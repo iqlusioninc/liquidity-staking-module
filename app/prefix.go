@@ -5,7 +5,7 @@ import (
 )
 
 const (
-	AccountAddressPrefix = "bitsong"
+	AccountAddressPrefix = "liquidstaking"
 )
 
 var (

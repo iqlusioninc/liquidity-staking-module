@@ -3,6 +3,7 @@ module github.com/iqlusioninc/liquidity-staking-module
 go 1.16
 
 require (
+	github.com/armon/go-metrics v0.3.8 // indirect
 	github.com/cosmos/cosmos-sdk v0.42.6
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/gogo/protobuf v1.3.3

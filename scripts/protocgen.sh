@@ -21,5 +21,5 @@ Mgoogle/protobuf/any.proto=github.com/cosmos/cosmos-sdk/codec/types:. \
 done
 
 # move proto files to the right places
-cp -r github.com/bitsongofficial/chainmodules/* ./
+cp -r github.com/iqlusioninc/liquidity-staking-module/* ./
 rm -rf github.com

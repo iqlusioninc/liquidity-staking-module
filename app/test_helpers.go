@@ -20,7 +20,7 @@ import (
 	"github.com/tendermint/tmlibs/cli"
 )
 
-func setup(withGenesis bool, invCheckPeriod uint) (*Bitsong, GenesisState) {
+func setup(withGenesis bool, invCheckPeriod uint) (*LiquidStaking, GenesisState) {
 	db := dbm.NewMemDB()
 	encCdc := MakeEncodingConfig()
 	app := New(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, simapp.EmptyAppOptions{})
@@ -31,7 +31,7 @@ func setup(withGenesis bool, invCheckPeriod uint) (*Bitsong, GenesisState) {
 }
 
 // Setup initializes a new SimApp. A Nop logger is set in SimApp.
-func Setup(isCheckTx bool) *Bitsong {
+func Setup(isCheckTx bool) *LiquidStaking {
 	app, genesisState := setup(!isCheckTx, 5)
 	if !isCheckTx {
 		// init chain must be called to stop deliverState from being nil
