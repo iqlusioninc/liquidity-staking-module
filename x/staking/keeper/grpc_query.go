@@ -10,7 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	epochkeeper "github.com/cosmos/cosmos-sdk/x/epoching/keeper"
+	epochkeeper "github.com/iqlusioninc/liquidity-staking-module/x/epoching/keeper"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 

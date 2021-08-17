@@ -20,15 +20,15 @@ import (
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
-func bootstrapGenesisTest(numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
-	_, app, ctx := getBaseSimappWithCustomKeeper()
+func bootstrapGenesisTest(t *testing.T, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
+	_, app, ctx := getBaseSimappWithCustomKeeper(t)
 
 	addrDels, _ := generateAddresses(app, ctx, numAddrs, sdk.NewInt(10000))
 	return app, ctx, addrDels
 }
 
 func TestInitGenesis(t *testing.T) {
-	app, ctx, addrs := bootstrapGenesisTest(10)
+	app, ctx, addrs := bootstrapGenesisTest(t, 10)
 
 	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 1)
 
@@ -77,11 +77,27 @@ func TestInitGenesis(t *testing.T) {
 	genesisState := types.NewGenesisState(params, validators, delegations)
 	vals := staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, genesisState)
 
+	coin := sdk.NewCoin(params.BondDenom, valTokens.MulRaw((int64)(len(validators))))
+
+	msg := types.NewMsgDelegate(sdk.AccAddress(addrs[0]), sdk.ValAddress(addrs[0]), coin)
+
+	app.StakingKeeper.QueueMsgForEpoch(ctx, app.StakingKeeper.GetEpochNumber(ctx), msg)
+
 	actualGenesis := staking.ExportGenesis(ctx, app.StakingKeeper)
 	require.Equal(t, genesisState.Params, actualGenesis.Params)
 	require.Equal(t, genesisState.Delegations, actualGenesis.Delegations)
 	require.EqualValues(t, app.StakingKeeper.GetAllValidators(ctx), actualGenesis.Validators)
-
+	msgs := app.StakingKeeper.GetEpochActions(ctx)
+	var anys []*codectypes.Any
+	for _, msg := range msgs {
+		any, err := codectypes.NewAnyWithValue(msg)
+		if err != nil {
+			panic(err)
+		}
+		anys = append(anys, any)
+	}
+	require.Equal(t, anys, actualGenesis.BufferedMsgs)
+	fmt.Println(app.StakingKeeper.GetEpochActions(ctx), 11, actualGenesis.BufferedMsgs)
 	// Ensure validators have addresses.
 	vals2, err := staking.WriteValidators(ctx, app.StakingKeeper)
 	require.NoError(t, err)
@@ -107,7 +123,7 @@ func TestInitGenesis(t *testing.T) {
 }
 
 func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.NewContext(false, tmproto.Header{})
 
 	consPub, err := codectypes.NewAnyWithValue(PKs[0])
@@ -155,7 +171,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	size := 200
 	require.True(t, size > 100)
 
-	app, ctx, addrs := bootstrapGenesisTest(200)
+	app, ctx, addrs := bootstrapGenesisTest(t, 200)
 
 	params := app.StakingKeeper.GetParams(ctx)
 	delegations := []types.Delegation{}
