@@ -7,7 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 // return a specific delegation

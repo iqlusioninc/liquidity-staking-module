@@ -11,8 +11,8 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/iqlusioninc/liquidity-staking-module/x/staking/teststaking"
+	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 func TestAllocateTokensToValidatorWithCommission(t *testing.T) {

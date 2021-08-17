@@ -14,8 +14,8 @@ import (
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/client/cli"
 )
 
 type IntegrationTestSuite struct {

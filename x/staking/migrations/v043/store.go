@@ -5,9 +5,9 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/address"
 	v040auth "github.com/cosmos/cosmos-sdk/x/auth/migrations/v040"
-	v043distribution "github.com/cosmos/cosmos-sdk/x/distribution/migrations/v043"
-	v040staking "github.com/cosmos/cosmos-sdk/x/staking/migrations/v040"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	v043distribution "github.com/iqlusioninc/liquidity-staking-module/x/distribution/migrations/v043"
+	v040staking "github.com/iqlusioninc/liquidity-staking-module/x/staking/migrations/v040"
+	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 // migratePrefixAddressAddressAddress is a helper function that migrates all keys of format:

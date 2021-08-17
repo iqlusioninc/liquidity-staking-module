@@ -7,7 +7,7 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 // get a single validator

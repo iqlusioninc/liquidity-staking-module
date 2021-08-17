@@ -5,7 +5,7 @@ import (
 	"math/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 // does a certain by-power index record exist

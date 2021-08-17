@@ -3,9 +3,9 @@ package distribution
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
+	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/keeper"
+	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 )
 
 func NewCommunityPoolSpendProposalHandler(k keeper.Keeper) govtypes.Handler {

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	types "github.com/cosmos/cosmos-sdk/x/staking/types"
+	types "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 // Slash a validator for an infraction committed at a known height

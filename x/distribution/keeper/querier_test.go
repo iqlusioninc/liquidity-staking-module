@@ -12,11 +12,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/keeper"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/keeper"
+	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
+	"github.com/iqlusioninc/liquidity-staking-module/x/staking"
+	"github.com/iqlusioninc/liquidity-staking-module/x/staking/teststaking"
+	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 const custom = "custom"

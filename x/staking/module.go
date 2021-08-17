@@ -18,10 +18,10 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	"github.com/cosmos/cosmos-sdk/x/staking/client/cli"
-	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/iqlusioninc/liquidity-staking-module/x/staking/client/cli"
+	"github.com/iqlusioninc/liquidity-staking-module/x/staking/keeper"
+	"github.com/iqlusioninc/liquidity-staking-module/x/staking/simulation"
+	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 var (

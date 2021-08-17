@@ -10,10 +10,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v040staking "github.com/cosmos/cosmos-sdk/x/staking/migrations/v040"
-	v043staking "github.com/cosmos/cosmos-sdk/x/staking/migrations/v043"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	v040staking "github.com/iqlusioninc/liquidity-staking-module/x/staking/migrations/v040"
+	v043staking "github.com/iqlusioninc/liquidity-staking-module/x/staking/migrations/v043"
+	"github.com/iqlusioninc/liquidity-staking-module/x/staking/teststaking"
+	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 func TestStoreMigration(t *testing.T) {

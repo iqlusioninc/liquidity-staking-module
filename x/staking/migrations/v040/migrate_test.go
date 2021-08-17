@@ -9,9 +9,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/simapp"
-	v034staking "github.com/cosmos/cosmos-sdk/x/staking/migrations/v034"
-	v038staking "github.com/cosmos/cosmos-sdk/x/staking/migrations/v038"
-	v040staking "github.com/cosmos/cosmos-sdk/x/staking/migrations/v040"
+	v034staking "github.com/iqlusioninc/liquidity-staking-module/x/staking/migrations/v034"
+	v038staking "github.com/iqlusioninc/liquidity-staking-module/x/staking/migrations/v038"
+	v040staking "github.com/iqlusioninc/liquidity-staking-module/x/staking/migrations/v040"
 )
 
 func TestMigrate(t *testing.T) {

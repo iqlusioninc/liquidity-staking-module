@@ -7,7 +7,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 )
 
 type msgServer struct {

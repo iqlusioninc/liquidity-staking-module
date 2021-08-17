@@ -9,9 +9,9 @@ import (
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/staking"
-	"github.com/cosmos/cosmos-sdk/x/staking/keeper"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
+	"github.com/iqlusioninc/liquidity-staking-module/x/staking"
+	"github.com/iqlusioninc/liquidity-staking-module/x/staking/keeper"
+	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 // Helper is a structure which wraps the staking message server

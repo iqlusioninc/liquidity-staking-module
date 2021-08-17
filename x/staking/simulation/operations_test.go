@@ -14,11 +14,11 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	"github.com/cosmos/cosmos-sdk/x/staking/simulation"
-	"github.com/cosmos/cosmos-sdk/x/staking/teststaking"
-	"github.com/cosmos/cosmos-sdk/x/staking/types"
+	distrtypes "github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
+	"github.com/iqlusioninc/liquidity-staking-module/x/staking/simulation"
+	"github.com/iqlusioninc/liquidity-staking-module/x/staking/teststaking"
+	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 // TestWeightedOperations tests the weights of the operations.

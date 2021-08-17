@@ -11,8 +11,8 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32/legacybech32"
-	v034staking "github.com/cosmos/cosmos-sdk/x/staking/migrations/v034"
-	v036staking "github.com/cosmos/cosmos-sdk/x/staking/migrations/v036"
+	v034staking "github.com/iqlusioninc/liquidity-staking-module/x/staking/migrations/v034"
+	v036staking "github.com/iqlusioninc/liquidity-staking-module/x/staking/migrations/v036"
 )
 
 const (

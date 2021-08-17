@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 )
 
 func TestQueryDelegationRewardsAddrValidation(t *testing.T) {

@@ -9,7 +9,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/simapp"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 )
 
 func TestItCreatesModuleAccountOnInitBlock(t *testing.T) {

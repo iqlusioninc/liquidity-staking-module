@@ -12,7 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/distribution/types"
+	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 )
 
 type GRPCQueryTestSuite struct {
