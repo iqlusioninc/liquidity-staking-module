@@ -7,8 +7,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	epochkeeper "github.com/iqlusioninc/liquidity-staking-module/x/epoching/keeper"
+	paramtypes "github.com/iqlusioninc/liquidity-staking-module/x/params/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 

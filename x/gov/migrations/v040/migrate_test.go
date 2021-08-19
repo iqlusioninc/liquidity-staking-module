@@ -8,12 +8,12 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v036params "github.com/cosmos/cosmos-sdk/x/params/migrations/v036"
 	v038upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/migrations/v038"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	v036distr "github.com/iqlusioninc/liquidity-staking-module/x/distribution/migrations/v036"
 	v036gov "github.com/iqlusioninc/liquidity-staking-module/x/gov/migrations/v036"
 	v040gov "github.com/iqlusioninc/liquidity-staking-module/x/gov/migrations/v040"
+	v036params "github.com/iqlusioninc/liquidity-staking-module/x/params/migrations/v036"
 )
 
 func TestMigrate(t *testing.T) {

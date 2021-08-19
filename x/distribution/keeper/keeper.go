@@ -8,8 +8,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
+	paramtypes "github.com/iqlusioninc/liquidity-staking-module/x/params/types"
 )
 
 // Keeper of the distribution store

@@ -6,8 +6,6 @@ import (
 	proto "github.com/gogo/protobuf/proto"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
-	v036params "github.com/cosmos/cosmos-sdk/x/params/migrations/v036"
-	v040params "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	v038upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/migrations/v038"
 	v040upgrade "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	v036distr "github.com/iqlusioninc/liquidity-staking-module/x/distribution/migrations/v036"
@@ -15,6 +13,8 @@ import (
 	v034gov "github.com/iqlusioninc/liquidity-staking-module/x/gov/migrations/v034"
 	v036gov "github.com/iqlusioninc/liquidity-staking-module/x/gov/migrations/v036"
 	v040gov "github.com/iqlusioninc/liquidity-staking-module/x/gov/types"
+	v036params "github.com/iqlusioninc/liquidity-staking-module/x/params/migrations/v036"
+	v040params "github.com/iqlusioninc/liquidity-staking-module/x/params/types/proposal"
 )
 
 func migrateVoteOption(oldVoteOption v034gov.VoteOption) v040gov.VoteOption {
