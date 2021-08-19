@@ -10,6 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/keeper"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/teststaking"
@@ -144,7 +145,7 @@ func TestQueryValidators(t *testing.T) {
 
 	// Create Validators
 	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
-	status := []types.BondStatus{types.Bonded, types.Unbonded, types.Unbonding}
+	status := []sdkstaking.BondStatus{sdkstaking.Bonded, sdkstaking.Unbonded, sdkstaking.Unbonding}
 	var validators [3]types.Validator
 	for i, amt := range amts {
 		validators[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i])

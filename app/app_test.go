@@ -29,9 +29,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	"github.com/cosmos/cosmos-sdk/x/slashing"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution"
-	"github.com/iqlusioninc/liquidity-staking-module/x/slashing"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking"
 )
 

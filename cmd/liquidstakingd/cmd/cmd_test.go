@@ -7,9 +7,9 @@ import (
 	"github.com/stretchr/testify/require"
 
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/cosmos/cosmos-sdk/simapp/simd/cmd"
 	"github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
+	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
+	"github.com/iqlusioninc/liquidity-staking-module/cmd/liquidstakingd/cmd"
 )
 
 func TestInitCmd(t *testing.T) {
