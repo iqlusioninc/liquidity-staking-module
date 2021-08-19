@@ -56,9 +56,17 @@ import (
 	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/cosmos/cosmos-sdk/x/gov"
+	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/cosmos/cosmos-sdk/x/params"
+	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
+	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
@@ -67,14 +75,6 @@ import (
 	distrclient "github.com/iqlusioninc/liquidity-staking-module/x/distribution/client"
 	distrkeeper "github.com/iqlusioninc/liquidity-staking-module/x/distribution/keeper"
 	distrtypes "github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
-	"github.com/iqlusioninc/liquidity-staking-module/x/gov"
-	govkeeper "github.com/iqlusioninc/liquidity-staking-module/x/gov/keeper"
-	govtypes "github.com/iqlusioninc/liquidity-staking-module/x/gov/types"
-	"github.com/iqlusioninc/liquidity-staking-module/x/params"
-	paramsclient "github.com/iqlusioninc/liquidity-staking-module/x/params/client"
-	paramskeeper "github.com/iqlusioninc/liquidity-staking-module/x/params/keeper"
-	paramstypes "github.com/iqlusioninc/liquidity-staking-module/x/params/types"
-	paramproposal "github.com/iqlusioninc/liquidity-staking-module/x/params/types/proposal"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing"
 	slashingkeeper "github.com/iqlusioninc/liquidity-staking-module/x/slashing/keeper"
 	slashingtypes "github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
@@ -251,9 +251,11 @@ func NewSimApp(
 		appCodec, keys[distrtypes.StoreKey], app.GetSubspace(distrtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, authtypes.FeeCollectorName, app.ModuleAccountAddrs(),
 	)
+
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
 		appCodec, keys[slashingtypes.StoreKey], &stakingKeeper, app.GetSubspace(slashingtypes.ModuleName),
 	)
+
 	app.CrisisKeeper = crisiskeeper.NewKeeper(
 		app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
 	)

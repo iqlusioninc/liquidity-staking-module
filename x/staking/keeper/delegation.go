@@ -7,6 +7,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
@@ -549,7 +550,7 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time
 // Delegate performs a delegation, set/update everything necessary within the store.
 // tokenSrc indicates the bond status of the incoming funds.
 func (k Keeper) Delegate(
-	ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Int, tokenSrc types.BondStatus,
+	ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Int, tokenSrc sdkstaking.BondStatus,
 	validator types.Validator, subtractEpochPool bool,
 ) (newShares sdk.Dec, err error) {
 	// In some situations, the exchange rate becomes invalid, e.g. if
@@ -585,7 +586,7 @@ func (k Keeper) Delegate(
 		// if subtractEpochPool is true then we are
 		// performing a delegation and not a redelegation, thus the source tokens are
 		// all non bonded
-		if tokenSrc == types.Bonded {
+		if tokenSrc == sdkstaking.Bonded {
 			panic("delegation token source cannot be bonded")
 		}
 
@@ -607,14 +608,14 @@ func (k Keeper) Delegate(
 	} else {
 		// potentially transfer tokens between pools, if
 		switch {
-		case tokenSrc == types.Bonded && validator.IsBonded():
+		case tokenSrc == sdkstaking.Bonded && validator.IsBonded():
 			// do nothing
-		case (tokenSrc == types.Unbonded || tokenSrc == types.Unbonding) && !validator.IsBonded():
+		case (tokenSrc == sdkstaking.Unbonded || tokenSrc == sdkstaking.Unbonding) && !validator.IsBonded():
 			// do nothing
-		case (tokenSrc == types.Unbonded || tokenSrc == types.Unbonding) && validator.IsBonded():
+		case (tokenSrc == sdkstaking.Unbonded || tokenSrc == sdkstaking.Unbonding) && validator.IsBonded():
 			// transfer pools
 			k.notBondedTokensToBonded(ctx, bondAmt)
-		case tokenSrc == types.Bonded && !validator.IsBonded():
+		case tokenSrc == sdkstaking.Bonded && !validator.IsBonded():
 			// transfer pools
 			k.bondedTokensToNotBonded(ctx, bondAmt)
 		default:

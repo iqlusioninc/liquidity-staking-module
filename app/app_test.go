@@ -26,11 +26,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/evidence"
 	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
+	"github.com/cosmos/cosmos-sdk/x/gov"
 	"github.com/cosmos/cosmos-sdk/x/mint"
+	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution"
-	"github.com/iqlusioninc/liquidity-staking-module/x/gov"
-	"github.com/iqlusioninc/liquidity-staking-module/x/params"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking"
 )

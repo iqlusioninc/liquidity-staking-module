@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
@@ -40,7 +41,7 @@ func (k Keeper) executeQueuedCreateValidatorMsg(ctx sdk.Context, msg *types.MsgC
 	// set newly created validators to Bonded status
 	// I think keeping this as it is is quite good as delegators are not needed to wait for validator to be created
 	// on epochs but just delegate to validators that is going to be activated on next epoch
-	_, err = k.Delegate(ctx, delegatorAddress, msg.Value.Amount, types.Unbonded, validator, true)
+	_, err = k.Delegate(ctx, delegatorAddress, msg.Value.Amount, sdkstaking.Unbonded, validator, true)
 	if err != nil {
 		return err
 	}
@@ -156,7 +157,7 @@ func (k Keeper) executeQueuedDelegationMsg(ctx sdk.Context, msg *types.MsgDelega
 	}
 
 	// NOTE: source funds are always unbonded
-	_, err = k.Delegate(ctx, delegatorAddress, msg.Amount.Amount, types.Unbonded, validator, true)
+	_, err = k.Delegate(ctx, delegatorAddress, msg.Amount.Amount, sdkstaking.Unbonded, validator, true)
 	if err != nil {
 		return err
 	}

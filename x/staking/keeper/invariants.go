@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
@@ -52,11 +53,11 @@ func ModuleAccountInvariants(k Keeper) sdk.Invariant {
 		notBondedPool := k.GetNotBondedPool(ctx)
 		bondDenom := k.BondDenom(ctx)
 
-		k.IterateValidators(ctx, func(_ int64, validator types.ValidatorI) bool {
+		k.IterateValidators(ctx, func(_ int64, validator sdkstaking.ValidatorI) bool {
 			switch validator.GetStatus() {
-			case types.Bonded:
+			case sdkstaking.Bonded:
 				bonded = bonded.Add(validator.GetTokens())
-			case types.Unbonding, types.Unbonded:
+			case sdkstaking.Unbonding, sdkstaking.Unbonded:
 				notBonded = notBonded.Add(validator.GetTokens())
 			default:
 				panic("invalid validator status")
