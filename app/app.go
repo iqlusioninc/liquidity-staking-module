@@ -42,9 +42,6 @@ import (
 	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 
-	paramproposal "github./cosmos/cosmos-sdk//x/params/types/proposal"
-	paramsclient "github.com//cosmos/cosmos-sdk/x/params/client"
-	paramskeeper "github.com//cosmos/cosmos-sdk/x/params/keeper"
 	"github.com/cosmos/cosmos-sdk/x/authz"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
@@ -66,6 +63,10 @@ import (
 	mintkeeper "github.com/cosmos/cosmos-sdk/x/mint/keeper"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	"github.com/cosmos/cosmos-sdk/x/params"
+	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
+	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
+	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
 	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
 	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
@@ -74,7 +75,6 @@ import (
 	distrclient "github.com/iqlusioninc/liquidity-staking-module/x/distribution/client"
 	distrkeeper "github.com/iqlusioninc/liquidity-staking-module/x/distribution/keeper"
 	distrtypes "github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
-	paramstypes "github.com/iqlusioninc/liquidity-staking-module/x/params/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing"
 	slashingkeeper "github.com/iqlusioninc/liquidity-staking-module/x/slashing/keeper"
 	slashingtypes "github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
@@ -251,9 +251,11 @@ func NewSimApp(
 		appCodec, keys[distrtypes.StoreKey], app.GetSubspace(distrtypes.ModuleName), app.AccountKeeper, app.BankKeeper,
 		&stakingKeeper, authtypes.FeeCollectorName, app.ModuleAccountAddrs(),
 	)
+
 	app.SlashingKeeper = slashingkeeper.NewKeeper(
 		appCodec, keys[slashingtypes.StoreKey], &stakingKeeper, app.GetSubspace(slashingtypes.ModuleName),
 	)
+
 	app.CrisisKeeper = crisiskeeper.NewKeeper(
 		app.GetSubspace(crisistypes.ModuleName), invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName,
 	)

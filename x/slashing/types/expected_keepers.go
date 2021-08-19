@@ -7,7 +7,8 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	auth "github.com/cosmos/cosmos-sdk/x/auth/types"
-	paramtypes "github.com/iqlusioninc/liquidity-staking-module/x/params/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
@@ -50,7 +51,7 @@ type StakingKeeper interface {
 
 	// Delegation allows for getting a particular delegation for a given validator
 	// and delegator outside the scope of the staking module.
-	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) stakingtypes.DelegationI
+	Delegation(sdk.Context, sdk.AccAddress, sdk.ValAddress) sdkstaking.DelegationI
 
 	// MaxValidators returns the maximum amount of bonded validators
 	MaxValidators(sdk.Context) uint32

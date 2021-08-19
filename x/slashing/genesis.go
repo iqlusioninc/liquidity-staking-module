@@ -3,16 +3,16 @@ package slashing
 import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/keeper"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
-	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 // InitGenesis initialize default parameters
 // and the keeper's address to pubkey map
 func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.StakingKeeper, data *types.GenesisState) {
 	stakingKeeper.IterateValidators(ctx,
-		func(index int64, validator stakingtypes.ValidatorI) bool {
+		func(index int64, validator sdkstaking.ValidatorI) bool {
 			consPk, err := validator.ConsPubKey()
 			if err != nil {
 				panic(err)

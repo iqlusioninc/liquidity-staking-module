@@ -10,7 +10,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	paramtypes "github.com/iqlusioninc/liquidity-staking-module/x/params/types"
+	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 )
 
 // Staking params default values
