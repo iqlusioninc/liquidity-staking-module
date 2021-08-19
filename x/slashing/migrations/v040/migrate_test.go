@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/client"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	v039slashing "github.com/iqlusioninc/liquidity-staking-module/x/slashing/migrations/v039"
 	v040slashing "github.com/iqlusioninc/liquidity-staking-module/x/slashing/migrations/v040"
 )
