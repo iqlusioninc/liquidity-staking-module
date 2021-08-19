@@ -23,11 +23,11 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	distrtypes "github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
+	govtypes "github.com/iqlusioninc/liquidity-staking-module/x/gov/types"
 	slashingtypes "github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
 	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
