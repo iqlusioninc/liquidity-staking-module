@@ -10,9 +10,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v036gov "github.com/cosmos/cosmos-sdk/x/gov/migrations/v036"
 	v034distr "github.com/iqlusioninc/liquidity-staking-module/x/distribution/migrations/v034"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
+	v036gov "github.com/iqlusioninc/liquidity-staking-module/x/gov/migrations/v036"
 )
 
 // ----------------------------------------------------------------------------
