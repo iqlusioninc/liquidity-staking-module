@@ -66,7 +66,7 @@ func TestSetValidator(t *testing.T) {
 	// test how the validator is set from a purely unbonbed pool
 	validator := teststaking.NewValidator(t, valAddr, valPubKey)
 	validator, _ = validator.AddTokensFromDel(valTokens)
-	require.Equal(t, types.Unbonded, validator.Status)
+	require.Equal(t, sdkstaking.Unbonded, validator.Status)
 	assert.Equal(t, valTokens, validator.Tokens)
 	assert.Equal(t, valTokens, validator.DelegatorShares.RoundInt())
 	app.StakingKeeper.SetValidator(ctx, validator)
@@ -79,7 +79,7 @@ func TestSetValidator(t *testing.T) {
 	require.Equal(t, validator.ABCIValidatorUpdate(app.StakingKeeper.PowerReduction(ctx)), updates[0])
 
 	// after the save the validator should be bonded
-	require.Equal(t, types.Bonded, validator.Status)
+	require.Equal(t, sdkstaking.Bonded, validator.Status)
 	assert.Equal(t, valTokens, validator.Tokens)
 	assert.Equal(t, valTokens, validator.DelegatorShares.RoundInt())
 
@@ -124,7 +124,7 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	// add a validator
 	validator := teststaking.NewValidator(t, addrVals[0], PKs[0])
 	validator, delSharesCreated := validator.AddTokensFromDel(app.StakingKeeper.TokensFromConsensusPower(ctx, 100))
-	require.Equal(t, types.Unbonded, validator.Status)
+	require.Equal(t, sdkstaking.Unbonded, validator.Status)
 	require.Equal(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 100), validator.Tokens)
 	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
 	validator, found := app.StakingKeeper.GetValidator(ctx, addrVals[0])
@@ -190,9 +190,9 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	nextCliffVal, _ = nextCliffVal.RemoveDelShares(shares.ToDec())
 	nextCliffVal = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, nextCliffVal, true)
 
-	expectedValStatus := map[int]types.BondStatus{
-		9: types.Bonded, 8: types.Bonded, 7: types.Bonded, 5: types.Bonded, 4: types.Bonded,
-		0: types.Unbonding, 1: types.Unbonding, 2: types.Unbonding, 3: types.Unbonding, 6: types.Unbonding,
+	expectedValStatus := map[int]sdkstaking.BondStatus{
+		9: sdkstaking.Bonded, 8: sdkstaking.Bonded, 7: sdkstaking.Bonded, 5: sdkstaking.Bonded, 4: sdkstaking.Bonded,
+		0: sdkstaking.Unbonding, 1: sdkstaking.Unbonding, 2: sdkstaking.Unbonding, 3: sdkstaking.Unbonding, 6: sdkstaking.Unbonding,
 	}
 
 	// require all the validators have their respective statuses
@@ -224,7 +224,7 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
 	validator, _ = validator.AddTokensFromDel(valTokens)
-	require.Equal(t, types.Unbonded, validator.Status)
+	require.Equal(t, sdkstaking.Unbonded, validator.Status)
 	require.Equal(t, valTokens, validator.Tokens)
 	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
 	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
@@ -236,7 +236,7 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
 	// validator should be unbonding
 	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
-	require.Equal(t, validator.GetStatus(), types.Unbonding)
+	require.Equal(t, validator.GetStatus(), sdkstaking.Unbonding)
 }
 
 // This function tests UpdateValidator, GetValidator, GetLastValidators, RemoveValidator
@@ -285,7 +285,7 @@ func TestValidatorBasics(t *testing.T) {
 	resVals = app.StakingKeeper.GetLastValidators(ctx)
 	require.Equal(t, 1, len(resVals))
 	assert.True(ValEq(t, validators[0], resVals[0]))
-	assert.Equal(t, types.Bonded, validators[0].Status)
+	assert.Equal(t, sdkstaking.Bonded, validators[0].Status)
 	assert.True(sdk.IntEq(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 9), validators[0].BondedTokens()))
 
 	// modify a records, save, and retrieve
@@ -462,11 +462,11 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 	require.True(t, found)
 	val4, found := app.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addrs[4]))
 	require.True(t, found)
-	require.Equal(t, types.Bonded, val0.Status)
-	require.Equal(t, types.Unbonding, val1.Status)
-	require.Equal(t, types.Unbonding, val2.Status)
-	require.Equal(t, types.Bonded, val3.Status)
-	require.Equal(t, types.Bonded, val4.Status)
+	require.Equal(t, sdkstaking.Bonded, val0.Status)
+	require.Equal(t, sdkstaking.Unbonding, val1.Status)
+	require.Equal(t, sdkstaking.Unbonding, val2.Status)
+	require.Equal(t, sdkstaking.Bonded, val3.Status)
+	require.Equal(t, sdkstaking.Bonded, val4.Status)
 
 	// first make sure everything made it in to the gotValidator group
 	resValidators := app.StakingKeeper.GetBondedValidatorsByPower(ctx)
@@ -659,11 +659,11 @@ func TestFullValidatorSetPowerChange(t *testing.T) {
 		validators[i], found = app.StakingKeeper.GetValidator(ctx, validators[i].GetOperator())
 		require.True(t, found)
 	}
-	assert.Equal(t, types.Unbonded, validators[0].Status)
-	assert.Equal(t, types.Unbonding, validators[1].Status)
-	assert.Equal(t, types.Bonded, validators[2].Status)
-	assert.Equal(t, types.Bonded, validators[3].Status)
-	assert.Equal(t, types.Unbonded, validators[4].Status)
+	assert.Equal(t, sdkstaking.Unbonded, validators[0].Status)
+	assert.Equal(t, sdkstaking.Unbonding, validators[1].Status)
+	assert.Equal(t, sdkstaking.Bonded, validators[2].Status)
+	assert.Equal(t, sdkstaking.Bonded, validators[3].Status)
+	assert.Equal(t, sdkstaking.Unbonded, validators[4].Status)
 	resValidators := app.StakingKeeper.GetBondedValidatorsByPower(ctx)
 	assert.Equal(t, max, len(resValidators))
 	assert.True(ValEq(t, validators[2], resValidators[0])) // in the order of txs
