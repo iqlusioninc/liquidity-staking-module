@@ -5,6 +5,6 @@ The purpose of this repository is to develop and release a new set of staking, d
 
 In scope are changes related to
 
-- liquid staking
+- [liquid staking](https://liquidstaking.finance)
 - key rotation for validators
 - compounding rewards
