@@ -4,7 +4,7 @@ go 1.16
 
 require (
 	github.com/armon/go-metrics v0.3.9
-	github.com/cosmos/cosmos-sdk v0.43.0-beta1.0.20210817145924-7b0e7da7c68a
+	github.com/cosmos/cosmos-sdk v0.43.0-beta1.0.20210819101012-6b4ed66f64f5
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
