@@ -30,6 +30,12 @@ service Msg {
   // Undelegate defines a method for performing an undelegation from a
   // delegate and a validator.
   rpc Undelegate(MsgUndelegate) returns (MsgUndelegateResponse);
+
+  // TokenizeShares defines a method for tokenizing shares from a validator.
+  rpc TokenizeShares(MsgTokenizeShares) returns (MsgTokenizeSharesResponse);
+  
+  // RedeemTokens defines a method for redeeming tokens from a validator for shares.
+  rpc RedeemTokens(MsgRedeemTokensforShares) returns (MsgRedeemTokensforSharesResponse);
 }
 
 // MsgCreateValidator defines a SDK message for creating a new validator.
@@ -123,4 +129,31 @@ message MsgUndelegate {
 // MsgUndelegateResponse defines the Msg/Undelegate response type.
 message MsgUndelegateResponse {
   google.protobuf.Timestamp completion_time = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}
+
+message MsgTokenizeShares {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string                   delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string                   validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  cosmos.base.v1beta1.Coin amount            = 3 [(gogoproto.nullable) = false];
+
+}
+
+message MsgTokenizeSharesResponse {
+  cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+}
+
+message MsgRedeemTokensforShares {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string                   delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string                   validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  cosmos.base.v1beta1.Coin amount            = 3 [(gogoproto.nullable) = false];
+
+}
+
+message MsgRedeemTokensforSharesResponse {
 }
