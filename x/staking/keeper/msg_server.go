@@ -210,3 +210,29 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 		CompletionTime: completionTime,
 	}, nil
 }
+
+func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeShares) (*types.MsgTokenizeSharesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	epochInterval := k.EpochInterval(ctx)
+	k.epochKeeper.QueueMsgForEpoch(ctx, 0, msg)
+
+	cacheCtx, _ := ctx.CacheContext()
+	cacheCtx = cacheCtx.WithBlockHeight(k.epochKeeper.GetNextEpochHeight(ctx, epochInterval))
+	cacheCtx = cacheCtx.WithBlockTime(k.epochKeeper.GetNextEpochTime(ctx, epochInterval))
+
+	return nil, nil
+}
+
+func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemTokensforShares) (*types.MsgRedeemTokensforSharesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	epochInterval := k.EpochInterval(ctx)
+	k.epochKeeper.QueueMsgForEpoch(ctx, 0, msg)
+
+	cacheCtx, _ := ctx.CacheContext()
+	cacheCtx = cacheCtx.WithBlockHeight(k.epochKeeper.GetNextEpochHeight(ctx, epochInterval))
+	cacheCtx = cacheCtx.WithBlockTime(k.epochKeeper.GetNextEpochTime(ctx, epochInterval))
+
+	return nil, nil
+}

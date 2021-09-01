@@ -142,7 +142,7 @@ message MsgTokenizeShares {
 }
 
 message MsgTokenizeSharesResponse {
-  cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
+  cosmos.base.v1beta1.Coin amount = 1 [(gogoproto.nullable) = false];
 }
 
 message MsgRedeemTokensforShares {
