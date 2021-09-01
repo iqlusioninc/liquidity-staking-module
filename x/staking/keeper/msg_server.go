@@ -214,6 +214,25 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeShares) (*types.MsgTokenizeSharesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
+	valAddr, valErr := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if valErr != nil {
+		return nil, valErr
+	}
+	validator, found := k.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
+	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return err
+	}
+
+	delegation, found := k.GetDelegation(ctx, delegatorAddress, valAddr)
+	if !found {
+		return nil, types.ErrNoDelegatorForAddress
+	}
+
 	epochInterval := k.EpochInterval(ctx)
 	k.epochKeeper.QueueMsgForEpoch(ctx, 0, msg)
 
