@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 
 	tmstrings "github.com/tendermint/tendermint/libs/strings"
 
@@ -211,6 +212,10 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	}, nil
 }
 
+func getShareTokenDenom(validatorAddress string, epochNumber int64) string {
+	return validatorAddress + fmt.Sprintf("%s", epochNumber)
+}
+
 func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeShares) (*types.MsgTokenizeSharesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -232,6 +237,9 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	if !found {
 		return nil, types.ErrNoDelegatorForAddress
 	}
+
+	shareTokenDenom := getShareTokenDenom(msg.ValidatorAddress, k.epochKeeper.GetEpochNumber(ctx))
+	_ = shareTokenDenom
 
 	epochInterval := k.EpochInterval(ctx)
 	k.epochKeeper.QueueMsgForEpoch(ctx, 0, msg)
