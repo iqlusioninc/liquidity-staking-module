@@ -155,3 +155,18 @@ message CommunityPoolSpendProposalWithDeposit {
   string amount      = 4 [(gogoproto.moretags) = "yaml:\"amount\""];
   string deposit     = 5 [(gogoproto.moretags) = "yaml:\"deposit\""];
 }
+
+//
+message YieldTokenization{
+  option (gogoproto.goproto_getters)  = false;
+  option (gogoproto.goproto_stringer) = true;
+
+  uint64 id = 1 [(gogoproto.moretags) = "yaml:\"id\""];
+  string shares = 2 [
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", 
+    (gogoproto.nullable) = false
+    ];
+  string token_address = 3 [(gogoproto.moretags) = "yaml:\"token_address\""];
+
+
+}

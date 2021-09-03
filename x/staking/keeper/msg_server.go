@@ -228,15 +228,19 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, types.ErrNoValidatorFound
 	}
 
+	_ = validator
+
 	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	delegation, found := k.GetDelegation(ctx, delegatorAddress, valAddr)
 	if !found {
 		return nil, types.ErrNoDelegatorForAddress
 	}
+
+	_ = delegation
 
 	shareTokenDenom := getShareTokenDenom(msg.ValidatorAddress, k.epochKeeper.GetEpochNumber(ctx))
 	_ = shareTokenDenom
