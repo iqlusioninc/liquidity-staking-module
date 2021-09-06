@@ -49,4 +49,5 @@ var (
 	ErrInvalidHistoricalInfo           = sdkerrors.New(ModuleName, 37, "invalid historical info")
 	ErrNoHistoricalInfo                = sdkerrors.New(ModuleName, 38, "no historical info found")
 	ErrEmptyValidatorPubKey            = sdkerrors.New(ModuleName, 39, "empty validator public key")
+	ErrNotEnoughBalance                = sdkerrors.New(ModuleName, 24, "not enough balance")
 )
