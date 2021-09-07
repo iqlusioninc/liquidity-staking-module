@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
@@ -259,7 +260,10 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
-	// Undelegate
+	_, err = k.Unbond(ctx, delegatorAddress, valAddr, sdk.NewDec(msg.Amount.Amount.Int64()))
+	if err != nil {
+		return nil, err
+	}
 
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), minttypes.ModuleName, sdk.Coins{msg.Amount})
 	if err != nil {
@@ -316,7 +320,10 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		return nil, err
 	}
 
-	// delegate
+	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, sdkstaking.Unbonded, validator, false)
+	if err != nil {
+		return nil, err
+	}
 
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, delegatorAddress, minttypes.ModuleName, sdk.Coins{msg.Amount})
 	if err != nil {
