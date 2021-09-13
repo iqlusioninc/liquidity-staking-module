@@ -353,12 +353,12 @@ func (v Validator) ConsensusPower(r sdk.Int) int64 {
 		return v.PotentialConsensusPower(r)
 	}
 
-	return 0
+	return sdk.TokensToConsensusPower(v.ShareTokens, r)
 }
 
 // PotentialConsensusPower returns the potential consensus-engine power.
 func (v Validator) PotentialConsensusPower(r sdk.Int) int64 {
-	return sdk.TokensToConsensusPower(v.Tokens, r)
+	return sdk.TokensToConsensusPower(v.Tokens.Add(v.ShareTokens), r)
 }
 
 // UpdateStatus updates the location of the shares within a validator
@@ -430,6 +430,32 @@ func (v Validator) RemoveDelShares(delShares sdk.Dec) (Validator, sdk.Int) {
 	v.DelegatorShares = remainingShares
 
 	return v, issuedTokens
+}
+
+// AddTokensFromDel adds share tokens to a validator
+func (v Validator) AddShareTokens(amount sdk.Int) (Validator, sdk.Int) {
+	if amount.IsNegative() {
+		panic(fmt.Sprintf("should not happen: trying to add negative share tokens %v", amount))
+	}
+
+	v.ShareTokens = v.ShareTokens.Add(amount)
+
+	return v, v.ShareTokens
+}
+
+// AddTokensFromDel adds share tokens to a validator
+func (v Validator) RemoveShareTokens(amount sdk.Int) (Validator, sdk.Int) {
+	if amount.IsNegative() {
+		panic(fmt.Sprintf("should not happen: trying to remove negative share tokens %v", amount))
+	}
+
+	if v.ShareTokens.LT(amount) {
+		panic(fmt.Sprintf("should not happen: only have %v share tokens, trying to remove %v", v.ShareTokens, amount))
+	}
+
+	v.ShareTokens = v.ShareTokens.Sub(amount)
+
+	return v, v.ShareTokens
 }
 
 // MinEqual defines a more minimum set of equality conditions when comparing two

@@ -255,7 +255,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, sdk.AccAddress(valAddr), sdk.Coins{shareToken})
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delegatorAddress, sdk.Coins{shareToken})
 	if err != nil {
 		return nil, err
 	}
@@ -274,6 +274,8 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	if err != nil {
 		return nil, err
 	}
+
+	k.AddValidatorShareTokens(ctx, validator, msg.Amount.Amount)
 
 	// epochInterval := k.EpochInterval(ctx)
 	// k.epochKeeper.QueueMsgForEpoch(ctx, 0, msg)
@@ -334,6 +336,8 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 	if err != nil {
 		return nil, err
 	}
+
+	k.RemoveValidatorShareTokens(ctx, validator, msg.Amount.Amount)
 
 	// epochInterval := k.EpochInterval(ctx)
 	// k.epochKeeper.QueueMsgForEpoch(ctx, 0, msg)
