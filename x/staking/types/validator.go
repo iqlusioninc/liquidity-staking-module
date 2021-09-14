@@ -52,6 +52,7 @@ func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, descriptio
 		Jailed:            false,
 		Status:            sdkstaking.Unbonded,
 		Tokens:            sdk.ZeroInt(),
+		ShareTokens:       sdk.ZeroInt(),
 		DelegatorShares:   sdk.ZeroDec(),
 		Description:       description,
 		UnbondingHeight:   int64(0),
@@ -432,7 +433,7 @@ func (v Validator) RemoveDelShares(delShares sdk.Dec) (Validator, sdk.Int) {
 	return v, issuedTokens
 }
 
-// AddTokensFromDel adds share tokens to a validator
+// AddShareTokens adds share tokens to a validator
 func (v Validator) AddShareTokens(amount sdk.Int) (Validator, sdk.Int) {
 	if amount.IsNegative() {
 		panic(fmt.Sprintf("should not happen: trying to add negative share tokens %v", amount))
@@ -443,7 +444,7 @@ func (v Validator) AddShareTokens(amount sdk.Int) (Validator, sdk.Int) {
 	return v, v.ShareTokens
 }
 
-// AddTokensFromDel adds share tokens to a validator
+// RemoveShareTokens remove share tokens from a validator
 func (v Validator) RemoveShareTokens(amount sdk.Int) (Validator, sdk.Int) {
 	if amount.IsNegative() {
 		panic(fmt.Sprintf("should not happen: trying to remove negative share tokens %v", amount))

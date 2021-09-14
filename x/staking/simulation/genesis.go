@@ -101,6 +101,7 @@ func RandomizedGenState(simState *module.SimulationState) {
 			panic(err)
 		}
 		validator.Tokens = sdk.NewInt(simState.InitialStake)
+		validator.ShareTokens = sdk.ZeroInt()
 		validator.DelegatorShares = sdk.NewDec(simState.InitialStake)
 		validator.Commission = commission
 

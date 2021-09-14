@@ -49,6 +49,7 @@ func TestInitGenesis(t *testing.T) {
 		ConsensusPubkey: pk0,
 		Status:          sdkstaking.Bonded,
 		Tokens:          valTokens,
+		ShareTokens:     valTokens,
 		DelegatorShares: valTokens.ToDec(),
 		Description:     types.NewDescription("hoop", "", "", "", ""),
 	}
@@ -57,6 +58,7 @@ func TestInitGenesis(t *testing.T) {
 		ConsensusPubkey: pk1,
 		Status:          sdkstaking.Bonded,
 		Tokens:          valTokens,
+		ShareTokens:     valTokens,
 		DelegatorShares: valTokens.ToDec(),
 		Description:     types.NewDescription("bloop", "", "", "", ""),
 	}
