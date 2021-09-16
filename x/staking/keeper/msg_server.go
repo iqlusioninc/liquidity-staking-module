@@ -260,31 +260,21 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
-	_, err = k.Unbond(ctx, delegatorAddress, valAddr, sdk.NewDec(msg.Amount.Amount.Int64()))
+	_, err = k.Unbond(ctx, delegatorAddress, valAddr, msg.Amount.Amount.ToDec())
 	if err != nil {
 		return nil, err
 	}
 
-	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, sdk.AccAddress(valAddr), minttypes.ModuleName, sdk.Coins{msg.Amount})
-	if err != nil {
-		return nil, err
-	}
-
-	err = k.bankKeeper.BurnCoins(ctx, minttypes.ModuleName, sdk.Coins{msg.Amount})
+	err = k.bankKeeper.BurnCoins(ctx, types.BondedPoolName, sdk.Coins{msg.Amount})
 	if err != nil {
 		return nil, err
 	}
 
 	k.AddValidatorShareTokens(ctx, validator, msg.Amount.Amount)
 
-	// epochInterval := k.EpochInterval(ctx)
-	// k.epochKeeper.QueueMsgForEpoch(ctx, 0, msg)
-
-	// cacheCtx, _ := ctx.CacheContext()
-	// cacheCtx = cacheCtx.WithBlockHeight(k.epochKeeper.GetNextEpochHeight(ctx, epochInterval))
-	// cacheCtx = cacheCtx.WithBlockTime(k.epochKeeper.GetNextEpochTime(ctx, epochInterval))
-
-	return nil, nil
+	return &types.MsgTokenizeSharesResponse{
+		Amount: shareToken,
+	}, nil
 }
 
 func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemTokensforShares) (*types.MsgRedeemTokensforSharesResponse, error) {
@@ -317,34 +307,27 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		return nil, err
 	}
 
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, sdk.AccAddress(valAddr), sdk.Coins{mintToken})
+	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.BondedPoolName, sdk.Coins{mintToken})
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, sdkstaking.Unbonded, validator, false)
+	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, sdkstaking.Bonded, validator, false)
 	if err != nil {
 		return nil, err
 	}
 
-	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, delegatorAddress, minttypes.ModuleName, sdk.Coins{msg.Amount})
+	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, delegatorAddress, types.NotBondedPoolName, sdk.Coins{msg.Amount})
 	if err != nil {
 		return nil, err
 	}
 
-	err = k.bankKeeper.BurnCoins(ctx, minttypes.ModuleName, sdk.Coins{msg.Amount})
+	err = k.bankKeeper.BurnCoins(ctx, types.NotBondedPoolName, sdk.Coins{msg.Amount})
 	if err != nil {
 		return nil, err
 	}
 
 	k.RemoveValidatorShareTokens(ctx, validator, msg.Amount.Amount)
 
-	// epochInterval := k.EpochInterval(ctx)
-	// k.epochKeeper.QueueMsgForEpoch(ctx, 0, msg)
-
-	// cacheCtx, _ := ctx.CacheContext()
-	// cacheCtx = cacheCtx.WithBlockHeight(k.epochKeeper.GetNextEpochHeight(ctx, epochInterval))
-	// cacheCtx = cacheCtx.WithBlockTime(k.epochKeeper.GetNextEpochTime(ctx, epochInterval))
-
-	return nil, nil
+	return &types.MsgRedeemTokensforSharesResponse{}, nil
 }
