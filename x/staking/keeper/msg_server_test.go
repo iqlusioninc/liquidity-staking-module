@@ -38,6 +38,9 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 	// apply TM updates
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
 
+	_, found := app.StakingKeeper.GetDelegation(ctx, addrAcc2, addrVal1)
+	require.True(t, found, "delegation not found after delegate")
+
 	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
 	resp, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
 		DelegatorAddress: addrAcc2.String(),
@@ -45,8 +48,13 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 		Amount:           sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delTokens),
 	})
 	require.NoError(t, err)
-
-	// Add checks
+	_, found = app.StakingKeeper.GetDelegation(ctx, addrAcc2, addrVal1)
+	require.False(t, found, "delegation found after tokenize share")
+	shareToken := app.BankKeeper.GetBalance(ctx, addrAcc2, resp.Amount.Denom)
+	require.Equal(t, resp.Amount, shareToken)
+	validator, found := app.StakingKeeper.GetValidator(ctx, addrVal1)
+	require.True(t, found, true, "validator not found")
+	require.Equal(t, validator.ShareTokens, resp.Amount.Amount)
 
 	msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensforShares{
 		DelegatorAddress: addrAcc2.String(),
@@ -54,6 +62,14 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 		Amount:           resp.Amount,
 	})
 	require.NoError(t, err)
-
-	// Add checks
+	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc2, addrVal1)
+	require.True(t, found, "delegation not found after redeem tokens")
+	require.Equal(t, delegation.DelegatorAddress, addrAcc2.String())
+	require.Equal(t, delegation.ValidatorAddress, addrVal1.String())
+	require.Equal(t, delegation.Shares, delTokens.ToDec())
+	shareToken = app.BankKeeper.GetBalance(ctx, addrAcc2, resp.Amount.Denom)
+	require.Equal(t, shareToken.Amount, sdk.ZeroInt())
+	validator, found = app.StakingKeeper.GetValidator(ctx, addrVal1)
+	require.True(t, found, true, "validator not found")
+	require.Equal(t, validator.ShareTokens, sdk.ZeroInt())
 }
