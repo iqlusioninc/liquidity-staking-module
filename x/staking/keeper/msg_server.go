@@ -9,6 +9,7 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
@@ -265,7 +266,18 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
-	err = k.bankKeeper.BurnCoins(ctx, types.BondedPoolName, sdk.Coins{msg.Amount})
+	shareTokenModuleAccount := authtypes.NewEmptyModuleAccount("ShareTokenModule"+msg.DelegatorAddress, "")
+	k.authKeeper.SetModuleAccount(ctx, shareTokenModuleAccount)
+
+	// Create reward NFT, log module address
+	// NFT features - create, burn, transfer
+
+	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.BondedPoolName, shareTokenModuleAccount.GetName(), sdk.Coins{msg.Amount})
+	if err != nil {
+		return nil, err
+	}
+
+	_, err = k.Keeper.Delegate(ctx, shareTokenModuleAccount.GetAddress(), msg.Amount.Amount, sdkstaking.Bonded, validator, false)
 	if err != nil {
 		return nil, err
 	}
@@ -301,13 +313,15 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		return nil, types.ErrNotEnoughBalance
 	}
 
-	mintToken := sdk.NewCoin(k.BondDenom(ctx), msg.Amount.Amount)
-	err = k.bankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.Coins{mintToken})
+	shareTokenModuleAccount := k.authKeeper.GetModuleAccount(ctx, "ShareTokenModule"+msg.DelegatorAddress)
+	_, err = k.Unbond(ctx, shareTokenModuleAccount.GetAddress(), valAddr, msg.Amount.Amount.ToDec())
 	if err != nil {
 		return nil, err
 	}
 
-	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.BondedPoolName, sdk.Coins{mintToken})
+	// burn reward NFT
+
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.BondedPoolName, delegatorAddress, sdk.Coins{sdk.NewCoin(k.BondDenom(ctx), msg.Amount.Amount)})
 	if err != nil {
 		return nil, err
 	}

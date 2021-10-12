@@ -354,12 +354,12 @@ func (v Validator) ConsensusPower(r sdk.Int) int64 {
 		return v.PotentialConsensusPower(r)
 	}
 
-	return sdk.TokensToConsensusPower(v.ShareTokens, r)
+	return 0
 }
 
 // PotentialConsensusPower returns the potential consensus-engine power.
 func (v Validator) PotentialConsensusPower(r sdk.Int) int64 {
-	return sdk.TokensToConsensusPower(v.Tokens.Add(v.ShareTokens), r)
+	return sdk.TokensToConsensusPower(v.Tokens, r)
 }
 
 // UpdateStatus updates the location of the shares within a validator
