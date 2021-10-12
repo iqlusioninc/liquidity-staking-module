@@ -392,3 +392,5 @@ func (msg MsgTokenizeShares) ValidateBasic() error {
 
 	return nil
 }
+
+// TODO: add changes for MsgTransferTokenizeShareRecord

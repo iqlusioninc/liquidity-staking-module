@@ -151,3 +151,5 @@ func (msg MsgFundCommunityPool) ValidateBasic() error {
 	}
 	return nil
 }
+
+// TODO: add changes for MsgWithdrawTokenizeShareRecordReward

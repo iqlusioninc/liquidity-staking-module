@@ -74,3 +74,5 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 	require.True(t, found, true, "validator not found")
 	require.Equal(t, validator.ShareTokens, sdk.ZeroInt())
 }
+
+// TODO: add test for TransferTokenizeShareRecord

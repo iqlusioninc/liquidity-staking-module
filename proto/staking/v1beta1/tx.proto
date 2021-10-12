@@ -167,7 +167,8 @@ message MsgTransferTokenizeShareRecord {
   option (gogoproto.goproto_getters) = false;
 
   uint64 tokenize_share_record_id = 1;
-  string new_owner = 2;
+  string sender = 2;
+  string new_owner = 3;
 }
 
 message MsgTransferTokenizeShareRecordResponse {}
