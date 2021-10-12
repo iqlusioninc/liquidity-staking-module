@@ -336,3 +336,11 @@ message Pool {
     (gogoproto.moretags)   = "yaml:\"bonded_tokens\""
   ];
 }
+
+message TokenizeShareRecord {
+  option (gogoproto.equal) = true;
+
+  string owner = 1;
+  string share_token_denom = 2;
+  string module_account = 3; // module account take the role of delegator
+}

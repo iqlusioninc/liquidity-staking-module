@@ -266,18 +266,20 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
+	// TODO: create utility function to get module account from token share generation record
+	// TODO: modify to use recordId - not delegatorAddress
 	shareTokenModuleAccount := authtypes.NewEmptyModuleAccount("ShareTokenModule"+msg.DelegatorAddress, "")
 	k.authKeeper.SetModuleAccount(ctx, shareTokenModuleAccount)
 
-	// Create reward NFT, log module address
-	// NFT features - create, burn, transfer
+	// TODO: Create reward ownership record
+	// TODO: Add reward ownership transfer feature
 
-	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.BondedPoolName, shareTokenModuleAccount.GetName(), sdk.Coins{msg.Amount})
+	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.NotBondedPoolName, shareTokenModuleAccount.GetName(), sdk.Coins{msg.Amount})
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = k.Keeper.Delegate(ctx, shareTokenModuleAccount.GetAddress(), msg.Amount.Amount, sdkstaking.Bonded, validator, false)
+	_, err = k.Keeper.Delegate(ctx, shareTokenModuleAccount.GetAddress(), msg.Amount.Amount, sdkstaking.Unbonded, validator, false)
 	if err != nil {
 		return nil, err
 	}
@@ -319,9 +321,9 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		return nil, err
 	}
 
-	// burn reward NFT
+	// TODO: burn reward ownership record if delegation amount become zero
 
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.BondedPoolName, delegatorAddress, sdk.Coins{sdk.NewCoin(k.BondDenom(ctx), msg.Amount.Amount)})
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.NotBondedPoolName, delegatorAddress, sdk.Coins{sdk.NewCoin(k.BondDenom(ctx), msg.Amount.Amount)})
 	if err != nil {
 		return nil, err
 	}
