@@ -139,7 +139,7 @@ func (k msgServer) WithdrawTokenizeShareRecordReward(goCtx context.Context, msg 
 		for _, a := range amount {
 			if a.Amount.IsInt64() {
 				telemetry.SetGaugeWithLabels(
-					[]string{"tx", "msg", "withdraw_commission"},
+					[]string{"tx", "msg", "withdraw_tokenize_share_reward"},
 					float32(a.Amount.Int64()),
 					[]metrics.Label{telemetry.NewLabel("denom", a.Denom)},
 				)
