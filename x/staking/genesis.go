@@ -167,6 +167,8 @@ func InitGenesis(
 		keeper.RestoreEpochAction(ctx, epochNumber, msg)
 	}
 
+	// TODO: InitGenesis for tokenize_share_records and last_tokenize_share_record_id
+
 	return res
 }
 
@@ -205,6 +207,8 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 		}
 		anys = append(anys, any)
 	}
+
+	// TODO: ExportGenesis for tokenize_share_records and last_tokenize_share_record_id
 
 	return &types.GenesisState{
 		Params:               keeper.GetParams(ctx),

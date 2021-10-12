@@ -36,6 +36,10 @@ service Msg {
   
   // RedeemTokens defines a method for redeeming tokens from a validator for shares.
   rpc RedeemTokens(MsgRedeemTokensforShares) returns (MsgRedeemTokensforSharesResponse);
+
+  // TransferTokenizeShareRecord defines a method to transfer ownership of TokenizeShareRecord
+  rpc TransferTokenizeShareRecord(MsgTransferTokenizeShareRecord)
+      returns (MsgTransferTokenizeShareRecordResponse);
 }
 
 // MsgCreateValidator defines a SDK message for creating a new validator.
@@ -157,3 +161,13 @@ message MsgRedeemTokensforShares {
 
 message MsgRedeemTokensforSharesResponse {
 }
+
+message MsgTransferTokenizeShareRecord {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  uint64 tokenize_share_record_id = 1;
+  string new_owner = 2;
+}
+
+message MsgTransferTokenizeShareRecordResponse {}

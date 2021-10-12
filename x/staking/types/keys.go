@@ -51,6 +51,9 @@ var (
 
 	EpochKey = []byte{0x51} // prefix for the epoch
 
+	TokenizeShareRecordPrefix          = []byte{0x61} // key for tokenizeshare record prefix
+	TokenizeShareRecordIdByOwnerPrefix = []byte{0x62} // key for tokenizeshare record id by owner prefix
+	LastTokenizeShareRecordIdKey       = []byte{0x63} // key for last tokenize share record id
 )
 
 // GetValidatorKey creates the key for the validator with address

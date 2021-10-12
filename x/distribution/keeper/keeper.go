@@ -154,6 +154,22 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 	return commission, nil
 }
 
+// withdraw reward for owning TokenizeShareRecord
+func (k Keeper) WithdrawTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk.AccAddress) (sdk.Coins, error) {
+	reward := sdk.Coins{}
+
+	// TODO: iterate all TokenizeShareRecord owned by ownerAddr and claim rewards
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeWithdrawTokenizeShareReward,
+			sdk.NewAttribute(sdk.AttributeKeyAmount, reward.String()),
+		),
+	)
+
+	return reward, nil
+}
+
 // GetTotalRewards returns the total amount of fee distribution rewards held in the store
 func (k Keeper) GetTotalRewards(ctx sdk.Context) (totalRewards sdk.DecCoins) {
 	k.IterateValidatorOutstandingRewards(ctx,

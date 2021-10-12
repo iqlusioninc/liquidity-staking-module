@@ -340,7 +340,8 @@ message Pool {
 message TokenizeShareRecord {
   option (gogoproto.equal) = true;
 
-  string owner = 1;
-  string share_token_denom = 2;
-  string module_account = 3; // module account take the role of delegator
+  uint64 id = 1;
+  string owner = 2;
+  string share_token_denom = 3;
+  string module_account = 4; // module account take the role of delegator
 }
