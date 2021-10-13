@@ -52,4 +52,5 @@ var (
 	ErrNotEnoughBalance                 = sdkerrors.New(ModuleName, 40, "not enough balance")
 	ErrTokenizeShareRecordNotExists     = sdkerrors.New(ModuleName, 41, "tokenize share record not exists")
 	ErrTokenizeShareRecordAlreadyExists = sdkerrors.New(ModuleName, 42, "tokenize share record already exists")
+	ErrNotTokenizeShareRecordOwner      = sdkerrors.New(ModuleName, 43, "not tokenize share record owner")
 )

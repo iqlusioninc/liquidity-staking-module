@@ -349,11 +349,18 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 }
 
 func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types.MsgTransferTokenizeShareRecord) (*types.MsgTransferTokenizeShareRecordResponse, error) {
-	// ctx := sdk.UnwrapSDKContext(goCtx)
+	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	// TODO: get tokenize share record by id
-	// TODO: check owner is same as msg.sender
-	// TODO: set new owner
-	// TODO: call SetTokenizeShareRecord
+	record, err := k.GetTokenizeShareRecord(ctx, msg.TokenizeShareRecordId)
+	if err != nil {
+		return nil, types.ErrTokenizeShareRecordNotExists
+	}
+
+	if record.Owner != msg.Sender {
+		return nil, types.ErrNotTokenizeShareRecordOwner
+	}
+
+	record.Owner = msg.NewOwner
+	k.setTokenizeShareRecord(ctx, record)
 	return &types.MsgTransferTokenizeShareRecordResponse{}, nil
 }

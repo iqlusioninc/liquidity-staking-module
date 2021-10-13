@@ -408,7 +408,7 @@ func (msg MsgTransferTokenizeShareRecord) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)
 	}
-	if _, err := sdk.ValAddressFromBech32(msg.NewOwner); err != nil {
+	if _, err := sdk.AccAddressFromBech32(msg.NewOwner); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid new owner address: %s", err)
 	}
 
