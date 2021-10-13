@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 
 	tmstrings "github.com/tendermint/tendermint/libs/strings"
@@ -266,20 +267,29 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
-	// TODO: create utility function to get module account from token share generation record
-	// TODO: modify to use recordId - not delegatorAddress
-	shareTokenModuleAccount := authtypes.NewEmptyModuleAccount("ShareTokenModule"+msg.DelegatorAddress, "")
-	k.authKeeper.SetModuleAccount(ctx, shareTokenModuleAccount)
+	recordId := k.GetLastTokenizeShareRecordId(ctx) + 1
+	record := types.TokenizeShareRecord{
+		Id:    recordId,
+		Owner: msg.DelegatorAddress,
+		// TODO: we will need to make this unique per tokenizeShare to avoid interaction with other tokenizeShare on same epoch
+		ShareTokenDenom: shareTokenDenom,
+		ModuleAccount:   fmt.Sprintf("tokenize_share_%d", recordId),
+		Validator:       msg.ValidatorAddress,
+	}
 
-	// TODO: Create reward ownership record
-	// TODO: Add reward ownership transfer feature
+	// create module account
+	moduleAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, record.ModuleAccount)
+	k.authKeeper.SetModuleAccount(ctx, moduleAcc)
 
-	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.NotBondedPoolName, shareTokenModuleAccount.GetName(), sdk.Coins{msg.Amount})
+	// create reward ownership record
+	k.setTokenizeShareRecord(ctx, record)
+
+	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.NotBondedPoolName, moduleAcc.GetName(), sdk.Coins{msg.Amount})
 	if err != nil {
 		return nil, err
 	}
 
-	_, err = k.Keeper.Delegate(ctx, shareTokenModuleAccount.GetAddress(), msg.Amount.Amount, sdkstaking.Unbonded, validator, false)
+	_, err = k.Keeper.Delegate(ctx, moduleAcc.GetAddress(), msg.Amount.Amount, sdkstaking.Unbonded, validator, false)
 	if err != nil {
 		return nil, err
 	}
@@ -315,6 +325,7 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		return nil, types.ErrNotEnoughBalance
 	}
 
+	// TODO: should get tokenizedShareRecord from burn denom
 	shareTokenModuleAccount := k.authKeeper.GetModuleAccount(ctx, "ShareTokenModule"+msg.DelegatorAddress)
 	_, err = k.Unbond(ctx, shareTokenModuleAccount.GetAddress(), valAddr, msg.Amount.Amount.ToDec())
 	if err != nil {
