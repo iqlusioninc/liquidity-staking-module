@@ -433,32 +433,6 @@ func (v Validator) RemoveDelShares(delShares sdk.Dec) (Validator, sdk.Int) {
 	return v, issuedTokens
 }
 
-// AddShareTokens adds share tokens to a validator
-func (v Validator) AddShareTokens(amount sdk.Int) (Validator, sdk.Int) {
-	if amount.IsNegative() {
-		panic(fmt.Sprintf("should not happen: trying to add negative share tokens %v", amount))
-	}
-
-	v.ShareTokens = v.ShareTokens.Add(amount)
-
-	return v, v.ShareTokens
-}
-
-// RemoveShareTokens remove share tokens from a validator
-func (v Validator) RemoveShareTokens(amount sdk.Int) (Validator, sdk.Int) {
-	if amount.IsNegative() {
-		panic(fmt.Sprintf("should not happen: trying to remove negative share tokens %v", amount))
-	}
-
-	if v.ShareTokens.LT(amount) {
-		panic(fmt.Sprintf("should not happen: only have %v share tokens, trying to remove %v", v.ShareTokens, amount))
-	}
-
-	v.ShareTokens = v.ShareTokens.Sub(amount)
-
-	return v, v.ShareTokens
-}
-
 // MinEqual defines a more minimum set of equality conditions when comparing two
 // validators.
 func (v *Validator) MinEqual(other *Validator) bool {

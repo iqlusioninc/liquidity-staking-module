@@ -216,8 +216,8 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	}, nil
 }
 
-func getShareTokenDenom(validatorAddress string, epochNumber int64) string {
-	return validatorAddress + strconv.Itoa(int(epochNumber))
+func getShareTokenDenom(validatorAddress string, tokenizeShareRecordId uint64) string {
+	return validatorAddress + strconv.Itoa(int(tokenizeShareRecordId))
 }
 
 func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeShares) (*types.MsgTokenizeSharesResponse, error) {
@@ -249,7 +249,16 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, types.ErrNotEnoughDelegationShares
 	}
 
-	shareTokenDenom := getShareTokenDenom(msg.ValidatorAddress, k.epochKeeper.GetEpochNumber(ctx))
+	recordId := k.GetLastTokenizeShareRecordId(ctx) + 1
+	shareTokenDenom := getShareTokenDenom(msg.ValidatorAddress, recordId)
+	record := types.TokenizeShareRecord{
+		Id:              recordId,
+		Owner:           msg.DelegatorAddress,
+		ShareTokenDenom: shareTokenDenom,
+		ModuleAccount:   fmt.Sprintf("tokenizeshare_%d", recordId),
+		Validator:       msg.ValidatorAddress,
+	}
+
 	shareToken := sdk.NewCoin(shareTokenDenom, msg.Amount.Amount)
 
 	err = k.bankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.Coins{shareToken})
@@ -262,19 +271,11 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
+	// TODO: Unbond function should pass shares amount, not token amount
+	// - should calculate from burn token amount, burn token total amount vs current delegation amount
 	_, err = k.Unbond(ctx, delegatorAddress, valAddr, msg.Amount.Amount.ToDec())
 	if err != nil {
 		return nil, err
-	}
-
-	recordId := k.GetLastTokenizeShareRecordId(ctx) + 1
-	record := types.TokenizeShareRecord{
-		Id:    recordId,
-		Owner: msg.DelegatorAddress,
-		// TODO: we will need to make this unique per tokenizeShare to avoid interaction with other tokenizeShare on same epoch
-		ShareTokenDenom: shareTokenDenom,
-		ModuleAccount:   fmt.Sprintf("tokenize_share_%d", recordId),
-		Validator:       msg.ValidatorAddress,
 	}
 
 	// create module account
@@ -282,7 +283,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	k.authKeeper.SetModuleAccount(ctx, moduleAcc)
 
 	// create reward ownership record
-	k.setTokenizeShareRecord(ctx, record)
+	k.AddTokenizeShareRecord(ctx, record)
 
 	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.NotBondedPoolName, moduleAcc.GetName(), sdk.Coins{msg.Amount})
 	if err != nil {
@@ -294,8 +295,6 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
-	k.AddValidatorShareTokens(ctx, validator, msg.Amount.Amount)
-
 	return &types.MsgTokenizeSharesResponse{
 		Amount: shareToken,
 	}, nil
@@ -303,17 +302,6 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 
 func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemTokensforShares) (*types.MsgRedeemTokensforSharesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-
-	valAddr, valErr := sdk.ValAddressFromBech32(msg.ValidatorAddress)
-	if valErr != nil {
-		return nil, valErr
-	}
-	validator, found := k.GetValidator(ctx, valAddr)
-	if !found {
-		return nil, types.ErrNoValidatorFound
-	}
-
-	_ = validator
 
 	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
@@ -325,36 +313,57 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		return nil, types.ErrNotEnoughBalance
 	}
 
-	// TODO: should get tokenizedShareRecord from burn denom
-	shareTokenModuleAccount := k.authKeeper.GetModuleAccount(ctx, "ShareTokenModule"+msg.DelegatorAddress)
+	record, err := k.GetTokenizeShareRecordByDenom(ctx, msg.Amount.Denom)
+	if err != nil {
+		return nil, err
+	}
+
+	valAddr, valErr := sdk.ValAddressFromBech32(record.Validator)
+	if valErr != nil {
+		return nil, valErr
+	}
+
+	validator, found := k.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
+	// TODO: Unbond function should pass shares amount, not token amount
+	// - should calculate from burn token amount, burn token total amount vs current delegation amount
+	shareTokenModuleAccount := k.authKeeper.GetModuleAccount(ctx, record.ModuleAccount)
 	_, err = k.Unbond(ctx, shareTokenModuleAccount.GetAddress(), valAddr, msg.Amount.Amount.ToDec())
 	if err != nil {
 		return nil, err
 	}
 
-	// TODO: burn reward ownership record if delegation amount become zero
+	_ = validator
 
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.NotBondedPoolName, delegatorAddress, sdk.Coins{sdk.NewCoin(k.BondDenom(ctx), msg.Amount.Amount)})
-	if err != nil {
-		return nil, err
+	// if delegation is fully undelegated from module account, remove tokenize share record
+	_, found = k.GetDelegation(ctx, shareTokenModuleAccount.GetAddress(), valAddr)
+	if !found {
+		k.authKeeper.RemoveAccount(ctx, shareTokenModuleAccount)
+		k.DeleteTokenizeShareRecord(ctx, record.Id)
 	}
 
-	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, sdkstaking.Bonded, validator, false)
-	if err != nil {
-		return nil, err
-	}
-
+	// send share tokens to NotBondedPool and burn
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, delegatorAddress, types.NotBondedPoolName, sdk.Coins{msg.Amount})
 	if err != nil {
 		return nil, err
 	}
-
 	err = k.bankKeeper.BurnCoins(ctx, types.NotBondedPoolName, sdk.Coins{msg.Amount})
 	if err != nil {
 		return nil, err
 	}
 
-	k.RemoveValidatorShareTokens(ctx, validator, msg.Amount.Amount)
+	// send redeemed tokens to delegator address and get delegated tokens
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.NotBondedPoolName, delegatorAddress, sdk.Coins{sdk.NewCoin(k.BondDenom(ctx), msg.Amount.Amount)})
+	if err != nil {
+		return nil, err
+	}
+	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, sdkstaking.Bonded, validator, false)
+	if err != nil {
+		return nil, err
+	}
 
 	return &types.MsgRedeemTokensforSharesResponse{}, nil
 }

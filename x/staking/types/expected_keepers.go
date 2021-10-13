@@ -22,6 +22,7 @@ type AccountKeeper interface {
 
 	// TODO remove with genesis 2-phases refactor https://github.com/cosmos/cosmos-sdk/issues/2862
 	SetModuleAccount(sdk.Context, authtypes.ModuleAccountI)
+	RemoveAccount(sdk.Context, authtypes.AccountI)
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
