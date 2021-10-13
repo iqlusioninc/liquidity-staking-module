@@ -39,7 +39,7 @@ func (k Keeper) GetTokenizeShareRecord(ctx sdk.Context, id uint64) (tokenizeShar
 func (k Keeper) GetTokenizeShareRecordsByOwner(ctx sdk.Context, owner sdk.AccAddress) (tokenizeShareRecords []types.TokenizeShareRecord, err error) {
 	store := ctx.KVStore(k.storeKey)
 
-	var it sdk.Iterator = sdk.KVStorePrefixIterator(store, types.GetTokenizeShareRecordsByOwnerKey(owner))
+	var it sdk.Iterator = sdk.KVStorePrefixIterator(store, types.GetTokenizeShareRecordIdsByOwnerPrefix(owner))
 	defer it.Close()
 
 	for ; it.Valid(); it.Next() {
@@ -103,5 +103,5 @@ func (k Keeper) setTokenizeShareRecordWithOwner(ctx sdk.Context, owner sdk.AccAd
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: id})
 
-	store.Set(types.SetTokenizeShareRecordByOwnerKey(owner, id), bz)
+	store.Set(types.GetTokenizeShareRecordIdByOwnerAndIdKey(owner, id), bz)
 }
