@@ -156,18 +156,46 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 
 // withdraw reward for owning TokenizeShareRecord
 func (k Keeper) WithdrawTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk.AccAddress) (sdk.Coins, error) {
-	reward := sdk.Coins{}
+	totalRewards := sdk.Coins{}
 
-	// TODO: iterate all TokenizeShareRecord owned by ownerAddr and claim rewards
+	records, err := k.stakingKeeper.GetTokenizeShareRecordsByOwner(ctx, ownerAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, record := range records {
+		valAddr, err := sdk.ValAddressFromBech32(record.Validator)
+		if err != nil {
+			return nil, err
+		}
+
+		val := k.stakingKeeper.Validator(ctx, valAddr)
+		if val == nil {
+			continue
+		}
+
+		del := k.stakingKeeper.Delegation(ctx, k.authKeeper.GetModuleAddress(record.ModuleAccount), valAddr)
+		if del == nil {
+			continue
+		}
+
+		// withdraw rewards
+		rewards, err := k.withdrawDelegationRewards(ctx, val, del)
+		if err != nil {
+			return nil, err
+		}
+
+		totalRewards = totalRewards.Add(rewards...)
+	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeWithdrawTokenizeShareReward,
-			sdk.NewAttribute(sdk.AttributeKeyAmount, reward.String()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, totalRewards.String()),
 		),
 	)
 
-	return reward, nil
+	return totalRewards, nil
 }
 
 // GetTotalRewards returns the total amount of fee distribution rewards held in the store
