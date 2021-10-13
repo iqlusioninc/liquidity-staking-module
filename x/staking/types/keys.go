@@ -353,3 +353,18 @@ func GetREDsByDelToValDstIndexKey(delAddr sdk.AccAddress, valDstAddr sdk.ValAddr
 func GetHistoricalInfoKey(height int64) []byte {
 	return append(HistoricalInfoKey, []byte(strconv.FormatInt(height, 10))...)
 }
+
+// GetTokenizeShareRecordByIndexKey returns the key of the specified id. Intended for querying the tokenizeShareRecord by the id.
+func GetTokenizeShareRecordByIndexKey(id uint64) []byte {
+	return append(TokenizeShareRecordPrefix, sdk.Uint64ToBigEndian(id)...)
+}
+
+// GetTokenizeShareRecordsByOwnerKey returns the key of the specified owner. Intended for querying all tokenizeShareRecords of an owner
+func GetTokenizeShareRecordsByOwnerKey(owner sdk.AccAddress) []byte {
+	return append(TokenizeShareRecordIdByOwnerPrefix, owner.Bytes()...)
+}
+
+// SetTokenizeShareRecordByOwnerKey returns the key of the specified owner and id. Intended for setting tokenizeShareRecord of an owner
+func SetTokenizeShareRecordByOwnerKey(owner sdk.AccAddress, id uint64) []byte {
+	return append(append(TokenizeShareRecordIdByOwnerPrefix, owner.Bytes()...), sdk.Uint64ToBigEndian(id)...)
+}
