@@ -271,9 +271,11 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
-	// TODO: Unbond function should pass shares amount, not token amount
-	// - should calculate from burn token amount, burn token total amount vs current delegation amount
-	_, err = k.Unbond(ctx, delegatorAddress, valAddr, msg.Amount.Amount.ToDec())
+	shares, err := k.ValidateUnbondAmount(
+		ctx, delegatorAddress, valAddr, msg.Amount.Amount,
+	)
+
+	_, err = k.Unbond(ctx, delegatorAddress, valAddr, shares)
 	if err != nil {
 		return nil, err
 	}
@@ -328,10 +330,12 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		return nil, types.ErrNoValidatorFound
 	}
 
-	// TODO: Unbond function should pass shares amount, not token amount
-	// - should calculate from burn token amount, burn token total amount vs current delegation amount
+	shares, err := k.ValidateUnbondAmount(
+		ctx, delegatorAddress, valAddr, msg.Amount.Amount,
+	)
+
 	shareTokenModuleAccount := k.authKeeper.GetModuleAccount(ctx, record.ModuleAccount)
-	_, err = k.Unbond(ctx, shareTokenModuleAccount.GetAddress(), valAddr, msg.Amount.Amount.ToDec())
+	_, err = k.Unbond(ctx, shareTokenModuleAccount.GetAddress(), valAddr, shares)
 	if err != nil {
 		return nil, err
 	}
