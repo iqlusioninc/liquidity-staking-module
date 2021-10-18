@@ -170,27 +170,6 @@ func TestAddTokensFromDel(t *testing.T) {
 	require.True(sdk.IntEq(t, sdk.NewInt(9), validator.Tokens))
 }
 
-func TestAddShareTokens(t *testing.T) {
-	validator := newValidator(t, valAddr1, pk1)
-
-	validator, shares := validator.AddShareTokens(sdk.NewInt(6))
-	require.True(sdk.IntEq(t, sdk.NewInt(6), shares))
-	require.True(sdk.IntEq(t, sdk.NewInt(6), validator.ShareTokens))
-
-	validator, shares = validator.AddShareTokens(sdk.NewInt(3))
-	require.True(sdk.IntEq(t, sdk.NewInt(9), shares))
-	require.True(sdk.IntEq(t, sdk.NewInt(9), validator.ShareTokens))
-}
-
-func TestRemoveShareTokens(t *testing.T) {
-	validator := newValidator(t, valAddr1, pk1)
-
-	validator, shares := validator.AddShareTokens(sdk.NewInt(6))
-	validator, shares = validator.RemoveShareTokens(sdk.NewInt(3))
-	require.True(sdk.IntEq(t, sdk.NewInt(3), shares))
-	require.True(sdk.IntEq(t, sdk.NewInt(3), validator.ShareTokens))
-}
-
 func TestUpdateStatus(t *testing.T) {
 	validator := newValidator(t, valAddr1, pk1)
 	validator, _ = validator.AddTokensFromDel(sdk.NewInt(100))

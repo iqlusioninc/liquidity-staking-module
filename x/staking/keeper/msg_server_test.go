@@ -59,7 +59,6 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 
 	msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensforShares{
 		DelegatorAddress: addrAcc2.String(),
-		ValidatorAddress: addrVal1.String(),
 		Amount:           resp.Amount,
 	})
 	require.NoError(t, err)
@@ -75,4 +74,42 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 	require.Equal(t, validator.ShareTokens, sdk.ZeroInt())
 }
 
-// TODO: add test for TransferTokenizeShareRecord
+func TestTransferTokenizeShareRecord(t *testing.T) {
+	_, app, ctx := createTestInput(t)
+
+	addrs := simapp.AddTestAddrs(app, ctx, 3, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
+	addrAcc1, addrAcc2, valAcc := addrs[0], addrs[1], addrs[2]
+	addrVal := sdk.ValAddress(valAcc)
+
+	pubKeys := simapp.CreateTestPubKeys(1)
+	pk := pubKeys[0]
+
+	val := teststaking.NewValidator(t, addrVal, pk)
+	app.StakingKeeper.SetValidator(ctx, val)
+	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val)
+
+	// apply TM updates
+	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, -1)
+
+	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
+
+	err := app.StakingKeeper.AddTokenizeShareRecord(ctx, types.TokenizeShareRecord{
+		Id:              1,
+		Owner:           addrAcc1.String(),
+		ShareTokenDenom: "share_token_denom",
+		ModuleAccount:   "module_account",
+		Validator:       val.String(),
+	})
+	require.NoError(t, err)
+
+	_, err = msgServer.TransferTokenizeShareRecord(sdk.WrapSDKContext(ctx), &types.MsgTransferTokenizeShareRecord{
+		TokenizeShareRecordId: 1,
+		Sender:                addrAcc1.String(),
+		NewOwner:              addrAcc2.String(),
+	})
+	require.NoError(t, err)
+
+	record, err := app.StakingKeeper.GetTokenizeShareRecord(ctx, 1)
+	require.NoError(t, err)
+	require.Equal(t, record.Owner, addrAcc2.String())
+}
