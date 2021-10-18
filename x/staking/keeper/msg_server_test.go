@@ -12,7 +12,6 @@ import (
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
-// TODO: modify test for modified TokenizeShares and Redeem process
 func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
@@ -51,11 +50,20 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 	require.NoError(t, err)
 	_, found = app.StakingKeeper.GetDelegation(ctx, addrAcc2, addrVal1)
 	require.False(t, found, "delegation found after tokenize share")
+
 	shareToken := app.BankKeeper.GetBalance(ctx, addrAcc2, resp.Amount.Denom)
 	require.Equal(t, resp.Amount, shareToken)
-	validator, found := app.StakingKeeper.GetValidator(ctx, addrVal1)
+	_, found = app.StakingKeeper.GetValidator(ctx, addrVal1)
 	require.True(t, found, true, "validator not found")
-	require.Equal(t, validator.ShareTokens, resp.Amount.Amount)
+
+	records := app.StakingKeeper.GetAllTokenizeShareRecords(ctx)
+	require.Len(t, records, 1)
+	_, found = app.StakingKeeper.GetDelegation(ctx, records[0].GetModuleAddress(), addrVal1)
+	require.True(t, found, "delegation not found from tokenize share module account after tokenize share")
+
+	// TODO: convert test to table driven
+	// TODO: add partial tokenize share test
+	// TODO: add partial redeem tokens test
 
 	msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensforShares{
 		DelegatorAddress: addrAcc2.String(),
@@ -69,9 +77,14 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 	require.Equal(t, delegation.Shares, delTokens.ToDec())
 	shareToken = app.BankKeeper.GetBalance(ctx, addrAcc2, resp.Amount.Denom)
 	require.Equal(t, shareToken.Amount, sdk.ZeroInt())
-	validator, found = app.StakingKeeper.GetValidator(ctx, addrVal1)
+	_, found = app.StakingKeeper.GetValidator(ctx, addrVal1)
 	require.True(t, found, true, "validator not found")
-	require.Equal(t, validator.ShareTokens, sdk.ZeroInt())
+
+	_, found = app.StakingKeeper.GetDelegation(ctx, records[0].GetModuleAddress(), addrVal1)
+	require.False(t, found, "delegation found from tokenize share module account after redeem full amount")
+
+	records = app.StakingKeeper.GetAllTokenizeShareRecords(ctx)
+	require.Len(t, records, 0)
 }
 
 func TestTransferTokenizeShareRecord(t *testing.T) {

@@ -112,6 +112,7 @@ func (k Keeper) DeleteTokenizeShareRecord(ctx sdk.Context, recordId uint64) erro
 	}
 
 	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetTokenizeShareRecordByIndexKey(recordId))
 	store.Delete(types.GetTokenizeShareRecordIdByOwnerAndIdKey(owner, recordId))
 	store.Delete(types.GetTokenizeShareRecordIdByDenomKey(record.ShareTokenDenom))
 	return nil

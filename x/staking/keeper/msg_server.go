@@ -10,7 +10,6 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
@@ -272,24 +271,19 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		ctx, delegatorAddress, valAddr, msg.Amount.Amount,
 	)
 
-	_, err = k.Unbond(ctx, delegatorAddress, valAddr, shares)
+	returnAmount, err := k.Unbond(ctx, delegatorAddress, valAddr, shares)
 	if err != nil {
 		return nil, err
 	}
 
-	// create module account
-	moduleAcc := authtypes.NewEmptyModuleAccount(types.ModuleName, record.ModuleAccount)
-	k.authKeeper.SetModuleAccount(ctx, moduleAcc)
+	if validator.IsBonded() {
+		k.bondedTokensToNotBonded(ctx, returnAmount)
+	}
 
 	// create reward ownership record
 	k.AddTokenizeShareRecord(ctx, record)
 
-	err = k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.NotBondedPoolName, moduleAcc.GetName(), sdk.Coins{msg.Amount})
-	if err != nil {
-		return nil, err
-	}
-
-	_, err = k.Keeper.Delegate(ctx, moduleAcc.GetAddress(), msg.Amount.Amount, sdkstaking.Unbonded, validator, false)
+	_, err = k.Keeper.Delegate(ctx, record.GetModuleAddress(), msg.Amount.Amount, sdkstaking.Unbonded, validator, false)
 	if err != nil {
 		return nil, err
 	}
@@ -328,21 +322,20 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 	}
 
 	shares, err := k.ValidateUnbondAmount(
-		ctx, delegatorAddress, valAddr, msg.Amount.Amount,
+		ctx, record.GetModuleAddress(), valAddr, msg.Amount.Amount,
 	)
 
-	shareTokenModuleAccount := k.authKeeper.GetModuleAccount(ctx, record.ModuleAccount)
-	_, err = k.Unbond(ctx, shareTokenModuleAccount.GetAddress(), valAddr, shares)
+	returnAmount, err := k.Unbond(ctx, record.GetModuleAddress(), valAddr, shares)
 	if err != nil {
 		return nil, err
 	}
 
-	_ = validator
+	if validator.IsBonded() {
+		k.bondedTokensToNotBonded(ctx, returnAmount)
+	}
 
-	// if delegation is fully undelegated from module account, remove tokenize share record
-	_, found = k.GetDelegation(ctx, shareTokenModuleAccount.GetAddress(), valAddr)
+	_, found = k.GetDelegation(ctx, record.GetModuleAddress(), valAddr)
 	if !found {
-		k.authKeeper.RemoveAccount(ctx, shareTokenModuleAccount)
 		k.DeleteTokenizeShareRecord(ctx, record.Id)
 	}
 
@@ -356,12 +349,8 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		return nil, err
 	}
 
-	// send redeemed tokens to delegator address and get delegated tokens
-	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.NotBondedPoolName, delegatorAddress, sdk.Coins{sdk.NewCoin(k.BondDenom(ctx), msg.Amount.Amount)})
-	if err != nil {
-		return nil, err
-	}
-	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, sdkstaking.Bonded, validator, false)
+	// convert the share tokens to delegated status
+	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, sdkstaking.Unbonded, validator, false)
 	if err != nil {
 		return nil, err
 	}
