@@ -47,7 +47,7 @@ var (
 	RedelegationQueueKey = []byte{0x42} // prefix for the timestamps in redelegations queue
 	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue
 
-	HistoricalInfoKey = []byte{0x50} // prefix for the historical info
+	HistoricalInfoKey = []byte{0x70} // prefix for the historical info
 
 	EpochKey = []byte{0x51} // prefix for the epoch
 
