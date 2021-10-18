@@ -107,8 +107,8 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 		return &types.MsgCreateValidatorResponse{}, err
 	}
 
-	epochNumber := k.epochKeeper.GetEpochNumber(ctx)
-	k.epochKeeper.QueueMsgForEpoch(ctx, epochNumber, msg)
+	epochNumber := k.GetEpochNumber(ctx)
+	k.QueueMsgForEpoch(ctx, epochNumber, msg)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
@@ -130,13 +130,12 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValidator) (*types.MsgEditValidatorResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	// Queue epoch action and move all the execution logic to Epoch execution
-	epochInterval := k.EpochInterval(ctx)
-	epochNumber := k.epochKeeper.GetEpochNumber(ctx)
-	k.epochKeeper.QueueMsgForEpoch(ctx, epochNumber, msg)
+	epochNumber := k.GetEpochNumber(ctx)
+	k.QueueMsgForEpoch(ctx, epochNumber, msg)
 
 	cacheCtx, _ := ctx.CacheContext()
-	cacheCtx = cacheCtx.WithBlockHeight(k.epochKeeper.GetNextEpochHeight(ctx, epochInterval))
-	cacheCtx = cacheCtx.WithBlockTime(k.epochKeeper.GetNextEpochTime(ctx, epochInterval))
+	cacheCtx = cacheCtx.WithBlockHeight(k.GetNextEpochHeight(ctx))
+	cacheCtx = cacheCtx.WithBlockTime(k.GetNextEpochTime(ctx))
 	err := k.executeQueuedEditValidatorMsg(cacheCtx, msg)
 	if err != nil {
 		return nil, err
@@ -166,8 +165,8 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 	}
 
 	// Queue epoch action and move all the execution logic to Epoch execution
-	epochNumber := k.epochKeeper.GetEpochNumber(ctx)
-	k.epochKeeper.QueueMsgForEpoch(ctx, epochNumber, msg)
+	epochNumber := k.GetEpochNumber(ctx)
+	k.QueueMsgForEpoch(ctx, epochNumber, msg)
 
 	// TODO should do validation by running with cachedCtx like gov proposal creation
 	// To consider: cachedCtx could have status which contains all the other epoch actions
@@ -179,13 +178,12 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRedelegate) (*types.MsgBeginRedelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	epochInterval := k.EpochInterval(ctx)
-	epochNumber := k.epochKeeper.GetEpochNumber(ctx)
-	k.epochKeeper.QueueMsgForEpoch(ctx, epochNumber, msg)
+	epochNumber := k.GetEpochNumber(ctx)
+	k.QueueMsgForEpoch(ctx, epochNumber, msg)
 
 	cacheCtx, _ := ctx.CacheContext()
-	cacheCtx = cacheCtx.WithBlockHeight(k.epochKeeper.GetNextEpochHeight(ctx, epochInterval))
-	cacheCtx = cacheCtx.WithBlockTime(k.epochKeeper.GetNextEpochTime(ctx, epochInterval))
+	cacheCtx = cacheCtx.WithBlockHeight(k.GetNextEpochHeight(ctx))
+	cacheCtx = cacheCtx.WithBlockTime(k.GetNextEpochTime(ctx))
 	completionTime, err := k.executeQueuedBeginRedelegateMsg(cacheCtx, msg)
 	if err != nil {
 		return nil, err
@@ -200,12 +198,11 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (*types.MsgUndelegateResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	epochInterval := k.EpochInterval(ctx)
-	k.epochKeeper.QueueMsgForEpoch(ctx, 0, msg)
+	k.QueueMsgForEpoch(ctx, 0, msg)
 
 	cacheCtx, _ := ctx.CacheContext()
-	cacheCtx = cacheCtx.WithBlockHeight(k.epochKeeper.GetNextEpochHeight(ctx, epochInterval))
-	cacheCtx = cacheCtx.WithBlockTime(k.epochKeeper.GetNextEpochTime(ctx, epochInterval))
+	cacheCtx = cacheCtx.WithBlockHeight(k.GetNextEpochHeight(ctx))
+	cacheCtx = cacheCtx.WithBlockTime(k.GetNextEpochTime(ctx))
 	completionTime, err := k.executeQueuedUndelegateMsg(cacheCtx, msg)
 	if err != nil {
 		return nil, err

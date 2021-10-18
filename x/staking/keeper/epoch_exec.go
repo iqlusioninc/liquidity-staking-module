@@ -337,7 +337,7 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 	logger := k.Logger(ctx)
 
 	// execute all epoch actions
-	for iterator := k.epochKeeper.GetEpochActionsIterator(ctx); iterator.Valid(); iterator.Next() {
+	for iterator := k.Keeper.GetEpochActionsIterator(ctx); iterator.Valid(); iterator.Next() {
 		msg := k.GetEpochActionByIterator(iterator)
 
 		switch msg := msg.(type) {
@@ -383,10 +383,10 @@ func (k Keeper) ExecuteEpoch(ctx sdk.Context) {
 			panic(fmt.Sprintf("unrecognized %s message type: %T", types.ModuleName, msg))
 		}
 		// dequeue processed item
-		k.epochKeeper.DeleteByKey(ctx, iterator.Key())
+		k.Keeper.DeleteByKey(ctx, iterator.Key())
 	}
 
 	// Update epochNumber after epoch finish
 	// This won't affect slashing module since slashing Endblocker run before staking module
-	k.epochKeeper.IncreaseEpochNumber(ctx)
+	k.Keeper.IncreaseEpochNumber(ctx)
 }
