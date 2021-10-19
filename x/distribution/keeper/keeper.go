@@ -174,7 +174,7 @@ func (k Keeper) WithdrawTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk
 			continue
 		}
 
-		del := k.stakingKeeper.Delegation(ctx, k.authKeeper.GetModuleAddress(record.ModuleAccount), valAddr)
+		del := k.stakingKeeper.Delegation(ctx, record.GetModuleAddress(), valAddr)
 		if del == nil {
 			continue
 		}
@@ -184,6 +184,9 @@ func (k Keeper) WithdrawTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk
 		if err != nil {
 			return nil, err
 		}
+
+		// send coins from record module account to record module owner account
+		k.bankKeeper.SendCoins(ctx, record.GetModuleAddress(), ownerAddr, rewards)
 
 		totalRewards = totalRewards.Add(rewards...)
 	}

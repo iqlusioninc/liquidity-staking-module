@@ -87,8 +87,6 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	require.True(t, true)
 }
 
-// TODO: add test for WithdrawTokenizeShareRecordReward
-
 func TestGetTotalRewards(t *testing.T) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
