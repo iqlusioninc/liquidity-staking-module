@@ -36,7 +36,7 @@ func (k Keeper) GetTokenizeShareRecord(ctx sdk.Context, id uint64) (tokenizeShar
 	return tokenizeShareRecord, nil
 }
 
-func (k Keeper) GetTokenizeShareRecordsByOwner(ctx sdk.Context, owner sdk.AccAddress) (tokenizeShareRecords []types.TokenizeShareRecord, err error) {
+func (k Keeper) GetTokenizeShareRecordsByOwner(ctx sdk.Context, owner sdk.AccAddress) (tokenizeShareRecords []types.TokenizeShareRecord) {
 	store := ctx.KVStore(k.storeKey)
 
 	var it sdk.Iterator = sdk.KVStorePrefixIterator(store, types.GetTokenizeShareRecordIdsByOwnerPrefix(owner))
