@@ -158,10 +158,7 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 func (k Keeper) WithdrawTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk.AccAddress) (sdk.Coins, error) {
 	totalRewards := sdk.Coins{}
 
-	records, err := k.stakingKeeper.GetTokenizeShareRecordsByOwner(ctx, ownerAddr)
-	if err != nil {
-		return nil, err
-	}
+	records := k.stakingKeeper.GetTokenizeShareRecordsByOwner(ctx, ownerAddr)
 
 	for _, record := range records {
 		valAddr, err := sdk.ValAddressFromBech32(record.Validator)
