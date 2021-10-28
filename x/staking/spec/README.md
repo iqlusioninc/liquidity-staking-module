@@ -21,6 +21,8 @@ ultimately determining the effective validator set for the system.
 This module will be used in the Cosmos Hub, the first Hub in the Cosmos
 network.
 
+This module has been extended with a liquid staking implementation to enable the creation of nonfungible tokenized staking shares to be used to be synthetic staked assets.
+
 ## Contents
 
 1. **[State](01_state.md)**
@@ -33,16 +35,22 @@ network.
     - [Redelegation](01_state.md#redelegation)
     - [Queues](01_state.md#queues)
     - [HistoricalInfo](01_state.md#historicalinfo)
+    - [TokenizeShareRecord](01_state.md#TokenizeShareRecord)
 2. **[State Transitions](02_state_transitions.md)**
     - [Validators](02_state_transitions.md#validators)
     - [Delegations](02_state_transitions.md#delegations)
     - [Slashing](02_state_transitions.md#slashing)
+    - [Tokenizing](02_state_transitions.md#slashing)
 3. **[Messages](03_messages.md)**
     - [MsgCreateValidator](03_messages.md#msgcreatevalidator)
     - [MsgEditValidator](03_messages.md#msgeditvalidator)
     - [MsgDelegate](03_messages.md#msgdelegate)
     - [MsgUndelegate](03_messages.md#msgundelegate)
     - [MsgBeginRedelegate](03_messages.md#msgbeginredelegate)
+    - [MsgTokenizeShares](03_messages.md#msgtokenizeshares)
+    - [MsgRedeemTokensforShares](03_messages.md#msgredeemtokensforshares)
+    - [MsgTransferTokenizeShareRecord](03_messages.md#msgtransfertokenizesharerecord)
+
 4. **[Begin-Block](04_begin_block.md)**
     - [Historical Info Tracking](04_begin_block.md#historical-info-tracking)
 5. **[End-Block](05_end_block.md)**
