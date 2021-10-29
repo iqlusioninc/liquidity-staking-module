@@ -104,9 +104,10 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 
 			msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
 			resp, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
-				DelegatorAddress: addrAcc2.String(),
-				ValidatorAddress: addrVal1.String(),
-				Amount:           sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), tc.tokenizeShareAmount),
+				DelegatorAddress:    addrAcc2.String(),
+				ValidatorAddress:    addrVal1.String(),
+				Amount:              sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), tc.tokenizeShareAmount),
+				TokenizedShareOwner: addrAcc2.String(),
 			})
 			if tc.expTokenizeErr {
 				require.Error(t, err)

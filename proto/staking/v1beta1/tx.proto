@@ -142,7 +142,7 @@ message MsgTokenizeShares {
   string                   delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
   string                   validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
   cosmos.base.v1beta1.Coin amount            = 3 [(gogoproto.nullable) = false];
-
+  string tokenized_share_owner = 4 [ (gogoproto.moretags) = "yaml:\"tokenized_share_owner\"" ];
 }
 
 message MsgTokenizeSharesResponse {
@@ -155,7 +155,6 @@ message MsgRedeemTokensforShares {
 
   string                   delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
   cosmos.base.v1beta1.Coin amount            = 2 [(gogoproto.nullable) = false];
-
 }
 
 message MsgRedeemTokensforSharesResponse {

@@ -249,7 +249,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	shareTokenDenom := getShareTokenDenom(msg.ValidatorAddress, recordId)
 	record := types.TokenizeShareRecord{
 		Id:              recordId,
-		Owner:           msg.DelegatorAddress,
+		Owner:           msg.TokenizedShareOwner,
 		ShareTokenDenom: shareTokenDenom,
 		ModuleAccount:   fmt.Sprintf("tokenizeshare_%d", recordId),
 		Validator:       msg.ValidatorAddress,
