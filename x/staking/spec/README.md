@@ -40,7 +40,7 @@ This module has been extended with a liquid staking implementation to enable the
    - [Validators](02_state_transitions.md#validators)
    - [Delegations](02_state_transitions.md#delegations)
    - [Slashing](02_state_transitions.md#slashing)
-   - [Tokenizing](02_state_transitions.md#slashing)
+   - [Tokenizing](02_state_transitions.md#tokenizing)
 3. **[Messages](03_messages.md)**
 
    - [MsgCreateValidator](03_messages.md#msgcreatevalidator)
