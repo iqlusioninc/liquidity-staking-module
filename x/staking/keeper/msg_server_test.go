@@ -207,4 +207,9 @@ func TestTransferTokenizeShareRecord(t *testing.T) {
 	record, err := app.StakingKeeper.GetTokenizeShareRecord(ctx, 1)
 	require.NoError(t, err)
 	require.Equal(t, record.Owner, addrAcc2.String())
+
+	records := app.StakingKeeper.GetTokenizeShareRecordsByOwner(ctx, addrAcc1)
+	require.Len(t, records, 0)
+	records = app.StakingKeeper.GetTokenizeShareRecordsByOwner(ctx, addrAcc2)
+	require.Len(t, records, 1)
 }

@@ -137,6 +137,11 @@ func (k Keeper) setTokenizeShareRecordWithOwner(ctx sdk.Context, owner sdk.AccAd
 	store.Set(types.GetTokenizeShareRecordIdByOwnerAndIdKey(owner, id), bz)
 }
 
+func (k Keeper) deleteTokenizeShareRecordWithOwner(ctx sdk.Context, owner sdk.AccAddress, id uint64) {
+	store := ctx.KVStore(k.storeKey)
+	store.Delete(types.GetTokenizeShareRecordIdByOwnerAndIdKey(owner, id))
+}
+
 func (k Keeper) setTokenizeShareRecordWithDenom(ctx sdk.Context, denom string, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: id})

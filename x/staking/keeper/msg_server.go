@@ -370,7 +370,19 @@ func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types
 		return nil, types.ErrNotTokenizeShareRecordOwner
 	}
 
+	// Remove old account reference
+	oldOwner, err := sdk.AccAddressFromBech32(record.Owner)
+	k.deleteTokenizeShareRecordWithOwner(ctx, oldOwner, record.Id)
+
 	record.Owner = msg.NewOwner
 	k.setTokenizeShareRecord(ctx, record)
+
+	// Set new account reference
+	newOwner, err := sdk.AccAddressFromBech32(record.Owner)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress
+	}
+	k.setTokenizeShareRecordWithOwner(ctx, newOwner, record.Id)
+
 	return &types.MsgTransferTokenizeShareRecordResponse{}, nil
 }
