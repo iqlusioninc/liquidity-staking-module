@@ -179,6 +179,8 @@ So a validator that hasn't received any rewards and has not been slashed will ha
 
 ### Tokenize delegation shares
 
+Tokenizing delegation shares tokenize the delegation shares to transferrable asset.
+
 The process of tokenizing delegation shares
 
 1. Get delegation from the delegator to the validator
@@ -190,6 +192,8 @@ The process of tokenizing delegation shares
 
 ### Redeem delegation shares
 
+Redeeming of delegation shares is to convert tokenized delegation shares to regular delegation share.
+
 The process of redeeming delegation shares from tokenized share
 
 1. Verify that tokenize share tokens amount is not lower than redeeming share tokens amount
@@ -200,6 +204,8 @@ The process of redeeming delegation shares from tokenized share
 6. Delegate unbonded tokens from delegator address to the validator
 
 ### Transfer tokenize share record
+
+Transferring of tokenized share record is done to move the reward withdrawal rights.
 
 The process of transferring the tokenize share record
 
