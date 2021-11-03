@@ -166,7 +166,15 @@ When this message is processed the following actions occur:
 ## MsgTokenizeShares
 
 The `MsgTokenizeShares` message is used to create tokenize delegated tokens.
-This message can be executed by any delegator who has positive amount of delegation and after execution the speicic amount of delegation disappear from the account and share tokens are provided.
+This message can be executed by any delegator who has positive amount of delegation and after execution the specific amount of delegation disappear from the account and share tokens are provided. Share tokens are demoninated in the validator and record id of the underlying delegation.
+
+A user may tokenize some or all of their Delegation.
+
+They will recieved shares like ` cosmosvaloper1xxxx5` where 5 is the record id for the validator operator.
+
+A validator may tokenize their self bond but tokenizing more than their min self bond will be equivalent to unbonding their min self bond and cause the validator to be removed from the active set.
+
+`MsgTokenizeSharesResponse` provides the number of tokens generated and their denom.
 
 ## MsgRedeemTokensforShares
 

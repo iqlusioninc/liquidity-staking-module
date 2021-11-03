@@ -21,7 +21,7 @@ ultimately determining the effective validator set for the system.
 This module will be used in the Cosmos Hub, the first Hub in the Cosmos
 network.
 
-This module has been extended with a liquid staking implementation to enable the creation of nonfungible tokenized staking shares to be used to be synthetic staked assets.
+This module has been extended with a liquid staking implementation to enable the creation of nonfungible tokenized staking shares to be used to be synthetic staked assets. The governing philosphy of this design is that it optimizes for allowing a smooth upgrade path from the existing cosmos staking module at the expense of the usability of the native staking token. It is anticipated that DAOs will form that accept these assets and issue a more usable underlying asset. 
 
 ## Contents
 
