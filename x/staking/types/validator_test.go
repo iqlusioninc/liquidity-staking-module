@@ -93,7 +93,7 @@ func TestRemoveTokens(t *testing.T) {
 
 	// update validator to from bonded -> unbonded
 	validator = validator.UpdateStatus(sdkstaking.Unbonded)
-	require.Equal(t, types.Unbonded, validator.Status)
+	require.Equal(t, sdkstaking.Unbonded, validator.Status)
 
 	validator = validator.RemoveTokens(sdk.NewInt(10))
 	require.Panics(t, func() { validator.RemoveTokens(sdk.NewInt(-1)) })
@@ -116,7 +116,7 @@ func TestAddTokensValidatorUnbonding(t *testing.T) {
 	validator, delShares := validator.AddTokensFromDel(sdk.NewInt(10))
 
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), delShares))
-	assert.Equal(t, types.Unbonding, validator.Status)
+	assert.Equal(t, sdkstaking.Unbonding, validator.Status)
 	assert.True(sdk.IntEq(t, sdk.NewInt(10), validator.Tokens))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 }
@@ -128,7 +128,7 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 	validator, delShares := validator.AddTokensFromDel(sdk.NewInt(10))
 
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), delShares))
-	assert.Equal(t, types.Unbonded, validator.Status)
+	assert.Equal(t, sdkstaking.Unbonded, validator.Status)
 	assert.True(sdk.IntEq(t, sdk.NewInt(10), validator.Tokens))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 }
@@ -173,20 +173,20 @@ func TestAddTokensFromDel(t *testing.T) {
 func TestUpdateStatus(t *testing.T) {
 	validator := newValidator(t, valAddr1, pk1)
 	validator, _ = validator.AddTokensFromDel(sdk.NewInt(100))
-	require.Equal(t, types.Unbonded, validator.Status)
+	require.Equal(t, sdkstaking.Unbonded, validator.Status)
 	require.Equal(t, int64(100), validator.Tokens.Int64())
 
 	// Unbonded to Bonded
 	validator = validator.UpdateStatus(sdkstaking.Bonded)
-	require.Equal(t, types.Bonded, validator.Status)
+	require.Equal(t, sdkstaking.Bonded, validator.Status)
 
 	// Bonded to Unbonding
 	validator = validator.UpdateStatus(sdkstaking.Unbonding)
-	require.Equal(t, types.Unbonding, validator.Status)
+	require.Equal(t, sdkstaking.Unbonding, validator.Status)
 
 	// Unbonding to Bonded
 	validator = validator.UpdateStatus(sdkstaking.Bonded)
-	require.Equal(t, types.Bonded, validator.Status)
+	require.Equal(t, sdkstaking.Bonded, validator.Status)
 }
 
 func TestPossibleOverflow(t *testing.T) {

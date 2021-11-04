@@ -17,9 +17,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
+	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/keeper"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/teststaking"
@@ -84,8 +85,8 @@ func TestValidatorByPowerIndex(t *testing.T) {
 
 	validator, found = app.StakingKeeper.GetValidator(ctx, validatorAddr)
 	require.True(t, found)
-	require.Equal(t, types.Unbonding, validator.Status)    // ensure is unbonding
-	require.Equal(t, initBond.QuoRaw(2), validator.Tokens) // ensure tokens slashed
+	require.Equal(t, sdkstaking.Unbonding, validator.Status) // ensure is unbonding
+	require.Equal(t, initBond.QuoRaw(2), validator.Tokens)   // ensure tokens slashed
 	app.StakingKeeper.Unjail(ctx, consAddr0)
 
 	// the old power record should have been deleted as the power changed
@@ -130,7 +131,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	valTokens := tstaking.CreateValidatorWithValPower(addr1, pk1, 10, true)
 	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
-	validator := tstaking.CheckValidator(addr1, types.Bonded, false)
+	validator := tstaking.CheckValidator(addr1, sdkstaking.Bonded, false)
 	assert.Equal(t, addr1.String(), validator.OperatorAddress)
 	consKey, err := validator.TmConsPublicKey()
 	require.NoError(t, err)
@@ -155,7 +156,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, 1, len(updates))
 
-	validator = tstaking.CheckValidator(addr2, types.Bonded, false)
+	validator = tstaking.CheckValidator(addr2, sdkstaking.Bonded, false)
 	assert.Equal(t, addr2.String(), validator.OperatorAddress)
 	consPk, err := validator.TmConsPublicKey()
 	require.NoError(t, err)
@@ -231,7 +232,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	require.Equal(t, 1, len(updates))
 
 	// verify the validator exists and has the correct attributes
-	validator := tstaking.CheckValidator(valAddr, types.Bonded, false)
+	validator := tstaking.CheckValidator(valAddr, sdkstaking.Bonded, false)
 	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt())
 	require.Equal(t, bondAmount, validator.BondedTokens())
 
@@ -239,7 +240,7 @@ func TestLegacyValidatorDelegations(t *testing.T) {
 	tstaking.Delegate(delAddr, valAddr, bondAmount)
 
 	// verify validator bonded shares
-	validator = tstaking.CheckValidator(valAddr, types.Bonded, false)
+	validator = tstaking.CheckValidator(valAddr, sdkstaking.Bonded, false)
 	require.Equal(t, bondAmount.MulRaw(2), validator.DelegatorShares.RoundInt())
 	require.Equal(t, bondAmount.MulRaw(2), validator.BondedTokens())
 
@@ -307,7 +308,7 @@ func TestIncrementsMsgDelegate(t *testing.T) {
 	// apply TM updates
 	app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 
-	validator := tstaking.CheckValidator(validatorAddr, types.Bonded, false)
+	validator := tstaking.CheckValidator(validatorAddr, sdkstaking.Bonded, false)
 	require.Equal(t, bondAmount, validator.DelegatorShares.RoundInt())
 	require.Equal(t, bondAmount, validator.BondedTokens(), "validator: %v", validator)
 
@@ -1065,7 +1066,7 @@ func TestUnbondingWhenExcessValidators(t *testing.T) {
 	// the total number of validators should stay the same
 	vals := app.StakingKeeper.GetLastValidators(ctx)
 	require.Equal(t, 2, len(vals), "vals %v", vals)
-	tstaking.CheckValidator(val1, types.Bonded, false)
+	tstaking.CheckValidator(val1, sdkstaking.Bonded, false)
 }
 
 func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
@@ -1160,7 +1161,7 @@ func TestBondUnbondRedelegateSlashTwice(t *testing.T) {
 	// validator power should have been reduced to zero
 	// validator should be in unbonding state
 	validator, _ = app.StakingKeeper.GetValidator(ctx, valA)
-	require.Equal(t, validator.GetStatus(), types.Unbonding)
+	require.Equal(t, validator.GetStatus(), sdkstaking.Unbonding)
 }
 
 func TestInvalidMsg(t *testing.T) {

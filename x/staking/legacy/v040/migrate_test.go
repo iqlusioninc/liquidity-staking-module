@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	v034staking "github.com/iqlusioninc/liquidity-staking-module/x/staking/legacy/v034"
 	v038staking "github.com/iqlusioninc/liquidity-staking-module/x/staking/legacy/v038"
 	v040staking "github.com/iqlusioninc/liquidity-staking-module/x/staking/legacy/v040"
