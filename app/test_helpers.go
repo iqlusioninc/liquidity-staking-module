@@ -29,6 +29,7 @@ import (
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
@@ -108,7 +109,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 			OperatorAddress:   sdk.ValAddress(val.Address).String(),
 			ConsensusPubkey:   pkAny,
 			Jailed:            false,
-			Status:            stakingtypes.Bonded,
+			Status:            sdkstaking.Bonded,
 			Tokens:            bondAmt,
 			DelegatorShares:   sdk.OneDec(),
 			Description:       stakingtypes.Description{},
