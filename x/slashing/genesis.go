@@ -1,18 +1,17 @@
 package slashing
 
 import (
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/keeper"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
+	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 // InitGenesis initialize default parameters
 // and the keeper's address to pubkey map
 func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.StakingKeeper, data *types.GenesisState) {
 	stakingKeeper.IterateValidators(ctx,
-		func(index int64, validator sdkstaking.ValidatorI) bool {
+		func(index int64, validator stakingtypes.ValidatorI) bool {
 			consPk, err := validator.ConsPubKey()
 			if err != nil {
 				panic(err)
@@ -38,12 +37,6 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.Stak
 		for _, missed := range array.MissedBlocks {
 			keeper.SetValidatorMissedBlockBitArray(ctx, address, missed.Index, missed.Missed)
 		}
-	}
-
-	epochNumber := stakingKeeper.GetEpochNumber(ctx)
-
-	for _, msg := range data.BufferedMsgs {
-		keeper.RestoreEpochAction(ctx, epochNumber, msg)
 	}
 
 	keeper.SetParams(ctx, data.Params)
@@ -72,16 +65,6 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) (data *types.GenesisSt
 
 		return false
 	})
-	msgs := keeper.GetEpochActions(ctx)
 
-	var anys []*codectypes.Any
-	for _, msg := range msgs {
-		any, err := codectypes.NewAnyWithValue(msg)
-		if err != nil {
-			panic(err)
-		}
-		anys = append(anys, any)
-	}
-
-	return types.NewGenesisState(params, signingInfos, missedBlocks, anys)
+	return types.NewGenesisState(params, signingInfos, missedBlocks)
 }

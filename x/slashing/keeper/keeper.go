@@ -8,7 +8,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	epochingkeeper "github.com/cosmos/cosmos-sdk/x/epoching/keeper"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
 )
 
@@ -17,7 +16,6 @@ type Keeper struct {
 	storeKey   sdk.StoreKey
 	cdc        codec.BinaryCodec
 	sk         types.StakingKeeper
-	ek         epochingkeeper.Keeper
 	paramspace types.ParamSubspace
 }
 
@@ -32,7 +30,6 @@ func NewKeeper(cdc codec.BinaryCodec, key sdk.StoreKey, sk types.StakingKeeper, 
 		storeKey:   key,
 		cdc:        cdc,
 		sk:         sk,
-		ek:         epochingkeeper.NewKeeper(cdc, key),
 		paramspace: paramspace,
 	}
 }
@@ -68,34 +65,29 @@ func (k Keeper) GetPubkey(ctx sdk.Context, a cryptotypes.Address) (cryptotypes.P
 // Slash attempts to slash a validator. The slash is delegated to the staking
 // module to make the necessary validator changes.
 func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdk.Dec, power, distributionHeight int64) {
-	coinsBurned := k.sk.Slash(ctx, consAddr, distributionHeight, power, fraction)
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSlash,
 			sdk.NewAttribute(types.AttributeKeyAddress, consAddr.String()),
 			sdk.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
 			sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueDoubleSign),
-			sdk.NewAttribute(types.AttributeKeyBurnedCoins, coinsBurned.String()),
 		),
 	)
-	// epoch slashing action for next epoch
-	validator := k.sk.ValidatorByConsAddr(ctx, consAddr)
-	if validator != nil {
-		// TODO: it's not percent but power, should make a fix
-		k.ek.QueueMsgForEpoch(ctx, k.sk.GetEpochNumber(ctx), types.NewSlashEvent(validator.GetOperator(), sdk.NewDec(power), fraction, distributionHeight, power))
-	}
+
+	k.sk.Slash(ctx, consAddr, distributionHeight, power, fraction)
 }
 
 // Jail attempts to jail a validator. The slash is delegated to the staking module
 // to make the necessary validator changes.
 func (k Keeper) Jail(ctx sdk.Context, consAddr sdk.ConsAddress) {
-	k.sk.Jail(ctx, consAddr)
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSlash,
 			sdk.NewAttribute(types.AttributeKeyJailed, consAddr.String()),
 		),
 	)
+
+	k.sk.Jail(ctx, consAddr)
 }
 
 func (k Keeper) deleteAddrPubkeyRelation(ctx sdk.Context, addr cryptotypes.Address) {

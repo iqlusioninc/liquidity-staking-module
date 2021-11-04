@@ -12,24 +12,22 @@ import (
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
-	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/teststaking"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
-func bootstrapGenesisTest(t *testing.T, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
-	_, app, ctx := getBaseSimappWithCustomKeeper(t)
+func bootstrapGenesisTest(numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
+	_, app, ctx := getBaseSimappWithCustomKeeper()
 
 	addrDels, _ := generateAddresses(app, ctx, numAddrs, sdk.NewInt(10000))
 	return app, ctx, addrDels
 }
 
 func TestInitGenesis(t *testing.T) {
-	app, ctx, addrs := bootstrapGenesisTest(t, 10)
+	app, ctx, addrs := bootstrapGenesisTest(10)
 
 	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 1)
 
@@ -47,7 +45,7 @@ func TestInitGenesis(t *testing.T) {
 	bondedVal1 := types.Validator{
 		OperatorAddress: sdk.ValAddress(addrs[0]).String(),
 		ConsensusPubkey: pk0,
-		Status:          sdkstaking.Bonded,
+		Status:          types.Bonded,
 		Tokens:          valTokens,
 		DelegatorShares: valTokens.ToDec(),
 		Description:     types.NewDescription("hoop", "", "", "", ""),
@@ -55,7 +53,7 @@ func TestInitGenesis(t *testing.T) {
 	bondedVal2 := types.Validator{
 		OperatorAddress: sdk.ValAddress(addrs[1]).String(),
 		ConsensusPubkey: pk1,
-		Status:          sdkstaking.Bonded,
+		Status:          types.Bonded,
 		Tokens:          valTokens,
 		DelegatorShares: valTokens.ToDec(),
 		Description:     types.NewDescription("bloop", "", "", "", ""),
@@ -66,7 +64,7 @@ func TestInitGenesis(t *testing.T) {
 	log.Printf("%#v", len(validators))
 	// mint coins in the bonded pool representing the validators coins
 	require.NoError(t,
-		testutil.FundModuleAccount(
+		simapp.FundModuleAccount(
 			app.BankKeeper,
 			ctx,
 			types.BondedPoolName,
@@ -78,27 +76,11 @@ func TestInitGenesis(t *testing.T) {
 	genesisState := types.NewGenesisState(params, validators, delegations)
 	vals := staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, genesisState)
 
-	coin := sdk.NewCoin(params.BondDenom, valTokens.MulRaw((int64)(len(validators))))
-
-	msg := types.NewMsgDelegate(sdk.AccAddress(addrs[0]), sdk.ValAddress(addrs[0]), coin)
-
-	app.StakingKeeper.QueueMsgForEpoch(ctx, app.StakingKeeper.GetEpochNumber(ctx), msg)
-
 	actualGenesis := staking.ExportGenesis(ctx, app.StakingKeeper)
 	require.Equal(t, genesisState.Params, actualGenesis.Params)
 	require.Equal(t, genesisState.Delegations, actualGenesis.Delegations)
 	require.EqualValues(t, app.StakingKeeper.GetAllValidators(ctx), actualGenesis.Validators)
-	msgs := app.StakingKeeper.GetEpochActions(ctx)
-	var anys []*codectypes.Any
-	for _, msg := range msgs {
-		any, err := codectypes.NewAnyWithValue(msg)
-		if err != nil {
-			panic(err)
-		}
-		anys = append(anys, any)
-	}
-	require.Equal(t, anys, actualGenesis.BufferedMsgs)
-	fmt.Println(app.StakingKeeper.GetEpochActions(ctx), 11, actualGenesis.BufferedMsgs)
+
 	// Ensure validators have addresses.
 	vals2, err := staking.WriteValidators(ctx, app.StakingKeeper)
 	require.NoError(t, err)
@@ -109,11 +91,11 @@ func TestInitGenesis(t *testing.T) {
 	// now make sure the validators are bonded and intra-tx counters are correct
 	resVal, found := app.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addrs[0]))
 	require.True(t, found)
-	require.Equal(t, sdkstaking.Bonded, resVal.Status)
+	require.Equal(t, types.Bonded, resVal.Status)
 
 	resVal, found = app.StakingKeeper.GetValidator(ctx, sdk.ValAddress(addrs[1]))
 	require.True(t, found)
-	require.Equal(t, sdkstaking.Bonded, resVal.Status)
+	require.Equal(t, types.Bonded, resVal.Status)
 
 	abcivals := make([]abci.ValidatorUpdate, len(vals))
 	for i, val := range validators {
@@ -124,7 +106,7 @@ func TestInitGenesis(t *testing.T) {
 }
 
 func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
-	app := simapp.Setup(t, false)
+	app := simapp.Setup(false)
 	ctx := app.NewContext(false, tmproto.Header{})
 
 	consPub, err := codectypes.NewAnyWithValue(PKs[0])
@@ -151,7 +133,7 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 
 	require.Panics(t, func() {
 		// setting validator status to bonded so the balance counts towards bonded pool
-		validator.Status = sdkstaking.Bonded
+		validator.Status = types.Bonded
 		staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, &types.GenesisState{
 			Params:     params,
 			Validators: []types.Validator{validator},
@@ -160,7 +142,7 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 
 	require.Panics(t, func() {
 		// setting validator status to unbonded so the balance counts towards not bonded pool
-		validator.Status = sdkstaking.Unbonded
+		validator.Status = types.Unbonded
 		staking.InitGenesis(ctx, app.StakingKeeper, app.AccountKeeper, app.BankKeeper, &types.GenesisState{
 			Params:     params,
 			Validators: []types.Validator{validator},
@@ -172,7 +154,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	size := 200
 	require.True(t, size > 100)
 
-	app, ctx, addrs := bootstrapGenesisTest(t, 200)
+	app, ctx, addrs := bootstrapGenesisTest(200)
 
 	params := app.StakingKeeper.GetParams(ctx)
 	delegations := []types.Delegation{}
@@ -184,7 +166,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 		validators[i], err = types.NewValidator(sdk.ValAddress(addrs[i]),
 			PKs[i], types.NewDescription(fmt.Sprintf("#%d", i), "", "", "", ""))
 		require.NoError(t, err)
-		validators[i].Status = sdkstaking.Bonded
+		validators[i].Status = types.Bonded
 
 		tokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 1)
 		if i < 100 {
@@ -200,7 +182,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 
 	// mint coins in the bonded pool representing the validators coins
 	require.NoError(t,
-		testutil.FundModuleAccount(
+		simapp.FundModuleAccount(
 			app.BankKeeper,
 			ctx,
 			types.BondedPoolName,
@@ -243,7 +225,7 @@ func TestValidateGenesis(t *testing.T) {
 		{"jailed and bonded validator", func(data *types.GenesisState) {
 			data.Validators = genValidators1
 			data.Validators[0].Jailed = true
-			data.Validators[0].Status = sdkstaking.Bonded
+			data.Validators[0].Status = types.Bonded
 		}, true},
 	}
 

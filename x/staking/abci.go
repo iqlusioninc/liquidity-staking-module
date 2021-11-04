@@ -22,11 +22,6 @@ func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
 // Called every block, update validator set
 func EndBlocker(ctx sdk.Context, k keeper.Keeper) []abci.ValidatorUpdate {
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyEndBlocker)
-	EpochInterval := k.GetParams(ctx).EpochInterval
-	if ctx.BlockHeight()%EpochInterval == 0 {
-		k.ExecuteEpoch(ctx)
-	}
 
-	// run block validator updates for slashed, jailed validators
 	return k.BlockValidatorUpdates(ctx)
 }

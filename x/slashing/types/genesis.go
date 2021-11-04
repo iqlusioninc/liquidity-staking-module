@@ -4,20 +4,18 @@ import (
 	"fmt"
 	"time"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // NewGenesisState creates a new GenesisState object
 func NewGenesisState(
-	params Params, signingInfos []SigningInfo, missedBlocks []ValidatorMissedBlocks, epochActions []*codectypes.Any,
+	params Params, signingInfos []SigningInfo, missedBlocks []ValidatorMissedBlocks,
 ) *GenesisState {
 
 	return &GenesisState{
 		Params:       params,
 		SigningInfos: signingInfos,
 		MissedBlocks: missedBlocks,
-		BufferedMsgs: epochActions,
 	}
 }
 
@@ -35,7 +33,6 @@ func DefaultGenesisState() *GenesisState {
 		Params:       DefaultParams(),
 		SigningInfos: []SigningInfo{},
 		MissedBlocks: []ValidatorMissedBlocks{},
-		BufferedMsgs: []*codectypes.Any{},
 	}
 }
 

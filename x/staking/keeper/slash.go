@@ -4,7 +4,6 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	types "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
@@ -22,7 +21,7 @@ import (
 // CONTRACT:
 //    Infraction was committed at the current height or at a past height,
 //    not at a height in the future
-func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec) sdk.Int {
+func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec) {
 	logger := k.Logger(ctx)
 
 	if slashFactor.IsNegative() {
@@ -46,7 +45,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 			"WARNING: ignored attempt to slash a nonexistent validator; we recommend you investigate immediately",
 			"validator", consAddr.String(),
 		)
-		return sdk.NewInt(0)
+		return
 	}
 
 	// should not be slashing an unbonded validator
@@ -123,11 +122,11 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	validator = k.RemoveValidatorTokens(ctx, validator, tokensToBurn)
 
 	switch validator.GetStatus() {
-	case sdkstaking.Bonded:
+	case types.Bonded:
 		if err := k.burnBondedTokens(ctx, tokensToBurn); err != nil {
 			panic(err)
 		}
-	case sdkstaking.Unbonding, sdkstaking.Unbonded:
+	case types.Unbonding, types.Unbonded:
 		if err := k.burnNotBondedTokens(ctx, tokensToBurn); err != nil {
 			panic(err)
 		}
@@ -141,7 +140,6 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		"slash_factor", slashFactor.String(),
 		"burned", tokensToBurn,
 	)
-	return tokensToBurn
 }
 
 // jail a validator

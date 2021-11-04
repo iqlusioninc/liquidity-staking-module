@@ -7,14 +7,13 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 )
 
 func TestSetWithdrawAddr(t *testing.T) {
-	app := simapp.Setup(t, false)
+	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000000000))
@@ -36,7 +35,7 @@ func TestSetWithdrawAddr(t *testing.T) {
 }
 
 func TestWithdrawValidatorCommission(t *testing.T) {
-	app := simapp.Setup(t, false)
+	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	valCommission := sdk.DecCoins{
@@ -50,7 +49,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	// set module account coins
 	distrAcc := app.DistrKeeper.GetDistributionAccount(ctx)
 	coins := sdk.NewCoins(sdk.NewCoin("mytoken", sdk.NewInt(2)), sdk.NewCoin("stake", sdk.NewInt(2)))
-	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, distrAcc.GetName(), coins))
+	require.NoError(t, simapp.FundModuleAccount(app.BankKeeper, ctx, distrAcc.GetName(), coins))
 
 	app.AccountKeeper.SetModuleAccount(ctx, distrAcc)
 
@@ -88,7 +87,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 }
 
 func TestGetTotalRewards(t *testing.T) {
-	app := simapp.Setup(t, false)
+	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	valCommission := sdk.DecCoins{
@@ -109,13 +108,13 @@ func TestGetTotalRewards(t *testing.T) {
 }
 
 func TestFundCommunityPool(t *testing.T) {
-	app := simapp.Setup(t, false)
+	app := simapp.Setup(false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.ZeroInt())
 
 	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr[0], amount))
+	require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, addr[0], amount))
 
 	initPool := app.DistrKeeper.GetFeePool(ctx)
 	assert.Empty(t, initPool.CommunityPool)

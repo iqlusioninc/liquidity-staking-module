@@ -10,11 +10,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
-	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
 	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
@@ -39,16 +38,6 @@ func checkValidatorSigningInfo(t *testing.T, app *simapp.SimApp, addr sdk.ConsAd
 	signingInfo, found := app.SlashingKeeper.GetValidatorSigningInfo(ctxCheck, addr)
 	require.Equal(t, expFound, found)
 	return signingInfo
-}
-
-func ExecuteNextEpoch(t *testing.T, app *simapp.SimApp) {
-	lastBlockHeight := app.LastBlockHeight()
-	for height := lastBlockHeight + 1; height <= lastBlockHeight+stakingtypes.DefaultEpochInterval; height++ {
-		header := tmproto.Header{Height: height}
-		app.BeginBlock(abci.RequestBeginBlock{Header: header})
-		app.EndBlock(abci.RequestEndBlock{Height: height})
-		app.Commit()
-	}
 }
 
 func TestSlashingMsgs(t *testing.T) {
@@ -83,8 +72,6 @@ func TestSlashingMsgs(t *testing.T) {
 	txGen := simapp.MakeTestEncodingConfig().TxConfig
 	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
 	require.NoError(t, err)
-	ExecuteNextEpoch(t, app)
-
 	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin.Sub(bondCoin)})
 
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
@@ -92,7 +79,7 @@ func TestSlashingMsgs(t *testing.T) {
 
 	validator := checkValidator(t, app, addr1, true)
 	require.Equal(t, sdk.ValAddress(addr1).String(), validator.OperatorAddress)
-	require.Equal(t, sdkstaking.Bonded, validator.Status)
+	require.Equal(t, stakingtypes.Bonded, validator.Status)
 	require.True(sdk.IntEq(t, bondTokens, validator.BondedTokens()))
 	unjailMsg := &types.MsgUnjail{ValidatorAddr: sdk.ValAddress(addr1).String()}
 

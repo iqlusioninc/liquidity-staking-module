@@ -10,9 +10,8 @@ import (
 //
 // - BondedPool -> "bonded_tokens_pool"
 const (
-	EpochDelegationPoolName = "epoch_temp_tokens_pool"
-	NotBondedPoolName       = "not_bonded_tokens_pool"
-	BondedPoolName          = "bonded_tokens_pool"
+	NotBondedPoolName = "not_bonded_tokens_pool"
+	BondedPoolName    = "bonded_tokens_pool"
 )
 
 // NewPool creates a new Pool instance used for queries

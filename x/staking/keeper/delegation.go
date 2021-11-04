@@ -7,7 +7,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
@@ -102,19 +101,15 @@ func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 }
 
 // remove a delegation
-func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) error {
+func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
 	delegatorAddress, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
 	if err != nil {
 		panic(err)
 	}
 	// TODO: Consider calling hooks outside of the store wrapper functions, it's unobvious.
-	if err := k.BeforeDelegationRemoved(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
-		return err
-	}
-
+	k.BeforeDelegationRemoved(ctx, delegatorAddress, delegation.GetValidatorAddr())
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetDelegationKey(delegatorAddress, delegation.GetValidatorAddr()))
-	return nil
 }
 
 // return a given amount of all the delegator unbonding-delegations
@@ -550,8 +545,8 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time
 // Delegate performs a delegation, set/update everything necessary within the store.
 // tokenSrc indicates the bond status of the incoming funds.
 func (k Keeper) Delegate(
-	ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Int, tokenSrc sdkstaking.BondStatus,
-	validator types.Validator, subtractEpochPool bool,
+	ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Int, tokenSrc types.BondStatus,
+	validator types.Validator, subtractAccount bool,
 ) (newShares sdk.Dec, err error) {
 	// In some situations, the exchange rate becomes invalid, e.g. if
 	// Validator loses all tokens due to slashing. In this case,
@@ -568,13 +563,9 @@ func (k Keeper) Delegate(
 
 	// call the appropriate hook if present
 	if found {
-		err = k.BeforeDelegationSharesModified(ctx, delAddr, validator.GetOperator())
+		k.BeforeDelegationSharesModified(ctx, delAddr, validator.GetOperator())
 	} else {
-		err = k.BeforeDelegationCreated(ctx, delAddr, validator.GetOperator())
-	}
-
-	if err != nil {
-		return sdk.ZeroDec(), err
+		k.BeforeDelegationCreated(ctx, delAddr, validator.GetOperator())
 	}
 
 	delegatorAddress, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
@@ -582,11 +573,11 @@ func (k Keeper) Delegate(
 		panic(err)
 	}
 
-	if subtractEpochPool {
-		// if subtractEpochPool is true then we are
-		// performing a delegation and not a redelegation, thus the source tokens are
-		// all non bonded
-		if tokenSrc == sdkstaking.Bonded {
+	// if subtractAccount is true then we are
+	// performing a delegation and not a redelegation, thus the source tokens are
+	// all non bonded
+	if subtractAccount {
+		if tokenSrc == types.Bonded {
 			panic("delegation token source cannot be bonded")
 		}
 
@@ -602,20 +593,20 @@ func (k Keeper) Delegate(
 		}
 
 		coins := sdk.NewCoins(sdk.NewCoin(k.BondDenom(ctx), bondAmt))
-		if err := k.bankKeeper.SendCoinsFromModuleToModule(ctx, types.EpochDelegationPoolName, sendName, coins); err != nil {
+		if err := k.bankKeeper.DelegateCoinsFromAccountToModule(ctx, delegatorAddress, sendName, coins); err != nil {
 			return sdk.Dec{}, err
 		}
 	} else {
 		// potentially transfer tokens between pools, if
 		switch {
-		case tokenSrc == sdkstaking.Bonded && validator.IsBonded():
+		case tokenSrc == types.Bonded && validator.IsBonded():
 			// do nothing
-		case (tokenSrc == sdkstaking.Unbonded || tokenSrc == sdkstaking.Unbonding) && !validator.IsBonded():
+		case (tokenSrc == types.Unbonded || tokenSrc == types.Unbonding) && !validator.IsBonded():
 			// do nothing
-		case (tokenSrc == sdkstaking.Unbonded || tokenSrc == sdkstaking.Unbonding) && validator.IsBonded():
+		case (tokenSrc == types.Unbonded || tokenSrc == types.Unbonding) && validator.IsBonded():
 			// transfer pools
 			k.notBondedTokensToBonded(ctx, bondAmt)
-		case tokenSrc == sdkstaking.Bonded && !validator.IsBonded():
+		case tokenSrc == types.Bonded && !validator.IsBonded():
 			// transfer pools
 			k.bondedTokensToNotBonded(ctx, bondAmt)
 		default:
@@ -630,9 +621,7 @@ func (k Keeper) Delegate(
 	k.SetDelegation(ctx, delegation)
 
 	// Call the after-modification hook
-	if err := k.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
-		return newShares, err
-	}
+	k.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr())
 
 	return newShares, nil
 }
@@ -648,9 +637,7 @@ func (k Keeper) Unbond(
 	}
 
 	// call the before-delegation-modified hook
-	if err := k.BeforeDelegationSharesModified(ctx, delAddr, valAddr); err != nil {
-		return amount, err
-	}
+	k.BeforeDelegationSharesModified(ctx, delAddr, valAddr)
 
 	// ensure that we have enough shares to remove
 	if delegation.Shares.LT(shares) {
@@ -683,15 +670,11 @@ func (k Keeper) Unbond(
 
 	// remove the delegation
 	if delegation.Shares.IsZero() {
-		err = k.RemoveDelegation(ctx, delegation)
+		k.RemoveDelegation(ctx, delegation)
 	} else {
 		k.SetDelegation(ctx, delegation)
 		// call the after delegation modification hook
-		err = k.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr())
-	}
-
-	if err != nil {
-		return amount, err
+		k.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr())
 	}
 
 	// remove the shares and coins from the validator

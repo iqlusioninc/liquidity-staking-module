@@ -7,11 +7,10 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
-	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
@@ -38,16 +37,6 @@ func checkDelegation(
 	}
 
 	require.False(t, found)
-}
-
-func ExecuteNextEpoch(t *testing.T, app *simapp.SimApp) {
-	lastBlockHeight := app.LastBlockHeight()
-	for height := lastBlockHeight + 1; height <= lastBlockHeight+types.DefaultEpochInterval; height++ {
-		header := tmproto.Header{Height: height}
-		app.BeginBlock(abci.RequestBeginBlock{Header: header})
-		app.EndBlock(abci.RequestEndBlock{Height: height})
-		app.Commit()
-	}
 }
 
 func TestStakingMsgs(t *testing.T) {
@@ -85,8 +74,6 @@ func TestStakingMsgs(t *testing.T) {
 	txGen := simapp.MakeTestEncodingConfig().TxConfig
 	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{createValidatorMsg}, "", []uint64{0}, []uint64{0}, true, true, priv1)
 	require.NoError(t, err)
-	ExecuteNextEpoch(t, app)
-
 	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin.Sub(bondCoin)})
 
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
@@ -94,7 +81,7 @@ func TestStakingMsgs(t *testing.T) {
 
 	validator := checkValidator(t, app, sdk.ValAddress(addr1), true)
 	require.Equal(t, sdk.ValAddress(addr1).String(), validator.OperatorAddress)
-	require.Equal(t, sdkstaking.Bonded, validator.Status)
+	require.Equal(t, types.Bonded, validator.Status)
 	require.True(sdk.IntEq(t, bondTokens, validator.BondedTokens()))
 
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
@@ -107,7 +94,6 @@ func TestStakingMsgs(t *testing.T) {
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
 	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{editValidatorMsg}, "", []uint64{0}, []uint64{1}, true, true, priv1)
 	require.NoError(t, err)
-	ExecuteNextEpoch(t, app)
 
 	validator = checkValidator(t, app, sdk.ValAddress(addr1), true)
 	require.Equal(t, description, validator.Description)
@@ -119,7 +105,6 @@ func TestStakingMsgs(t *testing.T) {
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
 	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{delegateMsg}, "", []uint64{1}, []uint64{0}, true, true, priv2)
 	require.NoError(t, err)
-	ExecuteNextEpoch(t, app)
 
 	simapp.CheckBalance(t, app, addr2, sdk.Coins{genCoin.Sub(bondCoin)})
 	checkDelegation(t, app, addr2, sdk.ValAddress(addr1), true, bondTokens.ToDec())
@@ -129,7 +114,6 @@ func TestStakingMsgs(t *testing.T) {
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
 	_, _, err = simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{beginUnbondingMsg}, "", []uint64{1}, []uint64{1}, true, true, priv2)
 	require.NoError(t, err)
-	ExecuteNextEpoch(t, app)
 
 	// delegation should exist anymore
 	checkDelegation(t, app, addr2, sdk.ValAddress(addr1), false, sdk.Dec{})

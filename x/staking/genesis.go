@@ -2,14 +2,13 @@ package staking
 
 import (
 	"fmt"
+	"log"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
-	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/keeper"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
@@ -45,9 +44,7 @@ func InitGenesis(
 
 		// Call the creation hook if not exported
 		if !data.Exported {
-			if err := keeper.AfterValidatorCreated(ctx, validator.GetOperator()); err != nil {
-				panic(err)
-			}
+			keeper.AfterValidatorCreated(ctx, validator.GetOperator())
 		}
 
 		// update timeslice if necessary
@@ -56,9 +53,9 @@ func InitGenesis(
 		}
 
 		switch validator.GetStatus() {
-		case sdkstaking.Bonded:
+		case types.Bonded:
 			bondedTokens = bondedTokens.Add(validator.GetTokens())
-		case sdkstaking.Unbonding, sdkstaking.Unbonded:
+		case types.Unbonding, types.Unbonded:
 			notBondedTokens = notBondedTokens.Add(validator.GetTokens())
 		default:
 			panic("invalid validator status")
@@ -73,17 +70,13 @@ func InitGenesis(
 
 		// Call the before-creation hook if not exported
 		if !data.Exported {
-			if err := keeper.BeforeDelegationCreated(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
-				panic(err)
-			}
+			keeper.BeforeDelegationCreated(ctx, delegatorAddress, delegation.GetValidatorAddr())
 		}
 
 		keeper.SetDelegation(ctx, delegation)
 		// Call the after-modification hook if not exported
 		if !data.Exported {
-			if err := keeper.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
-				panic(err)
-			}
+			keeper.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr())
 		}
 	}
 
@@ -156,15 +149,8 @@ func InitGenesis(
 		var err error
 		res, err = keeper.ApplyAndReturnValidatorSetUpdates(ctx)
 		if err != nil {
-			panic(err)
+			log.Fatal(err)
 		}
-	}
-
-	epochNumber := data.EpochNumber
-	keeper.SetEpochNumber(ctx, epochNumber)
-
-	for _, msg := range data.BufferedMsgs {
-		keeper.RestoreEpochAction(ctx, epochNumber, msg)
 	}
 
 	return res
@@ -195,18 +181,6 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 		return false
 	})
 
-	fmt.Println(keeper.GetEpochActions(ctx), 11)
-	msgs := keeper.GetEpochActions(ctx)
-
-	var anys []*codectypes.Any
-	for _, msg := range msgs {
-		any, err := codectypes.NewAnyWithValue(msg)
-		if err != nil {
-			panic(err)
-		}
-		anys = append(anys, any)
-	}
-
 	return &types.GenesisState{
 		Params:               keeper.GetParams(ctx),
 		LastTotalPower:       keeper.GetLastTotalPower(ctx),
@@ -215,14 +189,13 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 		Delegations:          keeper.GetAllDelegations(ctx),
 		UnbondingDelegations: unbondingDelegations,
 		Redelegations:        redelegations,
-		BufferedMsgs:         anys,
 		Exported:             true,
 	}
 }
 
 // WriteValidators returns a slice of bonded genesis validators.
 func WriteValidators(ctx sdk.Context, keeper keeper.Keeper) (vals []tmtypes.GenesisValidator, err error) {
-	keeper.IterateLastValidators(ctx, func(_ int64, validator sdkstaking.ValidatorI) (stop bool) {
+	keeper.IterateLastValidators(ctx, func(_ int64, validator types.ValidatorI) (stop bool) {
 		pk, err := validator.ConsPubKey()
 		if err != nil {
 			return true

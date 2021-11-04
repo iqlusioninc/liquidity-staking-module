@@ -2,9 +2,9 @@
 order: 6
 -->
 
-# Events
+# Tags
 
-The slashing module emits the following events:
+The slashing module emits the following events/tags:
 
 ## MsgServer
 
@@ -25,7 +25,6 @@ The slashing module emits the following events:
 | slash | power         | {validatorPower}            |
 | slash | reason        | {slashReason}               |
 | slash | jailed [0]    | {validatorConsensusAddress} |
-| slash | burned coins  | {sdk.Int}                   |
 
 - [0] Only included if the validator is jailed.
 

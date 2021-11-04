@@ -2,7 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	v043 "github.com/iqlusioninc/liquidity-staking-module/x/slashing/migrations/v043"
+	v043 "github.com/iqlusioninc/liquidity-staking-module/x/slashing/legacy/v043"
 )
 
 // Migrator is a struct for handling in-place store migrations.

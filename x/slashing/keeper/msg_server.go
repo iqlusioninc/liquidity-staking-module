@@ -9,16 +9,12 @@ import (
 
 type msgServer struct {
 	Keeper
-	stakingKeeper types.StakingKeeper
 }
 
 // NewMsgServerImpl returns an implementation of the slashing MsgServer interface
 // for the provided Keeper.
-func NewMsgServerImpl(keeper Keeper, stakingKeeper types.StakingKeeper) types.MsgServer {
-	return &msgServer{
-		Keeper:        keeper,
-		stakingKeeper: stakingKeeper,
-	}
+func NewMsgServerImpl(keeper Keeper) types.MsgServer {
+	return &msgServer{Keeper: keeper}
 }
 
 var _ types.MsgServer = msgServer{}
@@ -28,17 +24,23 @@ var _ types.MsgServer = msgServer{}
 // having been jailed (and thus unbonded) for downtime
 func (k msgServer) Unjail(goCtx context.Context, msg *types.MsgUnjail) (*types.MsgUnjailResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
-	// Queue epoch action and move all the execution logic to Epoch execution
 
-	epochNumber := k.stakingKeeper.GetEpochNumber(ctx)
-	k.ek.QueueMsgForEpoch(ctx, epochNumber, msg)
-
-	cacheCtx, _ := ctx.CacheContext()
-	cacheCtx = cacheCtx.WithBlockHeight(k.stakingKeeper.GetNextEpochHeight(ctx))
-	cacheCtx = cacheCtx.WithBlockTime(k.stakingKeeper.GetNextEpochTime(ctx))
-	err := k.executeQueuedUnjailMsg(cacheCtx, msg)
+	valAddr, valErr := sdk.ValAddressFromBech32(msg.ValidatorAddr)
+	if valErr != nil {
+		return nil, valErr
+	}
+	err := k.Keeper.Unjail(ctx, valAddr)
 	if err != nil {
 		return nil, err
 	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdk.EventTypeMessage,
+			sdk.NewAttribute(sdk.AttributeKeyModule, types.AttributeValueCategory),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.ValidatorAddr),
+		),
+	)
+
 	return &types.MsgUnjailResponse{}, nil
 }

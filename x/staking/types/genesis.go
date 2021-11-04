@@ -7,7 +7,7 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 )
 
-// NewGenesisState creates a new GenesisState instance
+// NewGenesisState creates a new GenesisState instanc e
 func NewGenesisState(params Params, validators []Validator, delegations []Delegation) *GenesisState {
 	return &GenesisState{
 		Params:      params,

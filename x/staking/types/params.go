@@ -30,9 +30,6 @@ const (
 	// value by not adding the staking module to the application module manager's
 	// SetOrderBeginBlockers.
 	DefaultHistoricalEntries uint32 = 10000
-
-	// Default Epoch interval is 10 blocks time
-	DefaultEpochInterval int64 = 10
 )
 
 var (
@@ -42,7 +39,6 @@ var (
 	KeyBondDenom         = []byte("BondDenom")
 	KeyHistoricalEntries = []byte("HistoricalEntries")
 	KeyPowerReduction    = []byte("PowerReduction")
-	KeyEpochInterval     = []byte("EpochInterval")
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
@@ -53,14 +49,13 @@ func ParamKeyTable() paramtypes.KeyTable {
 }
 
 // NewParams creates a new Params instance
-func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string, epochInterval int64) Params {
+func NewParams(unbondingTime time.Duration, maxValidators, maxEntries, historicalEntries uint32, bondDenom string) Params {
 	return Params{
 		UnbondingTime:     unbondingTime,
 		MaxValidators:     maxValidators,
 		MaxEntries:        maxEntries,
 		HistoricalEntries: historicalEntries,
 		BondDenom:         bondDenom,
-		EpochInterval:     epochInterval,
 	}
 }
 
@@ -72,7 +67,6 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyMaxEntries, &p.MaxEntries, validateMaxEntries),
 		paramtypes.NewParamSetPair(KeyHistoricalEntries, &p.HistoricalEntries, validateHistoricalEntries),
 		paramtypes.NewParamSetPair(KeyBondDenom, &p.BondDenom, validateBondDenom),
-		paramtypes.NewParamSetPair(KeyEpochInterval, &p.EpochInterval, validateEpochInterval),
 	}
 }
 
@@ -84,7 +78,6 @@ func DefaultParams() Params {
 		DefaultMaxEntries,
 		DefaultHistoricalEntries,
 		sdk.DefaultBondDenom,
-		DefaultEpochInterval,
 	)
 }
 
@@ -197,18 +190,6 @@ func validateBondDenom(i interface{}) error {
 		return err
 	}
 
-	return nil
-}
-
-func validateEpochInterval(i interface{}) error {
-	v, ok := i.(int64)
-	if !ok {
-		return fmt.Errorf("invalid parameter type: %T", i)
-	}
-
-	if v < 1 {
-		return fmt.Errorf("epoch interval should be positive integer")
-	}
 	return nil
 }
 

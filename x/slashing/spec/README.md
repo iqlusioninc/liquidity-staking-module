@@ -1,5 +1,5 @@
 <!--
-order: 0
+order: 20
 title: Slashing Overview
 parent:
   title: "slashing"

@@ -84,8 +84,6 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 			// That's fine since this is just used to filter unbonding delegations & redelegations.
 			distributionHeight := height - sdk.ValidatorUpdateDelay - 1
 
-			// TODO: we might need to trigger event on epoch execution
-			coinsBurned := k.sk.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
 			ctx.EventManager().EmitEvent(
 				sdk.NewEvent(
 					types.EventTypeSlash,
@@ -93,13 +91,9 @@ func (k Keeper) HandleValidatorSignature(ctx sdk.Context, addr cryptotypes.Addre
 					sdk.NewAttribute(types.AttributeKeyPower, fmt.Sprintf("%d", power)),
 					sdk.NewAttribute(types.AttributeKeyReason, types.AttributeValueMissingSignature),
 					sdk.NewAttribute(types.AttributeKeyJailed, consAddr.String()),
-					sdk.NewAttribute(types.AttributeKeyBurnedCoins, coinsBurned.String()),
 				),
 			)
-			// queue slashing action for next epoch
-			// TODO: it's not percent but power, should make a fix
-			k.ek.QueueMsgForEpoch(ctx, k.sk.GetEpochNumber(ctx), types.NewSlashEvent(validator.GetOperator(), sdk.NewDec(power), k.SlashFractionDowntime(ctx), distributionHeight, power))
-			// This initiates jail based on down time
+			k.sk.Slash(ctx, consAddr, distributionHeight, power, k.SlashFractionDowntime(ctx))
 			k.sk.Jail(ctx, consAddr)
 
 			signInfo.JailedUntil = ctx.BlockHeader().Time.Add(k.DowntimeJailDuration(ctx))
