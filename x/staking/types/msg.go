@@ -26,6 +26,7 @@ var (
 	_ sdk.Msg                            = &MsgDelegate{}
 	_ sdk.Msg                            = &MsgUndelegate{}
 	_ sdk.Msg                            = &MsgBeginRedelegate{}
+	_ sdk.Msg                            = &MsgTransferTokenizeShareRecord{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -362,6 +363,27 @@ func (msg MsgUndelegate) ValidateBasic() error {
 			sdkerrors.ErrInvalidRequest,
 			"invalid shares amount",
 		)
+	}
+
+	return nil
+}
+
+func (msg MsgTransferTokenizeShareRecord) GetSigners() []sdk.AccAddress {
+	sender, _ := sdk.AccAddressFromBech32(msg.Sender)
+	return []sdk.AccAddress{sender}
+}
+
+func (msg MsgTransferTokenizeShareRecord) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg MsgTransferTokenizeShareRecord) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.NewOwner); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid new owner address: %s", err)
 	}
 
 	return nil
