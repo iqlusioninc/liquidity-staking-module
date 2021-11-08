@@ -12,7 +12,7 @@ import (
 )
 
 func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	_, app, ctx := createTestInput()
 
 	testCases := []struct {
 		name                          string
@@ -74,7 +74,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, app, ctx = createTestInput(t)
+			_, app, ctx = createTestInput()
 			addrs := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
 			addrAcc1, addrAcc2 := addrs[0], addrs[1]
 			addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
@@ -169,7 +169,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 }
 
 func TestTransferTokenizeShareRecord(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	_, app, ctx := createTestInput()
 
 	addrs := simapp.AddTestAddrs(app, ctx, 3, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
 	addrAcc1, addrAcc2, valAcc := addrs[0], addrs[1], addrs[2]
