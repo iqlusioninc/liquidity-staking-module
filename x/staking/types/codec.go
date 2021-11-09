@@ -17,6 +17,8 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgDelegate{}, "cosmos-sdk/MsgDelegate", nil)
 	cdc.RegisterConcrete(&MsgUndelegate{}, "cosmos-sdk/MsgUndelegate", nil)
 	cdc.RegisterConcrete(&MsgBeginRedelegate{}, "cosmos-sdk/MsgBeginRedelegate", nil)
+	cdc.RegisterConcrete(&MsgTokenizeShares{}, "cosmos-sdk/MsgTokenizeShares", nil)
+	cdc.RegisterConcrete(&MsgRedeemTokensforShares{}, "cosmos-sdk/MsgRedeemTokensforShares", nil)
 	cdc.RegisterConcrete(&MsgTransferTokenizeShareRecord{}, "cosmos-sdk/MsgTransferTokenizeShareRecord", nil)
 }
 
@@ -28,6 +30,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgDelegate{},
 		&MsgUndelegate{},
 		&MsgBeginRedelegate{},
+		&MsgTokenizeShares{},
+		&MsgRedeemTokensforShares{},
 		&MsgTransferTokenizeShareRecord{},
 	)
 	registry.RegisterImplementations(
