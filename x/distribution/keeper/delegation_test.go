@@ -129,9 +129,10 @@ func TestWithdrawTokenizeShareRecordReward(t *testing.T) {
 	delTokens := sdk.NewInt(1000000)
 	msgServer := stakingkeeper.NewMsgServerImpl(app.StakingKeeper)
 	resp, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &stakingtypes.MsgTokenizeShares{
-		DelegatorAddress: sdk.AccAddress(valAddrs[0]).String(),
-		ValidatorAddress: valAddrs[0].String(),
-		Amount:           sdk.NewCoin(sdk.DefaultBondDenom, delTokens),
+		DelegatorAddress:    sdk.AccAddress(valAddrs[0]).String(),
+		ValidatorAddress:    valAddrs[0].String(),
+		TokenizedShareOwner: sdk.AccAddress(valAddrs[0]).String(),
+		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, delTokens),
 	})
 
 	// assert tokenize share response
