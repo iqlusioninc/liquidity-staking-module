@@ -16,6 +16,7 @@ const (
 
 // Verify interface at compile time
 var _, _, _ sdk.Msg = &MsgSetWithdrawAddress{}, &MsgWithdrawDelegatorReward{}, &MsgWithdrawValidatorCommission{}
+var _ sdk.Msg = &MsgWithdrawTokenizeShareRecordReward{}
 
 func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) *MsgSetWithdrawAddress {
 	return &MsgSetWithdrawAddress{

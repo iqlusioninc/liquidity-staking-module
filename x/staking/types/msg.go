@@ -26,6 +26,8 @@ var (
 	_ sdk.Msg                            = &MsgDelegate{}
 	_ sdk.Msg                            = &MsgUndelegate{}
 	_ sdk.Msg                            = &MsgBeginRedelegate{}
+	_ sdk.Msg                            = &MsgTokenizeShares{}
+	_ sdk.Msg                            = &MsgRedeemTokensforShares{}
 	_ sdk.Msg                            = &MsgTransferTokenizeShareRecord{}
 )
 
