@@ -53,4 +53,5 @@ var (
 	ErrTokenizeShareRecordNotExists     = sdkerrors.New(ModuleName, 41, "tokenize share record not exists")
 	ErrTokenizeShareRecordAlreadyExists = sdkerrors.New(ModuleName, 42, "tokenize share record already exists")
 	ErrNotTokenizeShareRecordOwner      = sdkerrors.New(ModuleName, 43, "not tokenize share record owner")
+	ErrVestingTokenizeSharesNotAllowed  = sdkerrors.New(ModuleName, 43, "tokenizing the share is not allowed for vesting account")
 )

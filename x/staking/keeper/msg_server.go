@@ -13,6 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
@@ -398,6 +399,14 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
 		return nil, err
+	}
+
+	acc := k.authKeeper.GetAccount(ctx, delegatorAddress)
+	if acc != nil {
+		_, ok := acc.(vesting.VestingAccount)
+		if ok {
+			return nil, types.ErrVestingTokenizeSharesNotAllowed
+		}
 	}
 
 	delegation, found := k.GetDelegation(ctx, delegatorAddress, valAddr)
