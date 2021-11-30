@@ -401,14 +401,6 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
-	acc := k.authKeeper.GetAccount(ctx, delegatorAddress)
-	if acc != nil {
-		_, ok := acc.(vesting.VestingAccount)
-		if ok {
-			return nil, types.ErrVestingTokenizeSharesNotAllowed
-		}
-	}
-
 	delegation, found := k.GetDelegation(ctx, delegatorAddress, valAddr)
 	if !found {
 		return nil, types.ErrNoDelegatorForAddress
@@ -418,6 +410,28 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	if msg.Amount.Amount.GT(sdk.Int(delegationAmount)) {
 		return nil, types.ErrNotEnoughDelegationShares
 	}
+
+	acc := k.authKeeper.GetAccount(ctx, delegatorAddress)
+	if acc != nil {
+		acc, ok := acc.(vesting.VestingAccount)
+		if ok {
+			// if account is a vesting account, it checks if free delegation (non-vesting delegation) is not exceeding
+			// the tokenize share amount and execute further tokenize share process
+			// tokenize share is reducing unlocked tokens delegation from the vesting account and further process
+			// is not causing issues
+			delVesting := delegationAmount
+			vestingCoins := acc.GetVestingCoins(ctx.BlockTime())
+			vestingNativeTokenAmount := vestingCoins.AmountOf(msg.Amount.Denom)
+			if delVesting.GT(vestingNativeTokenAmount.ToDec()) {
+				delVesting = vestingNativeTokenAmount.ToDec()
+			}
+			delFree := delegationAmount.Sub(delVesting)
+			if delFree.LT(msg.Amount.Amount.ToDec()) {
+				return nil, types.ErrExceedingFreeVestingDelegations
+			}
+		}
+	}
+	// TODO: add test for vesting account tokenize share method
 
 	recordId := k.GetLastTokenizeShareRecordId(ctx) + 1
 	shareTokenDenom := getShareTokenDenom(msg.ValidatorAddress, recordId)
