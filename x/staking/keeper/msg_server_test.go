@@ -3,7 +3,10 @@ package keeper_test
 import (
 	"testing"
 
+	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/keeper"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/teststaking"
@@ -16,6 +19,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 
 	testCases := []struct {
 		name                          string
+		vestingAmount                 sdk.Int
 		delegationAmount              sdk.Int
 		tokenizeShareAmount           sdk.Int
 		redeemAmount                  sdk.Int
@@ -26,6 +30,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 	}{
 		{
 			name:                          "full amount tokenize and redeem",
+			vestingAmount:                 sdk.NewInt(0),
 			delegationAmount:              app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount:           app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			redeemAmount:                  app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
@@ -36,6 +41,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 		},
 		{
 			name:                          "full amount tokenize and partial redeem",
+			vestingAmount:                 sdk.NewInt(0),
 			delegationAmount:              app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount:           app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			redeemAmount:                  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
@@ -46,6 +52,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 		},
 		{
 			name:                          "partial amount tokenize and full redeem",
+			vestingAmount:                 sdk.NewInt(0),
 			delegationAmount:              app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount:           app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			redeemAmount:                  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
@@ -56,6 +63,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 		},
 		{
 			name:                "over tokenize",
+			vestingAmount:       sdk.NewInt(0),
 			delegationAmount:    app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount: app.StakingKeeper.TokensFromConsensusPower(ctx, 30),
 			redeemAmount:        app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
@@ -64,11 +72,32 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 		},
 		{
 			name:                "over redeem",
+			vestingAmount:       sdk.NewInt(0),
 			delegationAmount:    app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount: app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			redeemAmount:        app.StakingKeeper.TokensFromConsensusPower(ctx, 40),
 			expTokenizeErr:      false,
 			expRedeemErr:        true,
+		},
+		{
+			name:                        "vesting account tokenize share failure",
+			vestingAmount:               app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			delegationAmount:            app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			tokenizeShareAmount:         app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			redeemAmount:                app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			expTokenizeErr:              true,
+			expRedeemErr:                false,
+			prevAccountDelegationExists: true,
+		},
+		{
+			name:                        "vesting account tokenize share success",
+			vestingAmount:               app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			delegationAmount:            app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			tokenizeShareAmount:         app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			redeemAmount:                app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			expTokenizeErr:              false,
+			expRedeemErr:                false,
+			prevAccountDelegationExists: true,
 		},
 	}
 
@@ -78,6 +107,16 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			addrs := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
 			addrAcc1, addrAcc2 := addrs[0], addrs[1]
 			addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
+
+			if !tc.vestingAmount.IsZero() {
+				// create vesting account
+				pubkey := secp256k1.GenPrivKey().PubKey()
+				baseAcc := authtypes.NewBaseAccount(addrAcc2, pubkey, 0, 0)
+				initialVesting := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, tc.vestingAmount))
+				baseVestingWithCoins := vestingtypes.NewBaseVestingAccount(baseAcc, initialVesting, ctx.BlockTime().Unix()+86400*365)
+				delayedVestingAccount := vestingtypes.NewDelayedVestingAccountRaw(baseVestingWithCoins)
+				app.AccountKeeper.SetAccount(ctx, delayedVestingAccount)
+			}
 
 			pubKeys := simapp.CreateTestPubKeys(2)
 			pk1, pk2 := pubKeys[0], pubKeys[1]

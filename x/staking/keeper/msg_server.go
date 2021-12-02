@@ -419,19 +419,12 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 			// the tokenize share amount and execute further tokenize share process
 			// tokenize share is reducing unlocked tokens delegation from the vesting account and further process
 			// is not causing issues
-			delVesting := delegationAmount
-			vestingCoins := acc.GetVestingCoins(ctx.BlockTime())
-			vestingNativeTokenAmount := vestingCoins.AmountOf(msg.Amount.Denom)
-			if delVesting.GT(vestingNativeTokenAmount.ToDec()) {
-				delVesting = vestingNativeTokenAmount.ToDec()
-			}
-			delFree := delegationAmount.Sub(delVesting)
-			if delFree.LT(msg.Amount.Amount.ToDec()) {
+			delFree := acc.GetDelegatedFree().AmountOf(msg.Amount.Denom)
+			if delFree.LT(msg.Amount.Amount) {
 				return nil, types.ErrExceedingFreeVestingDelegations
 			}
 		}
 	}
-	// TODO: add test for vesting account tokenize share method
 
 	recordId := k.GetLastTokenizeShareRecordId(ctx) + 1
 	shareTokenDenom := getShareTokenDenom(msg.ValidatorAddress, recordId)
