@@ -41,6 +41,7 @@ func NewTxCmd() *cobra.Command {
 		NewWithdrawAllRewardsCmd(),
 		NewSetWithdrawAddrCmd(),
 		NewFundCommunityPoolCmd(),
+		NewWithdrawTokenizeShareRecordRewardCmd(),
 	)
 
 	return distTxCmd
@@ -329,6 +330,38 @@ Where proposal.json contains:
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},
 	}
+
+	return cmd
+}
+
+// WithdrawTokenizeShareRecordReward defines a method to withdraw reward for owning TokenizeShareRecord
+func NewWithdrawTokenizeShareRecordRewardCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "withdraw-tokenize-share-rewards",
+		Args:  cobra.ExactArgs(0),
+		Short: "Withdraw reward for owning TokenizeShareRecord",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Withdraw reward for owned TokenizeShareRecord
+
+Example:
+$ %s tx distribution withdraw-tokenize-share-rewards --from mykey
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgWithdrawTokenizeShareRecordReward(clientCtx.GetFromAddress())
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
 
 	return cmd
 }
