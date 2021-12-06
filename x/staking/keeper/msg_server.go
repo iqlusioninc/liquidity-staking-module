@@ -406,6 +406,10 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, types.ErrNoDelegatorForAddress
 	}
 
+	if msg.Amount.Denom != k.BondDenom(ctx) {
+		return nil, types.ErrOnlyBondDenomAllowdForTokenize
+	}
+
 	delegationAmount := validator.Tokens.ToDec().Mul(delegation.GetShares()).Quo(validator.DelegatorShares)
 	if msg.Amount.Amount.GT(sdk.Int(delegationAmount)) {
 		return nil, types.ErrNotEnoughDelegationShares
@@ -461,10 +465,23 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		k.bondedTokensToNotBonded(ctx, returnAmount)
 	}
 
+	// Note: UndelegateCoinsFromModuleToAccount is internally calling TrackUndelegation for vesting account
+	err = k.bankKeeper.UndelegateCoinsFromModuleToAccount(ctx, types.NotBondedPoolName, delegatorAddress, sdk.Coins{msg.Amount})
+	if err != nil {
+		return nil, err
+	}
+
 	// create reward ownership record
 	k.AddTokenizeShareRecord(ctx, record)
 
-	_, err = k.Keeper.Delegate(ctx, record.GetModuleAddress(), msg.Amount.Amount, sdkstaking.Unbonded, validator, false)
+	// send coins to module account
+	err = k.bankKeeper.SendCoins(ctx, delegatorAddress, record.GetModuleAddress(), sdk.Coins{msg.Amount})
+	if err != nil {
+		return nil, err
+	}
+
+	// delegate from module account
+	_, err = k.Keeper.Delegate(ctx, record.GetModuleAddress(), msg.Amount.Amount, sdkstaking.Unbonded, validator, true)
 	if err != nil {
 		return nil, err
 	}
@@ -530,8 +547,16 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		return nil, err
 	}
 
+	// send equivalent amount of tokens to the delegator
+	returnCoin := sdk.NewCoin(k.BondDenom(ctx), returnAmount)
+	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.NotBondedPoolName, delegatorAddress, sdk.Coins{returnCoin})
+	if err != nil {
+		return nil, err
+	}
+
 	// convert the share tokens to delegated status
-	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, sdkstaking.Unbonded, validator, false)
+	// Note: Delegate(substractAccount => true) -> DelegateCoinsFromAccountToModule -> TrackDelegation for vesting account
+	_, err = k.Keeper.Delegate(ctx, delegatorAddress, returnAmount, sdkstaking.Unbonded, validator, true)
 	if err != nil {
 		return nil, err
 	}

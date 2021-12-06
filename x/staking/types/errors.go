@@ -54,4 +54,5 @@ var (
 	ErrTokenizeShareRecordAlreadyExists = sdkerrors.New(ModuleName, 42, "tokenize share record already exists")
 	ErrNotTokenizeShareRecordOwner      = sdkerrors.New(ModuleName, 43, "not tokenize share record owner")
 	ErrExceedingFreeVestingDelegations  = sdkerrors.New(ModuleName, 44, "trying to exceed vested free delegation for vesting account")
+	ErrOnlyBondDenomAllowdForTokenize   = sdkerrors.New(ModuleName, 45, "only bond denom is allowed for tokenize")
 )
