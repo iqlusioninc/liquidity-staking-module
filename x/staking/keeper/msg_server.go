@@ -519,9 +519,11 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		return nil, types.ErrNoValidatorFound
 	}
 
-	shares, err := k.ValidateUnbondAmount(
-		ctx, record.GetModuleAddress(), valAddr, msg.Amount.Amount,
-	)
+	// calculate the ratio between shares and redeem amount
+	// moduleAccountTotalDelegation * redeemAmount / totalIssue
+	delegation, found := k.GetDelegation(ctx, record.GetModuleAddress(), valAddr)
+	shareDenomSupply := k.bankKeeper.GetSupply(ctx, msg.Amount.Denom)
+	shares := delegation.Shares.Mul(msg.Amount.Amount.ToDec()).QuoInt(shareDenomSupply.Amount)
 
 	returnAmount, err := k.Unbond(ctx, record.GetModuleAddress(), valAddr, shares)
 	if err != nil {
