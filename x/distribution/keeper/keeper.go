@@ -173,3 +173,47 @@ func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.
 
 	return nil
 }
+
+// withdraw reward for owning TokenizeShareRecord
+func (k Keeper) WithdrawTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk.AccAddress) (sdk.Coins, error) {
+	totalRewards := sdk.Coins{}
+
+	records := k.stakingKeeper.GetTokenizeShareRecordsByOwner(ctx, ownerAddr)
+
+	for _, record := range records {
+		valAddr, err := sdk.ValAddressFromBech32(record.Validator)
+		if err != nil {
+			return nil, err
+		}
+
+		val := k.stakingKeeper.Validator(ctx, valAddr)
+		if val == nil {
+			continue
+		}
+
+		del := k.stakingKeeper.Delegation(ctx, record.GetModuleAddress(), valAddr)
+		if del == nil {
+			continue
+		}
+
+		// withdraw rewards
+		rewards, err := k.withdrawDelegationRewards(ctx, val, del)
+		if err != nil {
+			return nil, err
+		}
+
+		// send coins from record module account to record module owner account
+		k.bankKeeper.SendCoins(ctx, record.GetModuleAddress(), ownerAddr, rewards)
+
+		totalRewards = totalRewards.Add(rewards...)
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeWithdrawTokenizeShareReward,
+			sdk.NewAttribute(sdk.AttributeKeyAmount, totalRewards.String()),
+		),
+	)
+
+	return totalRewards, nil
+}

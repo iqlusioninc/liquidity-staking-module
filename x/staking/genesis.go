@@ -154,6 +154,13 @@ func InitGenesis(
 		}
 	}
 
+	keeper.SetLastTokenizeShareRecordId(ctx, data.LastTokenizeShareRecordId)
+	for _, tokenizeShareRecord := range data.TokenizeShareRecords {
+		if err := keeper.AddTokenizeShareRecord(ctx, tokenizeShareRecord); err != nil {
+			panic(err)
+		}
+	}
+
 	return res
 }
 
@@ -182,15 +189,22 @@ func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) *types.GenesisState {
 		return false
 	})
 
+	var tokenizeShareRecords []types.TokenizeShareRecord
+	for _, tokenizeShareRecord := range keeper.GetAllTokenizeShareRecords(ctx) {
+		tokenizeShareRecords = append(tokenizeShareRecords, tokenizeShareRecord)
+	}
+
 	return &types.GenesisState{
-		Params:               keeper.GetParams(ctx),
-		LastTotalPower:       keeper.GetLastTotalPower(ctx),
-		LastValidatorPowers:  lastValidatorPowers,
-		Validators:           keeper.GetAllValidators(ctx),
-		Delegations:          keeper.GetAllDelegations(ctx),
-		UnbondingDelegations: unbondingDelegations,
-		Redelegations:        redelegations,
-		Exported:             true,
+		Params:                    keeper.GetParams(ctx),
+		LastTotalPower:            keeper.GetLastTotalPower(ctx),
+		LastValidatorPowers:       lastValidatorPowers,
+		Validators:                keeper.GetAllValidators(ctx),
+		Delegations:               keeper.GetAllDelegations(ctx),
+		UnbondingDelegations:      unbondingDelegations,
+		Redelegations:             redelegations,
+		Exported:                  true,
+		TokenizeShareRecords:      tokenizeShareRecords,
+		LastTokenizeShareRecordId: keeper.GetLastTokenizeShareRecordId(ctx),
 	}
 }
 

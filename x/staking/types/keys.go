@@ -47,6 +47,11 @@ var (
 	ValidatorQueueKey    = []byte{0x43} // prefix for the timestamps in validator queue
 
 	HistoricalInfoKey = []byte{0x50} // prefix for the historical info
+
+	TokenizeShareRecordPrefix          = []byte{0x61} // key for tokenizeshare record prefix
+	TokenizeShareRecordIdByOwnerPrefix = []byte{0x62} // key for tokenizeshare record id by owner prefix
+	TokenizeShareRecordIdByDenomPrefix = []byte{0x63} // key for tokenizeshare record id by denom prefix
+	LastTokenizeShareRecordIdKey       = []byte{0x64} // key for last tokenize share record id
 )
 
 // GetValidatorKey creates the key for the validator with address
@@ -332,4 +337,23 @@ func GetREDsByDelToValDstIndexKey(delAddr sdk.AccAddress, valDstAddr sdk.ValAddr
 // GetHistoricalInfoKey returns a key prefix for indexing HistoricalInfo objects.
 func GetHistoricalInfoKey(height int64) []byte {
 	return append(HistoricalInfoKey, []byte(strconv.FormatInt(height, 10))...)
+}
+
+// GetTokenizeShareRecordByIndexKey returns the key of the specified id. Intended for querying the tokenizeShareRecord by the id.
+func GetTokenizeShareRecordByIndexKey(id uint64) []byte {
+	return append(TokenizeShareRecordPrefix, sdk.Uint64ToBigEndian(id)...)
+}
+
+// GetTokenizeShareRecordIdsByOwnerPrefix returns the key of the specified owner. Intended for querying all tokenizeShareRecords of an owner
+func GetTokenizeShareRecordIdsByOwnerPrefix(owner sdk.AccAddress) []byte {
+	return append(TokenizeShareRecordIdByOwnerPrefix, owner.Bytes()...)
+}
+
+// GetTokenizeShareRecordIdByOwnerAndIdKey returns the key of the specified owner and id. Intended for setting tokenizeShareRecord of an owner
+func GetTokenizeShareRecordIdByOwnerAndIdKey(owner sdk.AccAddress, id uint64) []byte {
+	return append(append(TokenizeShareRecordIdByOwnerPrefix, owner.Bytes()...), sdk.Uint64ToBigEndian(id)...)
+}
+
+func GetTokenizeShareRecordIdByDenomKey(denom string) []byte {
+	return append(TokenizeShareRecordIdByDenomPrefix, []byte(denom)...)
 }

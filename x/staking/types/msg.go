@@ -26,6 +26,9 @@ var (
 	_ sdk.Msg                            = &MsgDelegate{}
 	_ sdk.Msg                            = &MsgUndelegate{}
 	_ sdk.Msg                            = &MsgBeginRedelegate{}
+	_ sdk.Msg                            = &MsgTokenizeShares{}
+	_ sdk.Msg                            = &MsgRedeemTokensforShares{}
+	_ sdk.Msg                            = &MsgTransferTokenizeShareRecord{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -362,6 +365,83 @@ func (msg MsgUndelegate) ValidateBasic() error {
 			sdkerrors.ErrInvalidRequest,
 			"invalid shares amount",
 		)
+	}
+
+	return nil
+}
+
+func (msg MsgTokenizeShares) GetSigners() []sdk.AccAddress {
+	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	return []sdk.AccAddress{delegator}
+}
+
+func (msg MsgTokenizeShares) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg MsgTokenizeShares) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
+	}
+	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.TokenizedShareOwner); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid tokenize share owner address: %s", err)
+	}
+
+	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
+		return sdkerrors.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"invalid shares amount",
+		)
+	}
+
+	return nil
+}
+
+func (msg MsgRedeemTokensforShares) GetSigners() []sdk.AccAddress {
+	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	return []sdk.AccAddress{delegator}
+}
+
+func (msg MsgRedeemTokensforShares) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg MsgRedeemTokensforShares) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
+	}
+
+	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
+		return sdkerrors.Wrap(
+			sdkerrors.ErrInvalidRequest,
+			"invalid shares amount",
+		)
+	}
+
+	return nil
+}
+
+func (msg MsgTransferTokenizeShareRecord) GetSigners() []sdk.AccAddress {
+	sender, _ := sdk.AccAddressFromBech32(msg.Sender)
+	return []sdk.AccAddress{sender}
+}
+
+func (msg MsgTransferTokenizeShareRecord) GetSignBytes() []byte {
+	bz := ModuleCdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+func (msg MsgTransferTokenizeShareRecord) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.Sender); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid sender address: %s", err)
+	}
+	if _, err := sdk.AccAddressFromBech32(msg.NewOwner); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid new owner address: %s", err)
 	}
 
 	return nil
