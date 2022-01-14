@@ -431,6 +431,8 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	}
 
 	recordId := k.GetLastTokenizeShareRecordId(ctx) + 1
+	k.SetLastTokenizeShareRecordId(ctx, recordId)
+
 	shareTokenDenom := getShareTokenDenom(msg.ValidatorAddress, recordId)
 	record := types.TokenizeShareRecord{
 		Id:              recordId,

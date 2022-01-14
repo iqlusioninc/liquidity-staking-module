@@ -196,14 +196,20 @@ func (k Keeper) WithdrawTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk
 			continue
 		}
 
-		// withdraw rewards
-		rewards, err := k.withdrawDelegationRewards(ctx, val, del)
+		// withdraw rewards into reward module account and send it to reward owner
+		cacheCtx, write := ctx.CacheContext()
+		rewards, err := k.WithdrawDelegationRewards(cacheCtx, record.GetModuleAddress(), valAddr)
 		if err != nil {
-			return nil, err
+			k.Logger(ctx).Error(err.Error())
+			continue
 		}
 
-		// send coins from record module account to record module owner account
-		k.bankKeeper.SendCoins(ctx, record.GetModuleAddress(), ownerAddr, rewards)
+		err = k.bankKeeper.SendCoins(cacheCtx, record.GetModuleAddress(), ownerAddr, rewards)
+		if err != nil {
+			k.Logger(ctx).Error(err.Error())
+			continue
+		}
+		write()
 
 		totalRewards = totalRewards.Add(rewards...)
 	}
