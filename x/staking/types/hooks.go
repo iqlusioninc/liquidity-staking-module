@@ -26,6 +26,11 @@ func (h MultiStakingHooks) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.C
 		h[i].AfterValidatorRemoved(ctx, consAddr, valAddr)
 	}
 }
+func (h MultiStakingHooks) BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordId uint64) {
+	for i := range h {
+		h[i].BeforeTokenizeShareRecordRemoved(ctx, recordId)
+	}
+}
 func (h MultiStakingHooks) AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) {
 	for i := range h {
 		h[i].AfterValidatorBonded(ctx, consAddr, valAddr)
