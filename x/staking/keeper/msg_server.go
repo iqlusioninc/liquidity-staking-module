@@ -543,6 +543,10 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 
 	_, found = k.GetDelegation(ctx, record.GetModuleAddress(), valAddr)
 	if !found {
+		if k.hooks != nil {
+			k.hooks.BeforeTokenizeShareRecordRemoved(ctx, record.Id)
+		}
+
 		k.DeleteTokenizeShareRecord(ctx, record.Id)
 	}
 
