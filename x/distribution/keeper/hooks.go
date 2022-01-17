@@ -76,7 +76,10 @@ func (h Hooks) AfterValidatorRemoved(ctx sdk.Context, _ sdk.ConsAddress, valAddr
 }
 
 func (h Hooks) BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordId uint64) {
-	h.k.WithdrawSingleShareRecordReward(ctx, recordId)
+	err := h.k.WithdrawSingleShareRecordReward(ctx, recordId)
+	if err != nil {
+		h.k.Logger(ctx).Error(err.Error())
+	}
 }
 
 // increment period
