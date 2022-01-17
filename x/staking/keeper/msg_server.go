@@ -563,6 +563,11 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		return nil, err
 	}
 
+	validator, found = k.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, types.ErrNoValidatorFound
+	}
+
 	// convert the share tokens to delegated status
 	// Note: Delegate(substractAccount => true) -> DelegateCoinsFromAccountToModule -> TrackDelegation for vesting account
 	_, err = k.Keeper.Delegate(ctx, delegatorAddress, returnAmount, sdkstaking.Unbonded, validator, true)
