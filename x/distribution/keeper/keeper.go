@@ -204,23 +204,28 @@ func (k Keeper) WithdrawSingleShareRecordReward(ctx sdk.Context, recordId uint64
 
 	// withdraw rewards into reward module account and send it to reward owner
 	cacheCtx, write := ctx.CacheContext()
-	rewards, err := k.WithdrawDelegationRewards(cacheCtx, record.GetModuleAddress(), valAddr)
+	_, err = k.WithdrawDelegationRewards(cacheCtx, record.GetModuleAddress(), valAddr)
 	if err != nil {
 		return err
 	}
 
-	err = k.bankKeeper.SendCoins(cacheCtx, record.GetModuleAddress(), owner, rewards)
-	if err != nil {
-		return err
-	}
-	write()
+	// apply changes when the module account has positive balance
+	balances := k.bankKeeper.GetAllBalances(cacheCtx, record.GetModuleAddress())
+	if !balances.Empty() {
+		err = k.bankKeeper.SendCoins(cacheCtx, record.GetModuleAddress(), owner, balances)
+		if err != nil {
+			return err
+		}
+		write()
 
-	ctx.EventManager().EmitEvent(
-		sdk.NewEvent(
-			types.EventTypeWithdrawTokenizeShareReward,
-			sdk.NewAttribute(sdk.AttributeKeyAmount, totalRewards.String()),
-		),
-	)
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeWithdrawTokenizeShareReward,
+				sdk.NewAttribute(types.AttributeKeyWithdrawAddress, owner.String()),
+				sdk.NewAttribute(sdk.AttributeKeyAmount, totalRewards.String()),
+			),
+		)
+	}
 	return nil
 }
 
@@ -248,25 +253,29 @@ func (k Keeper) WithdrawTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk
 
 		// withdraw rewards into reward module account and send it to reward owner
 		cacheCtx, write := ctx.CacheContext()
-		rewards, err := k.WithdrawDelegationRewards(cacheCtx, record.GetModuleAddress(), valAddr)
+		_, err = k.WithdrawDelegationRewards(cacheCtx, record.GetModuleAddress(), valAddr)
 		if err != nil {
 			k.Logger(ctx).Error(err.Error())
 			continue
 		}
 
-		err = k.bankKeeper.SendCoins(cacheCtx, record.GetModuleAddress(), ownerAddr, rewards)
-		if err != nil {
-			k.Logger(ctx).Error(err.Error())
-			continue
+		// apply changes when the module account has positive balance
+		balances := k.bankKeeper.GetAllBalances(cacheCtx, record.GetModuleAddress())
+		if !balances.Empty() {
+			err = k.bankKeeper.SendCoins(cacheCtx, record.GetModuleAddress(), ownerAddr, balances)
+			if err != nil {
+				k.Logger(ctx).Error(err.Error())
+				continue
+			}
+			write()
+			totalRewards = totalRewards.Add(balances...)
 		}
-		write()
-
-		totalRewards = totalRewards.Add(rewards...)
 	}
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeWithdrawTokenizeShareReward,
+			sdk.NewAttribute(types.AttributeKeyWithdrawAddress, ownerAddr.String()),
 			sdk.NewAttribute(sdk.AttributeKeyAmount, totalRewards.String()),
 		),
 	)
