@@ -1216,3 +1216,94 @@ func TestInvalidCoinDenom(t *testing.T) {
 	msgRedelegate = types.NewMsgBeginRedelegate(delAddr, valA, valB, oneCoin)
 	tstaking.Handle(msgRedelegate, true)
 }
+
+func TestTokenizeShares(t *testing.T) {
+	initPower := int64(1000)
+
+	testCases := []struct {
+		name      string
+		delIndex  int64
+		valIndex  int64
+		amount    sdk.Int
+		isSuccess bool
+		expStatus sdkstaking.BondStatus
+		expJailed bool
+	}{
+		{
+			"tokenize shares for less than self delegation",
+			0, 0,
+			sdk.NewInt(10000),
+			true,
+			sdkstaking.Bonded,
+			false,
+		},
+		{
+			"tokenize shares for more than self delegation",
+			0, 0,
+			sdk.TokensFromConsensusPower(initPower+1, sdk.DefaultPowerReduction),
+			false,
+			sdkstaking.Bonded,
+			false,
+		},
+		{
+			"tokenize share for full self delegation",
+			0, 0,
+			sdk.TokensFromConsensusPower(50, sdk.DefaultPowerReduction),
+			true,
+			sdkstaking.Unbonding,
+			true,
+		},
+		{
+			"tokenize shares for less than delegation",
+			1, 0,
+			sdk.NewInt(1000),
+			true,
+			sdkstaking.Bonded,
+			false,
+		},
+		{
+			"tokenize shares for more than delegation",
+			1, 0,
+			sdk.NewInt(20000),
+			false,
+			sdkstaking.Bonded,
+			false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(*testing.T) {
+			app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 3, sdk.TokensFromConsensusPower(initPower, sdk.DefaultPowerReduction))
+			val1 := valAddrs[0]
+			del2 := delAddrs[1]
+			tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
+
+			// set staking params
+			params := app.StakingKeeper.GetParams(ctx)
+			params.MaxValidators = 2
+			app.StakingKeeper.SetParams(ctx, params)
+
+			// add validators
+			tstaking.CreateValidatorWithValPower(val1, PKs[0], 50, true)
+
+			// call it to update validator status to bonded
+			_, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+			require.NoError(t, err)
+
+			// delegate tokens to the validator
+			tstaking.Delegate(del2, val1, sdk.NewInt(10000))
+
+			del := delAddrs[tc.delIndex]
+			val := valAddrs[tc.valIndex]
+
+			tstaking.TokenizeShares(del, val, sdk.NewCoin(sdk.DefaultBondDenom, tc.amount), del, tc.isSuccess)
+
+			if tc.isSuccess {
+				// call it to update validator status automatically
+				_, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+				require.NoError(t, err)
+
+				tstaking.CheckValidator(val, tc.expStatus, tc.expJailed)
+			}
+		})
+	}
+}
