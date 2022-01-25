@@ -1307,3 +1307,127 @@ func TestTokenizeShares(t *testing.T) {
 		})
 	}
 }
+
+func TestRedeemTokensforShares(t *testing.T) {
+	initPower := int64(1000)
+
+	testCases := []struct {
+		name      string
+		amount    sdk.Int
+		isSuccess bool
+	}{
+		{
+			"redeem full shares",
+			sdk.NewInt(10000),
+			true,
+		},
+		{
+			"redeem partial shares",
+			sdk.NewInt(1000),
+			true,
+		},
+		{
+			"redeem zero shares",
+			sdk.NewInt(0),
+			false,
+		},
+		{
+			"redeem more than shares",
+			sdk.NewInt(20000),
+			false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(*testing.T) {
+			app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 3, sdk.TokensFromConsensusPower(initPower, sdk.DefaultPowerReduction))
+			val1 := valAddrs[0]
+			del2 := delAddrs[1]
+			tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
+
+			// set staking params
+			params := app.StakingKeeper.GetParams(ctx)
+			params.MaxValidators = 2
+			app.StakingKeeper.SetParams(ctx, params)
+
+			// add validators
+			tstaking.CreateValidatorWithValPower(val1, PKs[0], 50, true)
+
+			// call it to update validator status to bonded
+			_, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+			require.NoError(t, err)
+
+			// delegate tokens to the validator
+			tstaking.Delegate(del2, val1, sdk.NewInt(10000))
+
+			// tokenize shares
+			tstaking.TokenizeShares(del2, val1, sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000), del2, true)
+
+			// get tokenize share record
+			record, err := app.StakingKeeper.GetTokenizeShareRecord(ctx, 1)
+			require.NoError(t, err)
+
+			// redeem share
+			tstaking.RedeemTokensForShares(del2, sdk.NewCoin(record.ShareTokenDenom, tc.amount), tc.isSuccess)
+		})
+	}
+}
+
+func TransferTokenizeShareRecord(t *testing.T) {
+	initPower := int64(1000)
+
+	testCases := []struct {
+		name      string
+		recordId  uint64
+		oldOwner  int64
+		newOwner  int64
+		isSuccess bool
+	}{
+		{
+			"transfer to other",
+			1,
+			2, 1,
+			true,
+		},
+		{
+			"self transfer",
+			1,
+			2, 2,
+			true,
+		},
+		{
+			"transfer non-existent",
+			2,
+			2, 2,
+			false,
+		},
+	}
+	for _, tc := range testCases {
+		t.Run(tc.name, func(*testing.T) {
+			app, ctx, delAddrs, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 3, sdk.TokensFromConsensusPower(initPower, sdk.DefaultPowerReduction))
+			val1 := valAddrs[0]
+			del2 := delAddrs[1]
+			tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
+
+			// set staking params
+			params := app.StakingKeeper.GetParams(ctx)
+			params.MaxValidators = 2
+			app.StakingKeeper.SetParams(ctx, params)
+
+			// add validators
+			tstaking.CreateValidatorWithValPower(val1, PKs[0], 50, true)
+
+			// call it to update validator status to bonded
+			_, err := app.StakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+			require.NoError(t, err)
+
+			// delegate tokens to the validator
+			tstaking.Delegate(del2, val1, sdk.NewInt(10000))
+
+			// tokenize shares
+			tstaking.TokenizeShares(del2, val1, sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000), del2, true)
+
+			// redeem share
+			tstaking.TranserTokenizeShareRecord(tc.recordId, delAddrs[tc.oldOwner], delAddrs[tc.newOwner], tc.isSuccess)
+		})
+	}
+}
