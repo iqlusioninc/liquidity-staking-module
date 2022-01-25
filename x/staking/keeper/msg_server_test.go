@@ -158,6 +158,10 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			_, found := app.StakingKeeper.GetDelegation(ctx, addrAcc2, addrVal1)
 			require.True(t, found, "delegation not found after delegate")
 
+			lastRecordId := app.StakingKeeper.GetLastTokenizeShareRecordId(ctx)
+			oldValidator, found := app.StakingKeeper.GetValidator(ctx, addrVal1)
+			require.True(t, found)
+
 			msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
 			resp, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
 				DelegatorAddress:    addrAcc2.String(),
@@ -170,6 +174,14 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
+
+			// check last record id increase
+			require.Equal(t, lastRecordId+1, app.StakingKeeper.GetLastTokenizeShareRecordId(ctx))
+
+			// ensure validator's total tokens is consistent
+			newValidator, found := app.StakingKeeper.GetValidator(ctx, addrVal1)
+			require.True(t, found)
+			require.Equal(t, oldValidator.Tokens, newValidator.Tokens)
 
 			if tc.vestingAmount.IsPositive() {
 				acc := app.AccountKeeper.GetAccount(ctx, addrAcc2)
@@ -215,6 +227,8 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 				delegation = types.Delegation{Shares: sdk.ZeroDec()}
 			}
 			delAmountBefore := val1.TokensFromShares(delegation.Shares)
+			oldValidator, found = app.StakingKeeper.GetValidator(ctx, addrVal1)
+			require.True(t, found)
 
 			_, err = msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensforShares{
 				DelegatorAddress: addrAcc2.String(),
@@ -225,6 +239,11 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 				return
 			}
 			require.NoError(t, err)
+
+			// ensure validator's total tokens is consistent
+			newValidator, found = app.StakingKeeper.GetValidator(ctx, addrVal1)
+			require.True(t, found)
+			require.Equal(t, oldValidator.Tokens, newValidator.Tokens)
 
 			if tc.vestingAmount.IsPositive() {
 				acc := app.AccountKeeper.GetAccount(ctx, addrAcc2)
