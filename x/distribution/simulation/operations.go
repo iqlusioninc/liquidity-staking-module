@@ -15,12 +15,15 @@ import (
 	stakingkeeper "github.com/iqlusioninc/liquidity-staking-module/x/staking/keeper"
 )
 
+const DefaultWeightMsgWithdrawTokenizeShareRecordReward int = 50
+
 // Simulation operation weights constants
 const (
-	OpWeightMsgSetWithdrawAddress          = "op_weight_msg_set_withdraw_address"
-	OpWeightMsgWithdrawDelegationReward    = "op_weight_msg_withdraw_delegation_reward"
-	OpWeightMsgWithdrawValidatorCommission = "op_weight_msg_withdraw_validator_commission"
-	OpWeightMsgFundCommunityPool           = "op_weight_msg_fund_community_pool"
+	OpWeightMsgSetWithdrawAddress                = "op_weight_msg_set_withdraw_address"
+	OpWeightMsgWithdrawDelegationReward          = "op_weight_msg_withdraw_delegation_reward"
+	OpWeightMsgWithdrawValidatorCommission       = "op_weight_msg_withdraw_validator_commission"
+	OpWeightMsgFundCommunityPool                 = "op_weight_msg_fund_community_pool"
+	OpWeightMsgWithdrawTokenizeShareRecordReward = "op_weight_msg_withdraw_tokenize_share_record_reward"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -57,6 +60,13 @@ func WeightedOperations(
 		},
 	)
 
+	var weightMsgWithdrawTokenizeShareRecordReward int
+	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawTokenizeShareRecordReward, &weightMsgWithdrawTokenizeShareRecordReward, nil,
+		func(_ *rand.Rand) {
+			weightMsgWithdrawTokenizeShareRecordReward = DefaultWeightMsgWithdrawTokenizeShareRecordReward
+		},
+	)
+
 	return simulation.WeightedOperations{
 		simulation.NewWeightedOperation(
 			weightMsgSetWithdrawAddress,
@@ -73,6 +83,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgFundCommunityPool,
 			SimulateMsgFundCommunityPool(ak, bk, k, sk),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgWithdrawTokenizeShareRecordReward,
+			SimulateMsgWithdrawTokenizeShareRecordReward(ak, bk, k, sk),
 		),
 	}
 }
@@ -245,5 +259,43 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 		}
 
 		return simulation.GenAndDeliverTx(txCtx, fees)
+	}
+}
+
+// SimulateMsgWithdrawTokenizeShareRecordReward simulates MsgWithdrawTokenizeShareRecordReward execution where
+// a random account claim tokenize share record rewards.
+func SimulateMsgWithdrawTokenizeShareRecordReward(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+
+		rewardOwner, _ := simtypes.RandomAcc(r, accs)
+
+		records := sk.GetAllTokenizeShareRecords(ctx)
+		if len(records) > 0 {
+			record := records[r.Intn(len(records))]
+			for _, acc := range accs {
+				if acc.Address.String() == record.Owner {
+					rewardOwner = acc
+					break
+				}
+			}
+		}
+
+		msg := types.NewMsgWithdrawTokenizeShareRecordReward(rewardOwner.Address)
+
+		txCtx := simulation.OperationInput{
+			App:           app,
+			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:           nil,
+			Msg:           msg,
+			MsgType:       msg.Type(),
+			Context:       ctx,
+			SimAccount:    rewardOwner,
+			AccountKeeper: ak,
+			ModuleName:    types.ModuleName,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
 	}
 }
