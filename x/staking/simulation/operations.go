@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	DefaultWeightMsgTokenizeShares                 int = 100
-	DefaultWeightMsgRedeemTokensforShares          int = 100
-	DefaultWeightMsgMsgTransferTokenizeShareRecord int = 50
+	DefaultWeightMsgTokenizeShares              int = 100
+	DefaultWeightMsgRedeemTokensforShares       int = 100
+	DefaultWeightMsgTransferTokenizeShareRecord int = 50
 )
 
 // Simulation operation weights constants
@@ -92,7 +92,7 @@ func WeightedOperations(
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgTransferTokenizeShareRecord, &weightMsgTransferTokenizeShareRecord, nil,
 		func(_ *rand.Rand) {
-			weightMsgTransferTokenizeShareRecord = DefaultWeightMsgMsgTransferTokenizeShareRecord
+			weightMsgTransferTokenizeShareRecord = DefaultWeightMsgTransferTokenizeShareRecord
 		},
 	)
 

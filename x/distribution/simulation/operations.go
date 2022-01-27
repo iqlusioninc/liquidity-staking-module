@@ -282,18 +282,29 @@ func SimulateMsgWithdrawTokenizeShareRecordReward(ak types.AccountKeeper, bk typ
 			}
 		}
 
+		// if simaccount.PrivKey == nil, delegation address does not exist in accs. Return error
+		if rewardOwner.PrivKey == nil {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdrawTokenizeShareRecordReward, "account private key is nil"), nil, nil
+		}
+
 		msg := types.NewMsgWithdrawTokenizeShareRecordReward(rewardOwner.Address)
 
+		account := ak.GetAccount(ctx, rewardOwner.Address)
+		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
 		txCtx := simulation.OperationInput{
-			App:           app,
-			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
-			Cdc:           nil,
-			Msg:           msg,
-			MsgType:       msg.Type(),
-			Context:       ctx,
-			SimAccount:    rewardOwner,
-			AccountKeeper: ak,
-			ModuleName:    types.ModuleName,
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      rewardOwner,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
 		}
 
 		return simulation.GenAndDeliverTxWithRandFees(txCtx)
