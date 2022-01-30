@@ -39,6 +39,12 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryHistoricalInfo(),
 		GetCmdQueryParams(),
 		GetCmdQueryPool(),
+		GetCmdQueryTokenizeShareRecordById(),
+		GetCmdQueryTokenizeShareRecordByDenom(),
+		GetCmdQueryTokenizeShareRecordsOwned(),
+		GetCmdQueryAllTokenizeShareRecords(),
+		GetCmdQueryLastTokenizeShareRecordId(),
+		GetCmdQueryTotalTokenizeSharedAssets(),
 	)
 
 	return stakingQueryCmd
@@ -737,6 +743,222 @@ $ %s query staking params
 			}
 
 			return clientCtx.PrintProto(&res.Params)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdQueryTokenizeShareRecordById implements the query for individual tokenize share record information by share by id
+func GetCmdQueryTokenizeShareRecordById() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "tokenize-share-record-by-id",
+		Args:  cobra.NoArgs,
+		Short: "Query individual tokenize share record information by share by id",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query individual tokenize share record information by share by id.
+
+Example:
+$ %s query staking tokenize-share-record-by-id
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.TokenizeShareRecordById(cmd.Context(), &types.QueryTokenizeShareRecordByIdRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdQueryTokenizeShareRecordByDenom implements the query for individual tokenize share record information by share denom
+func GetCmdQueryTokenizeShareRecordByDenom() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "tokenize-share-record-by-denom",
+		Args:  cobra.NoArgs,
+		Short: "Query individual tokenize share record information by share denom",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query individual tokenize share record information by share denom.
+
+Example:
+$ %s query staking tokenize-share-record-by-denom
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.TokenizeShareRecordByDenom(cmd.Context(), &types.QueryTokenizeShareRecordByDenomRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdQueryTokenizeShareRecordsOwned implements the query tokenize share records by address
+func GetCmdQueryTokenizeShareRecordsOwned() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "tokenize-share-records-owned",
+		Args:  cobra.NoArgs,
+		Short: "Query tokenize share records by address",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query tokenize share records by address.
+
+Example:
+$ %s query staking tokenize-share-records-owned
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.TokenizeShareRecordsOwned(cmd.Context(), &types.QueryTokenizeShareRecordsOwnedRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdQueryAllTokenizeShareRecords implements the query for all tokenize share records
+func GetCmdQueryAllTokenizeShareRecords() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "all-tokenize-share-records",
+		Args:  cobra.NoArgs,
+		Short: "Query for all tokenize share records",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query for all tokenize share records.
+
+Example:
+$ %s query staking all-tokenize-share-records
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.AllTokenizeShareRecords(cmd.Context(), &types.QueryAllTokenizeShareRecordsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdQueryLastTokenizeShareRecordId implements the query for last tokenize share record id
+func GetCmdQueryLastTokenizeShareRecordId() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "last-tokenize-share-record-id",
+		Args:  cobra.NoArgs,
+		Short: "Query for last tokenize share record id",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query for last tokenize share record id.
+
+Example:
+$ %s query staking last-tokenize-share-record-id
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.LastTokenizeShareRecordId(cmd.Context(), &types.QueryLastTokenizeShareRecordIdRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// GetCmdQueryTotalTokenizeSharedAssets implements the query for total tokenized staked assets
+func GetCmdQueryTotalTokenizeSharedAssets() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "total-tokenize-share-assets",
+		Args:  cobra.NoArgs,
+		Short: "Query for total tokenized staked assets",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query for total tokenized staked assets.
+
+Example:
+$ %s query staking total-tokenize-share-assets
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.TotalTokenizeSharedAssets(cmd.Context(), &types.QueryTotalTokenizeSharedAssetsRequest{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
 		},
 	}
 
