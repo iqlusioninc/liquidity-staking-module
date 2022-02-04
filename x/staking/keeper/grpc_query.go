@@ -627,11 +627,7 @@ func (k Querier) TotalTokenizeSharedAssets(c context.Context, req *types.QueryTo
 	totalTokenizeShared := sdk.ZeroInt()
 
 	for _, record := range records {
-		moduleAcc, err := sdk.AccAddressFromBech32(record.ModuleAccount)
-		if err != nil {
-			return nil, err
-		}
-
+		moduleAcc := record.GetModuleAddress()
 		valAddr, err := sdk.ValAddressFromBech32(record.Validator)
 		if err != nil {
 			return nil, err

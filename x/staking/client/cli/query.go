@@ -754,14 +754,14 @@ $ %s query staking params
 // GetCmdQueryTokenizeShareRecordById implements the query for individual tokenize share record information by share by id
 func GetCmdQueryTokenizeShareRecordById() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "tokenize-share-record-by-id",
-		Args:  cobra.NoArgs,
+		Use:   "tokenize-share-record-by-id [id]",
+		Args:  cobra.ExactArgs(1),
 		Short: "Query individual tokenize share record information by share by id",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query individual tokenize share record information by share by id.
 
 Example:
-$ %s query staking tokenize-share-record-by-id
+$ %s query staking tokenize-share-record-by-id [id]
 `,
 				version.AppName,
 			),
@@ -773,7 +773,14 @@ $ %s query staking tokenize-share-record-by-id
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.TokenizeShareRecordById(cmd.Context(), &types.QueryTokenizeShareRecordByIdRequest{})
+			id, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.TokenizeShareRecordById(cmd.Context(), &types.QueryTokenizeShareRecordByIdRequest{
+				Id: uint64(id),
+			})
 			if err != nil {
 				return err
 			}
@@ -791,7 +798,7 @@ $ %s query staking tokenize-share-record-by-id
 func GetCmdQueryTokenizeShareRecordByDenom() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tokenize-share-record-by-denom",
-		Args:  cobra.NoArgs,
+		Args:  cobra.ExactArgs(1),
 		Short: "Query individual tokenize share record information by share denom",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query individual tokenize share record information by share denom.
@@ -809,7 +816,9 @@ $ %s query staking tokenize-share-record-by-denom
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.TokenizeShareRecordByDenom(cmd.Context(), &types.QueryTokenizeShareRecordByDenomRequest{})
+			res, err := queryClient.TokenizeShareRecordByDenom(cmd.Context(), &types.QueryTokenizeShareRecordByDenomRequest{
+				Denom: args[0],
+			})
 			if err != nil {
 				return err
 			}
@@ -827,13 +836,13 @@ $ %s query staking tokenize-share-record-by-denom
 func GetCmdQueryTokenizeShareRecordsOwned() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tokenize-share-records-owned",
-		Args:  cobra.NoArgs,
+		Args:  cobra.ExactArgs(1),
 		Short: "Query tokenize share records by address",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query tokenize share records by address.
 
 Example:
-$ %s query staking tokenize-share-records-owned
+$ %s query staking tokenize-share-records-owned [owner]
 `,
 				version.AppName,
 			),
@@ -845,7 +854,14 @@ $ %s query staking tokenize-share-records-owned
 			}
 			queryClient := types.NewQueryClient(clientCtx)
 
-			res, err := queryClient.TokenizeShareRecordsOwned(cmd.Context(), &types.QueryTokenizeShareRecordsOwnedRequest{})
+			owner, err := sdk.AccAddressFromBech32(args[0])
+			if err != nil {
+				return err
+			}
+
+			res, err := queryClient.TokenizeShareRecordsOwned(cmd.Context(), &types.QueryTokenizeShareRecordsOwnedRequest{
+				Owner: owner.String(),
+			})
 			if err != nil {
 				return err
 			}
