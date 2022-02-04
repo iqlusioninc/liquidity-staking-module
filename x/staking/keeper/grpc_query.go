@@ -546,7 +546,15 @@ func (k Querier) TokenizeShareRecordById(c context.Context, req *types.QueryToke
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	return &types.QueryTokenizeShareRecordByIdResponse{}, nil
+	ctx := sdk.UnwrapSDKContext(c)
+	record, err := k.GetTokenizeShareRecord(ctx, req.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryTokenizeShareRecordByIdResponse{
+		Record: record,
+	}, nil
 }
 
 // Query for individual tokenize share record information by share denom
@@ -555,7 +563,15 @@ func (k Querier) TokenizeShareRecordByDenom(c context.Context, req *types.QueryT
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	return &types.QueryTokenizeShareRecordByDenomResponse{}, nil
+	ctx := sdk.UnwrapSDKContext(c)
+	record, err := k.GetTokenizeShareRecordByDenom(ctx, req.Denom)
+	if err != nil {
+		return nil, err
+	}
+
+	return &types.QueryTokenizeShareRecordByDenomResponse{
+		Record: record,
+	}, nil
 }
 
 // Query tokenize share records by address
@@ -564,7 +580,16 @@ func (k Querier) TokenizeShareRecordsOwned(c context.Context, req *types.QueryTo
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	return &types.QueryTokenizeShareRecordsOwnedResponse{}, nil
+	ctx := sdk.UnwrapSDKContext(c)
+	owner, err := sdk.AccAddressFromBech32(req.Owner)
+	if err != nil {
+		return nil, err
+	}
+	records := k.GetTokenizeShareRecordsByOwner(ctx, owner)
+
+	return &types.QueryTokenizeShareRecordsOwnedResponse{
+		Records: records,
+	}, nil
 }
 
 // Query for all tokenize share records
@@ -572,8 +597,12 @@ func (k Querier) AllTokenizeShareRecords(c context.Context, req *types.QueryAllT
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
+	ctx := sdk.UnwrapSDKContext(c)
+	records := k.GetAllTokenizeShareRecords(ctx)
 
-	return &types.QueryAllTokenizeShareRecordsResponse{}, nil
+	return &types.QueryAllTokenizeShareRecordsResponse{
+		Records: records,
+	}, nil
 }
 
 // Query for last tokenize share record id
@@ -582,7 +611,10 @@ func (k Querier) LastTokenizeShareRecordId(c context.Context, req *types.QueryLa
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
 
-	return &types.QueryLastTokenizeShareRecordIdResponse{}, nil
+	ctx := sdk.UnwrapSDKContext(c)
+	return &types.QueryLastTokenizeShareRecordIdResponse{
+		Id: k.GetLastTokenizeShareRecordId(ctx),
+	}, nil
 }
 
 // Query for total tokenized staked assets
@@ -590,6 +622,35 @@ func (k Querier) TotalTokenizeSharedAssets(c context.Context, req *types.QueryTo
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
+	ctx := sdk.UnwrapSDKContext(c)
+	records := k.GetAllTokenizeShareRecords(ctx)
+	totalTokenizeShared := sdk.ZeroInt()
 
-	return &types.QueryTotalTokenizeSharedAssetsResponse{}, nil
+	for _, record := range records {
+		moduleAcc, err := sdk.AccAddressFromBech32(record.ModuleAccount)
+		if err != nil {
+			return nil, err
+		}
+
+		valAddr, err := sdk.ValAddressFromBech32(record.Validator)
+		if err != nil {
+			return nil, err
+		}
+
+		validator, found := k.GetValidator(ctx, valAddr)
+		if !found {
+			return nil, types.ErrNoValidatorFound
+		}
+
+		delegation, found := k.GetDelegation(ctx, moduleAcc, valAddr)
+		if !found {
+			return nil, types.ErrNoDelegation
+		}
+
+		tokens := validator.TokensFromShares(delegation.Shares)
+		totalTokenizeShared = totalTokenizeShared.Add(tokens.RoundInt())
+	}
+	return &types.QueryTotalTokenizeSharedAssetsResponse{
+		Value: sdk.NewCoin(k.BondDenom(ctx), totalTokenizeShared),
+	}, nil
 }

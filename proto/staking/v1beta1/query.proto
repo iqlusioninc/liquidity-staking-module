@@ -384,12 +384,12 @@ message QueryTokenizeShareRecordsOwnedRequest {
   string owner = 1;
 }
 message QueryTokenizeShareRecordsOwnedResponse {
-  repeated TokenizeShareRecord record = 1 [ (gogoproto.nullable) = false ];
+  repeated TokenizeShareRecord records = 1 [ (gogoproto.nullable) = false ];
 }
 
 message QueryAllTokenizeShareRecordsRequest {}
 message QueryAllTokenizeShareRecordsResponse {
-  repeated TokenizeShareRecord record = 1 [ (gogoproto.nullable) = false ];
+  repeated TokenizeShareRecord records = 1 [ (gogoproto.nullable) = false ];
 }
 
 message QueryLastTokenizeShareRecordIdRequest {}
