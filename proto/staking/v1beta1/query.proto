@@ -5,6 +5,7 @@ import "cosmos/base/query/v1beta1/pagination.proto";
 import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "staking/v1beta1/staking.proto";
+import "cosmos/base/v1beta1/coin.proto";
 
 option go_package = "github.com/iqlusioninc/liquidity-staking-module/x/staking/types";
 
@@ -90,6 +91,24 @@ service Query {
   rpc Params(QueryParamsRequest) returns (QueryParamsResponse) {
     option (google.api.http).get = "/cosmos/staking/v1beta1/params";
   }
+
+  // Query for individual tokenize share record information by share by id
+  rpc TokenizeShareRecordById(QueryTokenizeShareRecordByIdRequest) returns (QueryTokenizeShareRecordByIdResponse) {}
+
+  // Query for individual tokenize share record information by share denom
+  rpc TokenizeShareRecordByDenom(QueryTokenizeShareRecordByDenomRequest) returns (QueryTokenizeShareRecordByDenomResponse) {}
+
+  // Query tokenize share records by address
+  rpc TokenizeShareRecordsOwned(QueryTokenizeShareRecordsOwnedRequest) returns (QueryTokenizeShareRecordsOwnedResponse) {}
+
+  // Query for all tokenize share records
+  rpc AllTokenizeShareRecords(QueryAllTokenizeShareRecordsRequest) returns (QueryAllTokenizeShareRecordsResponse) {}
+
+  // Query for last tokenize share record id
+  rpc LastTokenizeShareRecordId(QueryLastTokenizeShareRecordIdRequest) returns (QueryLastTokenizeShareRecordIdResponse) {}
+
+  // Query for total tokenized staked assets
+  rpc TotalTokenizeSharedAssets(QueryTotalTokenizeSharedAssetsRequest) returns (QueryTotalTokenizeSharedAssetsResponse) {}
 }
 
 // QueryValidatorsRequest is request type for Query/Validators RPC method.
@@ -345,4 +364,40 @@ message QueryParamsRequest {}
 message QueryParamsResponse {
   // params holds all the parameters of this module.
   Params params = 1 [(gogoproto.nullable) = false];
+}
+
+message QueryTokenizeShareRecordByIdRequest {
+  uint64 id = 1;
+}
+message QueryTokenizeShareRecordByIdResponse {
+  TokenizeShareRecord record = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryTokenizeShareRecordByDenomRequest { 
+  string denom = 1;
+}
+message QueryTokenizeShareRecordByDenomResponse {
+  TokenizeShareRecord record = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryTokenizeShareRecordsOwnedRequest {
+  string owner = 1;
+}
+message QueryTokenizeShareRecordsOwnedResponse {
+  repeated TokenizeShareRecord records = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryAllTokenizeShareRecordsRequest {}
+message QueryAllTokenizeShareRecordsResponse {
+  repeated TokenizeShareRecord records = 1 [ (gogoproto.nullable) = false ];
+}
+
+message QueryLastTokenizeShareRecordIdRequest {}
+message QueryLastTokenizeShareRecordIdResponse {
+  uint64 id = 1;
+}
+
+message QueryTotalTokenizeSharedAssetsRequest {}
+message QueryTotalTokenizeSharedAssetsResponse {
+  cosmos.base.v1beta1.Coin value = 1 [ (gogoproto.nullable) = false ];
 }
