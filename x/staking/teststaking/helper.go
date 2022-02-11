@@ -82,6 +82,33 @@ func (sh *Helper) Undelegate(delegator sdk.AccAddress, val sdk.ValAddress, amoun
 	return sh.Handle(msg, ok)
 }
 
+func (sh *Helper) TokenizeShares(delegator sdk.AccAddress, val sdk.ValAddress, amount sdk.Coin, shareOwner sdk.AccAddress, ok bool) {
+	msg := &stakingtypes.MsgTokenizeShares{
+		DelegatorAddress:    delegator.String(),
+		ValidatorAddress:    val.String(),
+		Amount:              amount,
+		TokenizedShareOwner: shareOwner.String(),
+	}
+	sh.Handle(msg, ok)
+}
+
+func (sh *Helper) RedeemTokensForShares(delegator sdk.AccAddress, amount sdk.Coin, ok bool) {
+	msg := &stakingtypes.MsgRedeemTokensforShares{
+		DelegatorAddress: delegator.String(),
+		Amount:           amount,
+	}
+	sh.Handle(msg, ok)
+}
+
+func (sh *Helper) TranserTokenizeShareRecord(recordId uint64, owner, newOwner sdk.AccAddress, ok bool) {
+	msg := &stakingtypes.MsgTransferTokenizeShareRecord{
+		TokenizeShareRecordId: recordId,
+		Sender:                owner.String(),
+		NewOwner:              newOwner.String(),
+	}
+	sh.Handle(msg, ok)
+}
+
 // Handle calls staking handler on a given message
 func (sh *Helper) Handle(msg sdk.Msg, ok bool) *sdk.Result {
 	res, err := sh.h(sh.Ctx, msg)

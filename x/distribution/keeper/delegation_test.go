@@ -131,9 +131,14 @@ func TestWithdrawTokenizeShareRecordReward(t *testing.T) {
 	resp, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &stakingtypes.MsgTokenizeShares{
 		DelegatorAddress:    sdk.AccAddress(valAddrs[0]).String(),
 		ValidatorAddress:    valAddrs[0].String(),
-		TokenizedShareOwner: sdk.AccAddress(valAddrs[0]).String(),
+		TokenizedShareOwner: sdk.AccAddress(valAddrs[1]).String(),
 		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, delTokens),
 	})
+
+	// try withdrawing rewards before no reward is allocated
+	coins, err = app.DistrKeeper.WithdrawTokenizeShareRecordReward(ctx, sdk.AccAddress(valAddrs[1]))
+	require.Nil(t, err)
+	require.Equal(t, coins, sdk.Coins{})
 
 	// assert tokenize share response
 	require.NoError(t, err)
@@ -148,17 +153,37 @@ func TestWithdrawTokenizeShareRecordReward(t *testing.T) {
 	// end period
 	app.DistrKeeper.IncrementValidatorPeriod(ctx, val)
 
-	beforeBalance := app.BankKeeper.GetBalance(ctx, sdk.AccAddress(valAddrs[0]), sdk.DefaultBondDenom)
+	beforeBalance := app.BankKeeper.GetBalance(ctx, sdk.AccAddress(valAddrs[1]), sdk.DefaultBondDenom)
 
 	// withdraw rewards
-	coins, err = app.DistrKeeper.WithdrawTokenizeShareRecordReward(ctx, sdk.AccAddress(valAddrs[0]))
+	coins, err = app.DistrKeeper.WithdrawTokenizeShareRecordReward(ctx, sdk.AccAddress(valAddrs[1]))
 	require.Nil(t, err)
 
 	// check return value
 	require.Equal(t, coins.String(), "50000stake")
 	// check balance changes
-	afterBalance := app.BankKeeper.GetBalance(ctx, sdk.AccAddress(valAddrs[0]), sdk.DefaultBondDenom)
-	require.Equal(t, beforeBalance.Amount.Add(coins.AmountOf(sdk.DefaultBondDenom)), afterBalance.Amount)
+	midBalance := app.BankKeeper.GetBalance(ctx, sdk.AccAddress(valAddrs[1]), sdk.DefaultBondDenom)
+	require.Equal(t, beforeBalance.Amount.Add(coins.AmountOf(sdk.DefaultBondDenom)), midBalance.Amount)
+
+	// allocate more rewards manually on module account and try full redeem
+	record, err := app.StakingKeeper.GetTokenizeShareRecord(ctx, 1)
+	require.NoError(t, err)
+
+	err = app.MintKeeper.MintCoins(ctx, coins)
+	require.NoError(t, err)
+	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, record.GetModuleAddress(), coins)
+	require.NoError(t, err)
+
+	shareTokenBalance := app.BankKeeper.GetBalance(ctx, sdk.AccAddress(valAddrs[0]), record.ShareTokenDenom)
+
+	_, err = msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &stakingtypes.MsgRedeemTokensforShares{
+		DelegatorAddress: sdk.AccAddress(valAddrs[0]).String(),
+		Amount:           shareTokenBalance,
+	})
+	require.NoError(t, err)
+
+	finalBalance := app.BankKeeper.GetBalance(ctx, sdk.AccAddress(valAddrs[1]), sdk.DefaultBondDenom)
+	require.Equal(t, midBalance.Amount.Add(coins.AmountOf(sdk.DefaultBondDenom)), finalBalance.Amount)
 }
 
 func TestCalculateRewardsAfterSlash(t *testing.T) {

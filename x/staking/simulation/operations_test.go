@@ -47,6 +47,9 @@ func TestWeightedOperations(t *testing.T) {
 		{simappparams.DefaultWeightMsgDelegate, types.ModuleName, types.TypeMsgDelegate},
 		{simappparams.DefaultWeightMsgUndelegate, types.ModuleName, types.TypeMsgUndelegate},
 		{simappparams.DefaultWeightMsgBeginRedelegate, types.ModuleName, types.TypeMsgBeginRedelegate},
+		{simulation.DefaultWeightMsgTokenizeShares, types.ModuleName, types.TypeMsgTokenizeShares},
+		{simulation.DefaultWeightMsgRedeemTokensforShares, types.ModuleName, types.TypeMsgRedeemTokensforShares},
+		{simulation.DefaultWeightMsgTransferTokenizeShareRecord, types.ModuleName, types.TypeMsgTransferTokenizeShareRecord},
 	}
 
 	for i, w := range weightesOps {
