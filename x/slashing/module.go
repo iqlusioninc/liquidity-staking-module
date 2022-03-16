@@ -20,7 +20,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/client/cli"
-	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/client/rest"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/keeper"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/simulation"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
@@ -72,9 +71,7 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 }
 
 // RegisterRESTRoutes registers the REST routes for the slashing module.
-func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
-	rest.RegisterHandlers(clientCtx, rtr)
-}
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the slashig module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
