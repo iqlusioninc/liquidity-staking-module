@@ -12,6 +12,7 @@ import (
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	distrtypes "github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
@@ -23,7 +24,7 @@ import (
 // TestWeightedOperations tests the weights of the operations.
 func TestWeightedOperations(t *testing.T) {
 
-	app, ctx := createTestApp(false)
+	app, ctx := createTestApp(t, false)
 
 	ctx.WithChainID("test-chain")
 
@@ -66,7 +67,7 @@ func TestWeightedOperations(t *testing.T) {
 // TestSimulateMsgCreateValidator tests the normal scenario of a valid message of type TypeMsgCreateValidator.
 // Abonormal scenarios, where the message are created by an errors are not tested here.
 func TestSimulateMsgCreateValidator(t *testing.T) {
-	app, ctx := createTestApp(false)
+	app, ctx := createTestApp(t, false)
 
 	// setup 3 accounts
 	s := rand.NewSource(1)
@@ -98,7 +99,7 @@ func TestSimulateMsgCreateValidator(t *testing.T) {
 // TestSimulateMsgEditValidator tests the normal scenario of a valid message of type TypeMsgEditValidator.
 // Abonormal scenarios, where the message is created by an errors are not tested here.
 func TestSimulateMsgEditValidator(t *testing.T) {
-	app, ctx := createTestApp(false)
+	app, ctx := createTestApp(t, false)
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
@@ -135,7 +136,7 @@ func TestSimulateMsgEditValidator(t *testing.T) {
 // TestSimulateMsgDelegate tests the normal scenario of a valid message of type TypeMsgDelegate.
 // Abonormal scenarios, where the message is created by an errors are not tested here.
 func TestSimulateMsgDelegate(t *testing.T) {
-	app, ctx := createTestApp(false)
+	app, ctx := createTestApp(t, false)
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
@@ -171,7 +172,7 @@ func TestSimulateMsgDelegate(t *testing.T) {
 // TestSimulateMsgUndelegate tests the normal scenario of a valid message of type TypeMsgUndelegate.
 // Abonormal scenarios, where the message is created by an errors are not tested here.
 func TestSimulateMsgUndelegate(t *testing.T) {
-	app, ctx := createTestApp(false)
+	app, ctx := createTestApp(t, false)
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
@@ -217,7 +218,7 @@ func TestSimulateMsgUndelegate(t *testing.T) {
 // TestSimulateMsgBeginRedelegate tests the normal scenario of a valid message of type TypeMsgBeginRedelegate.
 // Abonormal scenarios, where the message is created by an errors, are not tested here.
 func TestSimulateMsgBeginRedelegate(t *testing.T) {
-	app, ctx := createTestApp(false)
+	app, ctx := createTestApp(t, false)
 	blockTime := time.Now().UTC()
 	ctx = ctx.WithBlockTime(blockTime)
 
@@ -265,9 +266,9 @@ func TestSimulateMsgBeginRedelegate(t *testing.T) {
 }
 
 // returns context and an app with updated mint keeper
-func createTestApp(isCheckTx bool) (*simapp.SimApp, sdk.Context) {
+func createTestApp(t *testing.T, isCheckTx bool) (*simapp.SimApp, sdk.Context) {
 	// sdk.PowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
-	app := simapp.Setup(isCheckTx)
+	app := simapp.Setup(t, isCheckTx)
 
 	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
 	app.MintKeeper.SetParams(ctx, minttypes.DefaultParams())
@@ -286,7 +287,7 @@ func getTestingAccounts(t *testing.T, r *rand.Rand, app *simapp.SimApp, ctx sdk.
 	for _, account := range accounts {
 		acc := app.AccountKeeper.NewAccountWithAddress(ctx, account.Address)
 		app.AccountKeeper.SetAccount(ctx, acc)
-		require.NoError(t, simapp.FundAccount(app.BankKeeper, ctx, account.Address, initCoins))
+		require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, account.Address, initCoins))
 	}
 
 	return accounts
