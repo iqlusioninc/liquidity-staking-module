@@ -43,9 +43,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.T().Skip("skipping test in unit-tests mode.")
 	}
 
-	s.network = network.New(s.T(), s.cfg)
+	var err error
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
 
-	_, err := s.network.WaitForHeight(1)
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
 	unbond, err := sdk.ParseCoinNormalized("10stake")
@@ -87,10 +89,13 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 	require.NoError(err)
 	require.NotNil(consPubKeyBz)
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	k, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(err)
 
-	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+	pub, err := k.GetPubKey()
+	require.NoError(err)
+
+	newAddr := sdk.AccAddress(pub.Address())
 	_, err = banktestutil.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
@@ -1052,10 +1057,13 @@ func (s *IntegrationTestSuite) TestNewEditValidatorCmd() {
 func (s *IntegrationTestSuite) TestNewDelegateCmd() {
 	val := s.network.Validators[0]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	k, _, err := val.ClientCtx.Keyring.NewMnemonic("NewAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
-	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+	pub, err := k.GetPubKey()
+	s.Require().NoError(err)
+
+	newAddr := sdk.AccAddress(pub.Address())
 
 	_, err = banktestutil.MsgSendExec(
 		val.ClientCtx,
@@ -1537,9 +1545,12 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 	val := s.network.Validators[0]
 
 	// Create new account in the keyring.
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewDelegator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	// Create new account in the keyring.
+	k, _, err := val.ClientCtx.Keyring.NewMnemonic("NewDelegator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(err)
-	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+	pub, err := k.GetPubKey()
+	require.NoError(err)
+	newAddr := sdk.AccAddress(pub.Address())
 
 	// Send some funds to the new account.
 	_, err = banktestutil.MsgSendExec(
@@ -1567,7 +1578,7 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 	require.NoError(err)
 
 	// Create a HTTP rpc client.
-	rpcClient, err := http.New(val.RPCAddress, "/websocket")
+	rpcClient, err := http.New(val.RPCAddress)
 	require.NoError(err)
 
 	// Loop until we find a block result with the correct validator updates.

@@ -7,8 +7,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/golang/protobuf/proto"
@@ -25,6 +23,7 @@ import (
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/keeper"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/teststaking"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
+	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 func bootstrapHandlerGenesisTest(t *testing.T, power int64, numAddrs int, accAmount sdk.Int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
@@ -171,7 +170,7 @@ func TestDuplicatesMsgCreateValidator(t *testing.T) {
 func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
 	initPower := int64(1000)
 	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, initPower, 1, sdk.TokensFromConsensusPower(initPower, sdk.DefaultPowerReduction))
-	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{
+	ctx = ctx.WithConsensusParams(&tmproto.ConsensusParams{
 		Validator: &tmproto.ValidatorParams{PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519}},
 	})
 
@@ -185,7 +184,7 @@ func TestInvalidPubKeyTypeMsgCreateValidator(t *testing.T) {
 
 func TestBothPubKeyTypesMsgCreateValidator(t *testing.T) {
 	app, ctx, _, valAddrs := bootstrapHandlerGenesisTest(t, 1000, 2, sdk.NewInt(1000))
-	ctx = ctx.WithConsensusParams(&abci.ConsensusParams{
+	ctx = ctx.WithConsensusParams(&tmproto.ConsensusParams{
 		Validator: &tmproto.ValidatorParams{PubKeyTypes: []string{tmtypes.ABCIPubKeyTypeEd25519, tmtypes.ABCIPubKeyTypeSecp256k1}},
 	})
 
