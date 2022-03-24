@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
@@ -433,7 +434,7 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 
 		validator, found := k.GetValidator(ctx, delegation.GetValidatorAddr())
 		if !found {
-			return types.ErrNoValidatorFound
+			return sdkstaking.ErrNoValidatorFound
 		}
 
 		validators = append(validators, validator)
@@ -635,12 +636,12 @@ func (k Querier) TotalTokenizeSharedAssets(c context.Context, req *types.QueryTo
 
 		validator, found := k.GetValidator(ctx, valAddr)
 		if !found {
-			return nil, types.ErrNoValidatorFound
+			return nil, sdkstaking.ErrNoValidatorFound
 		}
 
 		delegation, found := k.GetDelegation(ctx, moduleAcc, valAddr)
 		if !found {
-			return nil, types.ErrNoDelegation
+			return nil, sdkstaking.ErrNoDelegation
 		}
 
 		tokens := validator.TokensFromShares(delegation.Shares)

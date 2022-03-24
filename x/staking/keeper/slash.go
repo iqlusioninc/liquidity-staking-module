@@ -22,7 +22,7 @@ import (
 // CONTRACT:
 //    Infraction was committed at the current height or at a past height,
 //    not at a height in the future
-func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec) {
+func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec) sdk.Int {
 	logger := k.Logger(ctx)
 
 	if slashFactor.IsNegative() {
@@ -46,7 +46,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 			"WARNING: ignored attempt to slash a nonexistent validator; we recommend you investigate immediately",
 			"validator", consAddr.String(),
 		)
-		return
+		return sdk.NewInt(0)
 	}
 
 	// should not be slashing an unbonded validator
@@ -141,6 +141,7 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		"slash_factor", slashFactor.String(),
 		"burned", tokensToBurn,
 	)
+	return tokensToBurn
 }
 
 // jail a validator

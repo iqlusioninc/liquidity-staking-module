@@ -6,11 +6,9 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -71,11 +69,15 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 }
 
 // RegisterRESTRoutes registers the REST routes for the slashing module.
+// Deprecated: RegisterRESTRoutes is deprecated. `x/slashing` legacy REST implementation
+// has been removed from the SDK.
 func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the slashig module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
+		panic(err)
+	}
 }
 
 // GetTxCmd returns the root tx command for the slashing module.
@@ -117,9 +119,9 @@ func (AppModule) Name() string {
 // RegisterInvariants registers the slashing module invariants.
 func (am AppModule) RegisterInvariants(_ sdk.InvariantRegistry) {}
 
-// Route returns the message routing key for the slashing module.
+// Deprecated: Route returns the message routing key for the slashing module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
+	return sdk.Route{}
 }
 
 // QuerierRoute returns the slashing module's querier route name.

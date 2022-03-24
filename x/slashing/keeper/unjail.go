@@ -3,7 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
-	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
+	sdkslashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
 // Unjail calls the staking Unjail function to unjail a validator if the
@@ -11,26 +11,26 @@ import (
 func (k Keeper) Unjail(ctx sdk.Context, validatorAddr sdk.ValAddress) error {
 	validator := k.sk.Validator(ctx, validatorAddr)
 	if validator == nil {
-		return types.ErrNoValidatorForAddress
+		return sdkslashingtypes.ErrNoValidatorForAddress
 	}
 
 	// cannot be unjailed if no self-delegation exists
 	selfDel := k.sk.Delegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
 	if selfDel == nil {
-		return types.ErrMissingSelfDelegation
+		return sdkslashingtypes.ErrMissingSelfDelegation
 	}
 
 	tokens := validator.TokensFromShares(selfDel.GetShares()).TruncateInt()
 	minSelfBond := validator.GetMinSelfDelegation()
 	if tokens.LT(minSelfBond) {
 		return sdkerrors.Wrapf(
-			types.ErrSelfDelegationTooLowToUnjail, "%s less than %s", tokens, minSelfBond,
+			sdkslashingtypes.ErrSelfDelegationTooLowToUnjail, "%s less than %s", tokens, minSelfBond,
 		)
 	}
 
 	// cannot be unjailed if not jailed
 	if !validator.IsJailed() {
-		return types.ErrValidatorNotJailed
+		return sdkslashingtypes.ErrValidatorNotJailed
 	}
 
 	consAddr, err := validator.GetConsAddr()
@@ -49,12 +49,12 @@ func (k Keeper) Unjail(ctx sdk.Context, validatorAddr sdk.ValAddress) error {
 	if found {
 		// cannot be unjailed if tombstoned
 		if info.Tombstoned {
-			return types.ErrValidatorJailed
+			return sdkslashingtypes.ErrValidatorJailed
 		}
 
 		// cannot be unjailed until out of jail
 		if ctx.BlockHeader().Time.Before(info.JailedUntil) {
-			return types.ErrValidatorJailed
+			return sdkslashingtypes.ErrValidatorJailed
 		}
 	}
 

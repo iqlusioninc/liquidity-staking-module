@@ -9,6 +9,7 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkdistr "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 )
@@ -31,7 +32,7 @@ type Keeper struct {
 func NewKeeper(
 	cdc codec.BinaryCodec, key storetypes.StoreKey, paramSpace paramtypes.Subspace,
 	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper,
-	feeCollectorName string, blockedAddrs map[string]bool,
+	feeCollectorName string,
 ) Keeper {
 
 	// ensure distribution module account is set
@@ -52,7 +53,6 @@ func NewKeeper(
 		bankKeeper:       bk,
 		stakingKeeper:    sk,
 		feeCollectorName: feeCollectorName,
-		blockedAddrs:     blockedAddrs,
 	}
 }
 
@@ -63,12 +63,12 @@ func (k Keeper) Logger(ctx sdk.Context) log.Logger {
 
 // SetWithdrawAddr sets a new address that will receive the rewards upon withdrawal
 func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, withdrawAddr sdk.AccAddress) error {
-	if k.blockedAddrs[withdrawAddr.String()] {
+	if k.bankKeeper.BlockedAddr(withdrawAddr) {
 		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive external funds", withdrawAddr)
 	}
 
 	if !k.GetWithdrawAddrEnabled(ctx) {
-		return types.ErrSetWithdrawAddrDisabled
+		return sdkdistr.ErrSetWithdrawAddrDisabled
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -86,18 +86,26 @@ func (k Keeper) SetWithdrawAddr(ctx sdk.Context, delegatorAddr sdk.AccAddress, w
 func (k Keeper) WithdrawDelegationRewards(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error) {
 	val := k.stakingKeeper.Validator(ctx, valAddr)
 	if val == nil {
-		return nil, types.ErrNoValidatorDistInfo
+		return nil, sdkdistr.ErrNoValidatorDistInfo
 	}
 
 	del := k.stakingKeeper.Delegation(ctx, delAddr, valAddr)
 	if del == nil {
-		return nil, types.ErrEmptyDelegationDistInfo
+		return nil, sdkdistr.ErrEmptyDelegationDistInfo
 	}
 
 	// withdraw rewards
 	rewards, err := k.withdrawDelegationRewards(ctx, val, del)
 	if err != nil {
 		return nil, err
+	}
+
+	if rewards.IsZero() {
+		baseDenom, _ := sdk.GetBaseDenom()
+		rewards = sdk.Coins{sdk.Coin{
+			Denom:  baseDenom,
+			Amount: sdk.ZeroInt(),
+		}}
 	}
 
 	ctx.EventManager().EmitEvent(
@@ -118,7 +126,7 @@ func (k Keeper) WithdrawValidatorCommission(ctx sdk.Context, valAddr sdk.ValAddr
 	// fetch validator accumulated commission
 	accumCommission := k.GetValidatorAccumulatedCommission(ctx, valAddr)
 	if accumCommission.Commission.IsZero() {
-		return nil, types.ErrNoValidatorCommission
+		return nil, sdkdistr.ErrNoValidatorCommission
 	}
 
 	commission, remainder := accumCommission.Commission.TruncateDecimal()

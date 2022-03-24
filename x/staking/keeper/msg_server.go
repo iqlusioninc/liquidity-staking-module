@@ -40,9 +40,13 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 		return nil, err
 	}
 
+	if msg.Commission.Rate.LT(k.MinCommissionRate(ctx)) {
+		return nil, sdkerrors.Wrapf(sdkstaking.ErrCommissionLTMinRate, "cannot set validator commission to less than minimum rate of %s", k.MinCommissionRate(ctx))
+	}
+
 	// check to see if the pubkey or sender has been registered before
 	if _, found := k.GetValidator(ctx, valAddr); found {
-		return nil, types.ErrValidatorOwnerExists
+		return nil, sdkstaking.ErrValidatorOwnerExists
 	}
 
 	pk, ok := msg.Pubkey.GetCachedValue().(cryptotypes.PubKey)
@@ -51,7 +55,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	}
 
 	if _, found := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk)); found {
-		return nil, types.ErrValidatorPubKeyExists
+		return nil, sdkstaking.ErrValidatorPubKeyExists
 	}
 
 	bondDenom := k.BondDenom(ctx)
@@ -69,7 +73,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	if cp != nil && cp.Validator != nil {
 		if !tmstrings.StringInSlice(pk.Type(), cp.Validator.PubKeyTypes) {
 			return nil, sdkerrors.Wrapf(
-				types.ErrValidatorPubKeyTypeNotSupported,
+				sdkstaking.ErrValidatorPubKeyTypeNotSupported,
 				"got: %s, expected: %s", pk.Type(), cp.Validator.PubKeyTypes,
 			)
 		}
@@ -79,6 +83,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	if err != nil {
 		return nil, err
 	}
+
 	commission := types.NewCommissionWithTime(
 		msg.Commission.Rate, msg.Commission.MaxRate,
 		msg.Commission.MaxChangeRate, ctx.BlockHeader().Time,
@@ -101,7 +106,9 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	k.SetNewValidatorByPowerIndex(ctx, validator)
 
 	// call the after-creation hook
-	k.AfterValidatorCreated(ctx, validator.GetOperator())
+	if err := k.AfterValidatorCreated(ctx, validator.GetOperator()); err != nil {
+		return nil, err
+	}
 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
@@ -137,7 +144,7 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 	// validator must already be registered
 	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
-		return nil, types.ErrNoValidatorFound
+		return nil, sdkstaking.ErrNoValidatorFound
 	}
 
 	// replace all editable fields (clients should autofill existing values)
@@ -155,18 +162,20 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 		}
 
 		// call the before-modification hook since we're about to update the commission
-		k.BeforeValidatorModified(ctx, valAddr)
+		if err := k.BeforeValidatorModified(ctx, valAddr); err != nil {
+			return nil, err
+		}
 
 		validator.Commission = commission
 	}
 
 	if msg.MinSelfDelegation != nil {
 		if !msg.MinSelfDelegation.GT(validator.MinSelfDelegation) {
-			return nil, types.ErrMinSelfDelegationDecreased
+			return nil, sdkstaking.ErrMinSelfDelegationDecreased
 		}
 
 		if msg.MinSelfDelegation.GT(validator.Tokens) {
-			return nil, types.ErrSelfDelegationBelowMinimum
+			return nil, sdkstaking.ErrSelfDelegationBelowMinimum
 		}
 
 		validator.MinSelfDelegation = (*msg.MinSelfDelegation)
@@ -200,7 +209,7 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 
 	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
-		return nil, types.ErrNoValidatorFound
+		return nil, sdkstaking.ErrNoValidatorFound
 	}
 
 	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
@@ -391,7 +400,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	}
 	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
-		return nil, types.ErrNoValidatorFound
+		return nil, sdkstaking.ErrNoValidatorFound
 	}
 
 	_ = validator
@@ -403,7 +412,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 
 	delegation, found := k.GetDelegation(ctx, delegatorAddress, valAddr)
 	if !found {
-		return nil, types.ErrNoDelegatorForAddress
+		return nil, sdkstaking.ErrNoDelegatorForAddress
 	}
 
 	if msg.Amount.Denom != k.BondDenom(ctx) {
@@ -412,7 +421,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 
 	delegationAmount := validator.Tokens.ToDec().Mul(delegation.GetShares()).Quo(validator.DelegatorShares)
 	if msg.Amount.Amount.GT(sdk.Int(delegationAmount)) {
-		return nil, types.ErrNotEnoughDelegationShares
+		return nil, sdkstaking.ErrNotEnoughDelegationShares
 	}
 
 	acc := k.authKeeper.GetAccount(ctx, delegatorAddress)
@@ -484,7 +493,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 
 	validator, found = k.GetValidator(ctx, valAddr)
 	if !found {
-		return nil, types.ErrNoValidatorFound
+		return nil, sdkstaking.ErrNoValidatorFound
 	}
 
 	// delegate from module account
@@ -523,7 +532,7 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 
 	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
-		return nil, types.ErrNoValidatorFound
+		return nil, sdkstaking.ErrNoValidatorFound
 	}
 
 	// calculate the ratio between shares and redeem amount
@@ -569,7 +578,7 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 
 	validator, found = k.GetValidator(ctx, valAddr)
 	if !found {
-		return nil, types.ErrNoValidatorFound
+		return nil, sdkstaking.ErrNoValidatorFound
 	}
 
 	// convert the share tokens to delegated status

@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	sdkdistr "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 )
@@ -139,7 +140,7 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val sdkstaking.Valid
 func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdkstaking.ValidatorI, del sdkstaking.DelegationI) (sdk.Coins, error) {
 	// check existence of delegator starting info
 	if !k.HasDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr()) {
-		return nil, types.ErrEmptyDelegationDistInfo
+		return nil, sdkdistr.ErrEmptyDelegationDistInfo
 	}
 
 	// end current period and calculate rewards

@@ -171,14 +171,11 @@ $ %[1]s tx distribution withdraw-all-rewards --from mykey
 				}
 
 				msg := types.NewMsgWithdrawDelegatorReward(delAddr, val)
-				if err := msg.ValidateBasic(); err != nil {
-					return err
-				}
 				msgs = append(msgs, msg)
 			}
 
 			chunkSize, _ := cmd.Flags().GetInt(FlagMaxMessagesPerTx)
-			if clientCtx.BroadcastMode != flags.BroadcastBlock && chunkSize > 0 {
+			if !clientCtx.GenerateOnly && clientCtx.BroadcastMode != flags.BroadcastBlock && chunkSize > 0 {
 				return fmt.Errorf("cannot use broadcast mode %[1]s with %[2]s != 0",
 					clientCtx.BroadcastMode, FlagMaxMessagesPerTx)
 			}

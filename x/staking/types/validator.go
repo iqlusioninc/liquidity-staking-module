@@ -9,7 +9,7 @@ import (
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmprotocrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
-	"gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -63,7 +63,16 @@ func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, descriptio
 
 // String implements the Stringer interface for a Validator object.
 func (v Validator) String() string {
-	out, _ := yaml.Marshal(v)
+	bz, err := codec.ProtoMarshalJSON(&v, nil)
+	if err != nil {
+		panic(err)
+	}
+
+	out, err := yaml.JSONToYAML(bz)
+	if err != nil {
+		panic(err)
+	}
+
 	return string(out)
 }
 
@@ -321,7 +330,7 @@ func (v Validator) TokensFromSharesRoundUp(shares sdk.Dec) sdk.Dec {
 // returns an error if the validator has no tokens.
 func (v Validator) SharesFromTokens(amt sdk.Int) (sdk.Dec, error) {
 	if v.Tokens.IsZero() {
-		return sdk.ZeroDec(), ErrInsufficientShares
+		return sdk.ZeroDec(), sdkstaking.ErrInsufficientShares
 	}
 
 	return v.GetDelegatorShares().MulInt(amt).QuoInt(v.GetTokens()), nil
@@ -331,7 +340,7 @@ func (v Validator) SharesFromTokens(amt sdk.Int) (sdk.Dec, error) {
 // a bond amount. It returns an error if the validator has no tokens.
 func (v Validator) SharesFromTokensTruncated(amt sdk.Int) (sdk.Dec, error) {
 	if v.Tokens.IsZero() {
-		return sdk.ZeroDec(), ErrInsufficientShares
+		return sdk.ZeroDec(), sdkstaking.ErrInsufficientShares
 	}
 
 	return v.GetDelegatorShares().MulInt(amt).QuoTruncate(v.GetTokens().ToDec()), nil

@@ -33,7 +33,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 			},
 			true,
 
-			len(vals),
+			len(vals) + 1, // +1 validator from genesis state
 			false,
 		},
 		{
@@ -42,7 +42,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 				req = &types.QueryValidatorsRequest{Status: ""}
 			},
 			true,
-			len(vals),
+			len(vals) + 1, // +1 validator from genesis state
 			false,
 		},
 		{
@@ -73,7 +73,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidators() {
 				suite.NoError(err)
 				suite.NotNil(valsResp)
 				suite.Equal(tc.numVals, len(valsResp.Validators))
-				suite.Equal(uint64(len(vals)), valsResp.Pagination.Total)
+				suite.Equal(uint64(len(vals))+1, valsResp.Pagination.Total) // +1 validator from genesis state
 
 				if tc.hasNext {
 					suite.NotNil(valsResp.Pagination.NextKey)
