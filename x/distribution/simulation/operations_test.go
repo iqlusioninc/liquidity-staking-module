@@ -10,11 +10,11 @@ import (
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
+	simappparams "github.com/iqlusioninc/liquidity-staking-module/app/params"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/simulation"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 	distrtypes "github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
@@ -44,6 +44,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{simappparams.DefaultWeightMsgWithdrawDelegationReward, types.ModuleName, types.TypeMsgWithdrawDelegatorReward},
 		{simappparams.DefaultWeightMsgWithdrawValidatorCommission, types.ModuleName, types.TypeMsgWithdrawValidatorCommission},
 		{simappparams.DefaultWeightMsgFundCommunityPool, types.ModuleName, types.TypeMsgFundCommunityPool},
+		{simulation.DefaultWeightMsgWithdrawTokenizeShareRecordReward, types.ModuleName, types.TypeMsgWithdrawTokenizeShareRecordReward},
 	}
 
 	for i, w := range weightesOps {
