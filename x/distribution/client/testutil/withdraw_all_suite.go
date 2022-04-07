@@ -8,11 +8,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
-	"github.com/cosmos/cosmos-sdk/x/distribution/client/cli"
-	stakingcli "github.com/cosmos/cosmos-sdk/x/staking/client/cli"
+	"github.com/iqlusioninc/liquidity-staking-module/testutil/network"
+	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/client/cli"
+	stakingcli "github.com/iqlusioninc/liquidity-staking-module/x/staking/client/cli"
 	"github.com/stretchr/testify/suite"
 )
 

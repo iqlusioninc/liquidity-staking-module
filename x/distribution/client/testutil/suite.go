@@ -12,9 +12,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+	"github.com/iqlusioninc/liquidity-staking-module/testutil/network"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/client/cli"
 )
 
