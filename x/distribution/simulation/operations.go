@@ -287,7 +287,7 @@ func SimulateMsgWithdrawTokenizeShareRecordReward(ak types.AccountKeeper, bk typ
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgWithdrawTokenizeShareRecordReward, "account private key is nil"), nil, nil
 		}
 
-		msg := types.NewMsgWithdrawTokenizeShareRecordReward(rewardOwner.Address)
+		msg := types.NewMsgWithdrawAllTokenizeShareRecordReward(rewardOwner.Address)
 
 		account := ak.GetAccount(ctx, rewardOwner.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
