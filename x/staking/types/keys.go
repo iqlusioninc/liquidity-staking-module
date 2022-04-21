@@ -365,6 +365,7 @@ func GetTokenizeShareRecordIdsByOwnerPrefix(owner sdk.AccAddress) []byte {
 
 // GetTokenizeShareRecordIdByOwnerAndIdKey returns the key of the specified owner and id. Intended for setting tokenizeShareRecord of an owner
 func GetTokenizeShareRecordIdByOwnerAndIdKey(owner sdk.AccAddress, id uint64) []byte {
+	// TODO: use length prefix owner.Bytes
 	return append(append(TokenizeShareRecordIdByOwnerPrefix, owner.Bytes()...), sdk.Uint64ToBigEndian(id)...)
 }
 

@@ -388,6 +388,7 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 }
 
 func getShareTokenDenom(validatorAddress string, tokenizeShareRecordId uint64) string {
+	// TODO: denom conflict possibility
 	return validatorAddress + strconv.Itoa(int(tokenizeShareRecordId))
 }
 
