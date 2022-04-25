@@ -102,7 +102,10 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	validator.MinSelfDelegation = msg.MinSelfDelegation
 
 	k.SetValidator(ctx, validator)
-	k.SetValidatorByConsAddr(ctx, validator)
+	err = k.SetValidatorByConsAddr(ctx, validator)
+	if err != nil {
+		return nil, err
+	}
 	k.SetNewValidatorByPowerIndex(ctx, validator)
 
 	// call the after-creation hook
@@ -466,6 +469,9 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	shares, err := k.ValidateUnbondAmount(
 		ctx, delegatorAddress, valAddr, msg.Amount.Amount,
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	returnAmount, err := k.Unbond(ctx, delegatorAddress, valAddr, shares)
 	if err != nil {
@@ -556,7 +562,10 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 			k.hooks.BeforeTokenizeShareRecordRemoved(ctx, record.Id)
 		}
 
-		k.DeleteTokenizeShareRecord(ctx, record.Id)
+		err = k.DeleteTokenizeShareRecord(ctx, record.Id)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// send share tokens to NotBondedPool and burn
@@ -605,6 +614,9 @@ func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types
 
 	// Remove old account reference
 	oldOwner, err := sdk.AccAddressFromBech32(record.Owner)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress
+	}
 	k.deleteTokenizeShareRecordWithOwner(ctx, oldOwner, record.Id)
 
 	record.Owner = msg.NewOwner
