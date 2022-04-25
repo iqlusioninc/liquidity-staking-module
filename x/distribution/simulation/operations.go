@@ -15,7 +15,7 @@ import (
 	stakingkeeper "github.com/iqlusioninc/liquidity-staking-module/x/staking/keeper"
 )
 
-const DefaultWeightMsgWithdrawTokenizeShareRecordReward int = 50
+const DefaultWeightMsgWithdrawAllTokenizeShareRecordReward int = 50
 
 // Simulation operation weights constants
 const (
@@ -63,7 +63,7 @@ func WeightedOperations(
 	var weightMsgWithdrawTokenizeShareRecordReward int
 	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawTokenizeShareRecordReward, &weightMsgWithdrawTokenizeShareRecordReward, nil,
 		func(_ *rand.Rand) {
-			weightMsgWithdrawTokenizeShareRecordReward = DefaultWeightMsgWithdrawTokenizeShareRecordReward
+			weightMsgWithdrawTokenizeShareRecordReward = DefaultWeightMsgWithdrawAllTokenizeShareRecordReward
 		},
 	)
 
