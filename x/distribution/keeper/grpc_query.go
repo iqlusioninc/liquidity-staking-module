@@ -268,25 +268,29 @@ func (k Keeper) TokenizeShareRecordReward(c context.Context, req *types.QueryTok
 			return nil, err
 		}
 
+		moduleAddr := record.GetModuleAddress()
+		moduleBalance := k.bankKeeper.GetAllBalances(ctx, moduleAddr)
+		moduleBalanceDecCoins := sdk.NewDecCoinsFromCoins(moduleBalance...)
+
 		val := k.stakingKeeper.Validator(ctx, valAddr)
-		if val == nil {
-			continue
+		del := k.stakingKeeper.Delegation(ctx, moduleAddr, valAddr)
+		if val != nil && del != nil {
+			// withdraw rewards
+			endingPeriod := k.IncrementValidatorPeriod(ctx, val)
+			recordReward := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
+
+			rewards = append(rewards, types.TokenizeShareRecordReward{
+				RecordId: record.Id,
+				Reward:   recordReward.Add(moduleBalanceDecCoins...),
+			})
+			totalRewards = totalRewards.Add(recordReward...)
+		} else if !moduleBalance.IsZero() {
+			rewards = append(rewards, types.TokenizeShareRecordReward{
+				RecordId: record.Id,
+				Reward:   moduleBalanceDecCoins,
+			})
+			totalRewards = totalRewards.Add(moduleBalanceDecCoins...)
 		}
-
-		del := k.stakingKeeper.Delegation(ctx, record.GetModuleAddress(), valAddr)
-		if del == nil {
-			continue
-		}
-
-		// withdraw rewards
-		endingPeriod := k.IncrementValidatorPeriod(ctx, val)
-		recordReward := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
-
-		rewards = append(rewards, types.TokenizeShareRecordReward{
-			RecordId: record.Id,
-			Reward:   recordReward,
-		})
-		totalRewards = totalRewards.Add(recordReward...)
 	}
 
 	return &types.QueryTokenizeShareRecordRewardResponse{

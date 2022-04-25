@@ -44,7 +44,7 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		{simappparams.DefaultWeightMsgWithdrawDelegationReward, types.ModuleName, types.TypeMsgWithdrawDelegatorReward},
 		{simappparams.DefaultWeightMsgWithdrawValidatorCommission, types.ModuleName, types.TypeMsgWithdrawValidatorCommission},
 		{simappparams.DefaultWeightMsgFundCommunityPool, types.ModuleName, types.TypeMsgFundCommunityPool},
-		{simulation.DefaultWeightMsgWithdrawTokenizeShareRecordReward, types.ModuleName, types.TypeMsgWithdrawTokenizeShareRecordReward},
+		{simulation.DefaultWeightMsgWithdrawAllTokenizeShareRecordReward, types.ModuleName, types.TypeMsgWithdrawAllTokenizeShareRecordReward},
 	}
 
 	for i, w := range weightesOps {
