@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 
 	metrics "github.com/armon/go-metrics"
@@ -388,7 +389,7 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 }
 
 func getShareTokenDenom(validatorAddress string, tokenizeShareRecordId uint64) string {
-	return validatorAddress + strconv.Itoa(int(tokenizeShareRecordId))
+	return strings.ToLower(validatorAddress) + strconv.Itoa(int(tokenizeShareRecordId))
 }
 
 func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeShares) (*types.MsgTokenizeSharesResponse, error) {
