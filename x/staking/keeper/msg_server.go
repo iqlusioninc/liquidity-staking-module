@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	metrics "github.com/armon/go-metrics"
@@ -387,10 +386,6 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	}, nil
 }
 
-func getShareTokenDenom(validatorAddress string, tokenizeShareRecordId uint64) string {
-	return validatorAddress + strconv.Itoa(int(tokenizeShareRecordId))
-}
-
 func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeShares) (*types.MsgTokenizeSharesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -442,16 +437,14 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	recordId := k.GetLastTokenizeShareRecordId(ctx) + 1
 	k.SetLastTokenizeShareRecordId(ctx, recordId)
 
-	shareTokenDenom := getShareTokenDenom(msg.ValidatorAddress, recordId)
 	record := types.TokenizeShareRecord{
-		Id:              recordId,
-		Owner:           msg.TokenizedShareOwner,
-		ShareTokenDenom: shareTokenDenom,
-		ModuleAccount:   fmt.Sprintf("tokenizeshare_%d", recordId),
-		Validator:       msg.ValidatorAddress,
+		Id:            recordId,
+		Owner:         msg.TokenizedShareOwner,
+		ModuleAccount: fmt.Sprintf("tokenizeshare_%d", recordId),
+		Validator:     msg.ValidatorAddress,
 	}
 
-	shareToken := sdk.NewCoin(shareTokenDenom, msg.Amount.Amount)
+	shareToken := sdk.NewCoin(record.GetShareTokenDenom(), msg.Amount.Amount)
 
 	err = k.bankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.Coins{shareToken})
 	if err != nil {
