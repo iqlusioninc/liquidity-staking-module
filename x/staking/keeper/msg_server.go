@@ -491,6 +491,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
+	// Note: it is needed to get latest validator object to get Keeper.Delegate function work properly
 	validator, found = k.GetValidator(ctx, valAddr)
 	if !found {
 		return nil, sdkstaking.ErrNoValidatorFound
