@@ -202,7 +202,10 @@ func (msg MsgWithdrawAllTokenizeShareRecordReward) Type() string {
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgWithdrawAllTokenizeShareRecordReward) GetSigners() []sdk.AccAddress {
-	owner, _ := sdk.AccAddressFromBech32(msg.OwnerAddress)
+	owner, err := sdk.AccAddressFromBech32(msg.OwnerAddress)
+	if err != nil {
+		panic(err)
+	}
 	return []sdk.AccAddress{owner}
 }
 
