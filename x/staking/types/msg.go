@@ -216,7 +216,10 @@ func (msg MsgDelegate) Type() string { return TypeMsgDelegate }
 
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgDelegate) GetSigners() []sdk.AccAddress {
-	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
 	return []sdk.AccAddress{delegator}
 }
 
@@ -266,7 +269,10 @@ func (msg MsgBeginRedelegate) Type() string { return TypeMsgBeginRedelegate }
 
 // GetSigners implements the sdk.Msg interface
 func (msg MsgBeginRedelegate) GetSigners() []sdk.AccAddress {
-	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
 	return []sdk.AccAddress{delegator}
 }
 
@@ -316,7 +322,10 @@ func (msg MsgUndelegate) Type() string { return TypeMsgUndelegate }
 
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgUndelegate) GetSigners() []sdk.AccAddress {
-	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
 	return []sdk.AccAddress{delegator}
 }
 
@@ -349,7 +358,10 @@ func (msg MsgUndelegate) ValidateBasic() error {
 func (msg MsgTokenizeShares) Type() string { return TypeMsgTokenizeShares }
 
 func (msg MsgTokenizeShares) GetSigners() []sdk.AccAddress {
-	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
 	return []sdk.AccAddress{delegator}
 }
 
@@ -383,7 +395,10 @@ func (msg MsgTokenizeShares) ValidateBasic() error {
 func (msg MsgRedeemTokensforShares) Type() string { return TypeMsgRedeemTokensforShares }
 
 func (msg MsgRedeemTokensforShares) GetSigners() []sdk.AccAddress {
-	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
 	return []sdk.AccAddress{delegator}
 }
 
@@ -411,7 +426,10 @@ func (msg MsgRedeemTokensforShares) ValidateBasic() error {
 func (msg MsgTransferTokenizeShareRecord) Type() string { return TypeMsgTransferTokenizeShareRecord }
 
 func (msg MsgTransferTokenizeShareRecord) GetSigners() []sdk.AccAddress {
-	sender, _ := sdk.AccAddressFromBech32(msg.Sender)
+	sender, err := sdk.AccAddressFromBech32(msg.Sender)
+	if err != nil {
+		panic(err)
+	}
 	return []sdk.AccAddress{sender}
 }
 

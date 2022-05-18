@@ -31,7 +31,10 @@ func (msg MsgSetWithdrawAddress) Type() string  { return TypeMsgSetWithdrawAddre
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgSetWithdrawAddress) GetSigners() []sdk.AccAddress {
-	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
 	return []sdk.AccAddress{delegator}
 }
 
@@ -65,7 +68,10 @@ func (msg MsgWithdrawDelegatorReward) Type() string  { return TypeMsgWithdrawDel
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgWithdrawDelegatorReward) GetSigners() []sdk.AccAddress {
-	delegator, _ := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
 	return []sdk.AccAddress{delegator}
 }
 
@@ -133,7 +139,10 @@ func (msg MsgFundCommunityPool) Type() string { return TypeMsgFundCommunityPool 
 // GetSigners returns the signer addresses that are expected to sign the result
 // of GetSignBytes.
 func (msg MsgFundCommunityPool) GetSigners() []sdk.AccAddress {
-	depositor, _ := sdk.AccAddressFromBech32(msg.Depositor)
+	depositor, err := sdk.AccAddressFromBech32(msg.Depositor)
+	if err != nil {
+		panic(err)
+	}
 	return []sdk.AccAddress{depositor}
 }
 
@@ -168,7 +177,10 @@ func (msg MsgWithdrawTokenizeShareRecordReward) Type() string {
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgWithdrawTokenizeShareRecordReward) GetSigners() []sdk.AccAddress {
-	owner, _ := sdk.AccAddressFromBech32(msg.OwnerAddress)
+	owner, err := sdk.AccAddressFromBech32(msg.OwnerAddress)
+	if err != nil {
+		panic(err)
+	}
 	return []sdk.AccAddress{owner}
 }
 
