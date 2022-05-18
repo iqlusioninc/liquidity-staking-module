@@ -313,11 +313,10 @@ func TestTransferTokenizeShareRecord(t *testing.T) {
 	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
 
 	err := app.StakingKeeper.AddTokenizeShareRecord(ctx, types.TokenizeShareRecord{
-		Id:              1,
-		Owner:           addrAcc1.String(),
-		ShareTokenDenom: "share_token_denom",
-		ModuleAccount:   "module_account",
-		Validator:       val.String(),
+		Id:            1,
+		Owner:         addrAcc1.String(),
+		ModuleAccount: "module_account",
+		Validator:     val.String(),
 	})
 	require.NoError(t, err)
 
