@@ -360,12 +360,12 @@ func GetTokenizeShareRecordByIndexKey(id uint64) []byte {
 
 // GetTokenizeShareRecordIdsByOwnerPrefix returns the key of the specified owner. Intended for querying all tokenizeShareRecords of an owner
 func GetTokenizeShareRecordIdsByOwnerPrefix(owner sdk.AccAddress) []byte {
-	return append(TokenizeShareRecordIdByOwnerPrefix, owner.Bytes()...)
+	return append(TokenizeShareRecordIdByOwnerPrefix, address.MustLengthPrefix(owner)...)
 }
 
 // GetTokenizeShareRecordIdByOwnerAndIdKey returns the key of the specified owner and id. Intended for setting tokenizeShareRecord of an owner
 func GetTokenizeShareRecordIdByOwnerAndIdKey(owner sdk.AccAddress, id uint64) []byte {
-	return append(append(TokenizeShareRecordIdByOwnerPrefix, owner.Bytes()...), sdk.Uint64ToBigEndian(id)...)
+	return append(append(TokenizeShareRecordIdByOwnerPrefix, address.MustLengthPrefix(owner)...), sdk.Uint64ToBigEndian(id)...)
 }
 
 func GetTokenizeShareRecordIdByDenomKey(denom string) []byte {
