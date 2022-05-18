@@ -617,12 +617,12 @@ func SimulateMsgRedeemTokensforShares(ak types.AccountKeeper, bk types.BankKeepe
 		if len(records) > 0 {
 			record := records[r.Intn(len(records))]
 			for _, acc := range accs {
-				balance := bk.GetBalance(ctx, acc.Address, record.ShareTokenDenom)
+				balance := bk.GetBalance(ctx, acc.Address, record.GetShareTokenDenom())
 				if balance.Amount.IsPositive() {
 					redeemUser = acc
 					redeemAmount, err := simtypes.RandPositiveInt(r, balance.Amount)
 					if err == nil {
-						redeemCoin = sdk.NewCoin(record.ShareTokenDenom, redeemAmount)
+						redeemCoin = sdk.NewCoin(record.GetShareTokenDenom(), redeemAmount)
 					}
 					break
 				}
@@ -678,7 +678,7 @@ func SimulateMsgTransferTokenizeShareRecord(ak types.AccountKeeper, bk types.Ban
 		if len(records) > 0 {
 			record := records[r.Intn(len(records))]
 			for _, acc := range accs {
-				balance := bk.GetBalance(ctx, acc.Address, record.ShareTokenDenom)
+				balance := bk.GetBalance(ctx, acc.Address, record.GetShareTokenDenom())
 				if balance.Amount.IsPositive() {
 					simAccount = acc
 					transferRecord = record

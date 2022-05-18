@@ -178,7 +178,7 @@ func TestRedeemTokensforShares(t *testing.T) {
 			require.NoError(t, err)
 
 			// redeem share
-			tstaking.RedeemTokensForShares(del2, sdk.NewCoin(record.ShareTokenDenom, tc.amount), tc.isSuccess)
+			tstaking.RedeemTokensForShares(del2, sdk.NewCoin(record.GetShareTokenDenom(), tc.amount), tc.isSuccess)
 		})
 	}
 }

@@ -231,7 +231,59 @@ func (k Keeper) WithdrawSingleShareRecordReward(ctx sdk.Context, recordId uint64
 }
 
 // withdraw reward for owning TokenizeShareRecord
-func (k Keeper) WithdrawTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk.AccAddress) (sdk.Coins, error) {
+func (k Keeper) WithdrawTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk.AccAddress, recordId uint64) (sdk.Coins, error) {
+	record, err := k.stakingKeeper.GetTokenizeShareRecord(ctx, recordId)
+	if err != nil {
+		return nil, err
+	}
+
+	if record.Owner != ownerAddr.String() {
+		return nil, types.ErrNotTokenizeShareRecordOwner
+	}
+
+	valAddr, err := sdk.ValAddressFromBech32(record.Validator)
+	if err != nil {
+		return nil, err
+	}
+
+	val := k.stakingKeeper.Validator(ctx, valAddr)
+	if val == nil {
+		return nil, err
+	}
+
+	del := k.stakingKeeper.Delegation(ctx, record.GetModuleAddress(), valAddr)
+	if del == nil {
+		return nil, err
+	}
+
+	// withdraw rewards into reward module account and send it to reward owner
+	_, err = k.WithdrawDelegationRewards(ctx, record.GetModuleAddress(), valAddr)
+	if err != nil {
+		return nil, err
+	}
+
+	// apply changes when the module account has positive balance
+	rewards := k.bankKeeper.GetAllBalances(ctx, record.GetModuleAddress())
+	if !rewards.Empty() {
+		err = k.bankKeeper.SendCoins(ctx, record.GetModuleAddress(), ownerAddr, rewards)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeWithdrawTokenizeShareReward,
+			sdk.NewAttribute(types.AttributeKeyWithdrawAddress, ownerAddr.String()),
+			sdk.NewAttribute(sdk.AttributeKeyAmount, rewards.String()),
+		),
+	)
+
+	return rewards, nil
+}
+
+// withdraw reward for all owning TokenizeShareRecord
+func (k Keeper) WithdrawAllTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk.AccAddress) (sdk.Coins, error) {
 	totalRewards := sdk.Coins{}
 
 	records := k.stakingKeeper.GetTokenizeShareRecordsByOwner(ctx, ownerAddr)
