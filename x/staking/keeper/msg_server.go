@@ -403,8 +403,6 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, sdkstaking.ErrNoValidatorFound
 	}
 
-	_ = validator
-
 	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
 		return nil, err
@@ -502,6 +500,17 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeTokenizeShares,
+			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
+			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+			sdk.NewAttribute(types.AttributeKeyShareOwner, msg.TokenizedShareOwner),
+			sdk.NewAttribute(types.AttributeKeyShareRecordId, fmt.Sprintf("%d", record.Id)),
+			sdk.NewAttribute(types.AttributeKeyAmount, msg.Amount.String()),
+		),
+	)
+
 	return &types.MsgTokenizeSharesResponse{
 		Amount: shareToken,
 	}, nil
@@ -588,6 +597,15 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		return nil, err
 	}
 
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeRedeemShares,
+			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
+			sdk.NewAttribute(types.AttributeKeyValidator, validator.OperatorAddress),
+			sdk.NewAttribute(types.AttributeKeyAmount, msg.Amount.String()),
+		),
+	)
+
 	return &types.MsgRedeemTokensforSharesResponse{}, nil
 }
 
@@ -616,6 +634,15 @@ func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types
 		return nil, sdkerrors.ErrInvalidAddress
 	}
 	k.setTokenizeShareRecordWithOwner(ctx, newOwner, record.Id)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeTransferTokenizeShareRecord,
+			sdk.NewAttribute(types.AttributeKeyShareRecordId, fmt.Sprintf("%d", msg.TokenizeShareRecordId)),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+			sdk.NewAttribute(types.AttributeKeyShareOwner, msg.NewOwner),
+		),
+	)
 
 	return &types.MsgTransferTokenizeShareRecordResponse{}, nil
 }
