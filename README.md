@@ -4,7 +4,7 @@ The purpose of this repository is to develop and release a new set of staking, d
 
 ## Liquid Staking design
 
-This repo represents an opinated design for adding liquid staking to the Cosmos SDK. The
+This repo represents an opinionated design for adding liquid staking to the Cosmos SDK.
 
 There are a few core goals.
 
