@@ -2,6 +2,7 @@ package cli
 
 import (
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -42,6 +43,7 @@ func NewTxCmd() *cobra.Command {
 		NewSetWithdrawAddrCmd(),
 		NewFundCommunityPoolCmd(),
 		NewWithdrawTokenizeShareRecordRewardCmd(),
+		NewWithdrawAllTokenizeShareRecordRewardCmd(),
 	)
 
 	return distTxCmd
@@ -331,14 +333,14 @@ Where proposal.json contains:
 	return cmd
 }
 
-// WithdrawTokenizeShareRecordReward defines a method to withdraw reward for owning TokenizeShareRecord
-func NewWithdrawTokenizeShareRecordRewardCmd() *cobra.Command {
+// WithdrawAllTokenizeShareRecordReward defines a method to withdraw reward for all owning TokenizeShareRecord
+func NewWithdrawAllTokenizeShareRecordRewardCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "withdraw-tokenize-share-rewards",
+		Use:   "withdraw-all-tokenize-share-rewards",
 		Args:  cobra.ExactArgs(0),
-		Short: "Withdraw reward for owning TokenizeShareRecord",
+		Short: "Withdraw reward for all owning TokenizeShareRecord",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Withdraw reward for owned TokenizeShareRecord
+			fmt.Sprintf(`Withdraw reward for all owned TokenizeShareRecord
 
 Example:
 $ %s tx distribution withdraw-tokenize-share-rewards --from mykey
@@ -352,7 +354,44 @@ $ %s tx distribution withdraw-tokenize-share-rewards --from mykey
 				return err
 			}
 
-			msg := types.NewMsgWithdrawTokenizeShareRecordReward(clientCtx.GetFromAddress())
+			msg := types.NewMsgWithdrawAllTokenizeShareRecordReward(clientCtx.GetFromAddress())
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// WithdrawTokenizeShareRecordReward defines a method to withdraw reward for an owning TokenizeShareRecord
+func NewWithdrawTokenizeShareRecordRewardCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "withdraw-tokenize-share-rewards",
+		Args:  cobra.ExactArgs(1),
+		Short: "Withdraw reward for an owning TokenizeShareRecord",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Withdraw reward for an owned TokenizeShareRecord
+
+Example:
+$ %s tx distribution withdraw-tokenize-share-rewards 1 --from mykey
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			recordId, err := strconv.Atoi(args[0])
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgWithdrawTokenizeShareRecordReward(clientCtx.GetFromAddress(), uint64(recordId))
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

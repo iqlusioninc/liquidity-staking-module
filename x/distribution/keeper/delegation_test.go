@@ -140,7 +140,7 @@ func TestWithdrawTokenizeShareRecordReward(t *testing.T) {
 	})
 
 	// try withdrawing rewards before no reward is allocated
-	coins, err = app.DistrKeeper.WithdrawTokenizeShareRecordReward(ctx, sdk.AccAddress(valAddrs[1]))
+	coins, err = app.DistrKeeper.WithdrawAllTokenizeShareRecordReward(ctx, sdk.AccAddress(valAddrs[1]))
 	require.Nil(t, err)
 	require.Equal(t, coins, sdk.Coins{})
 
@@ -160,7 +160,7 @@ func TestWithdrawTokenizeShareRecordReward(t *testing.T) {
 	beforeBalance := app.BankKeeper.GetBalance(ctx, sdk.AccAddress(valAddrs[1]), sdk.DefaultBondDenom)
 
 	// withdraw rewards
-	coins, err = app.DistrKeeper.WithdrawTokenizeShareRecordReward(ctx, sdk.AccAddress(valAddrs[1]))
+	coins, err = app.DistrKeeper.WithdrawAllTokenizeShareRecordReward(ctx, sdk.AccAddress(valAddrs[1]))
 	require.Nil(t, err)
 
 	// check return value
