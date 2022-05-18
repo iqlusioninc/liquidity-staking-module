@@ -11,7 +11,7 @@ There are a few core goals.
 1. Staked assets should be able to converted into liquid staked assets without unbonding.
 2. The smallest change set possible on the existing staking, slashing and distrbution modules.
 3. Assets are expected to be minimally fungible. Assets have a denom of "cosmosvaloperxxxx[recordId]". Record ID is a pointer to a non fungible asset that recieves the rewards from the tokenized stake.
-4. Governance rights are bound to the validator.
+4. Governance rights remain with the validator. Validators vote with the full voting power of all staked assets (including those made liquid), but liquid staked assets cannot vote (cannot override the validator).
 
 ## Typical user flow.
 
@@ -34,11 +34,11 @@ liquidstakingd tx staking redeem-tokens 1000cosmosvaloper14tlxr8mcr3rg9mjp8d96f9
 
 ## Hypothetical user flow with refungiblization
 
-This flow requires an itegration with CosmWasm that is not part of this repo at this time.
+This flow requires an integration with CosmWasm (or Interchain Security) that is not part of this repo at this time.
 
 1. Alice bonds 500 ATOM to iqlusion.io
 2. Alice executes MsgTokenizeShares for the 500_000_000uatom and 500_000_000cosmosvaloper1xxxx42 in return.
-3. There is a staking DAO contract in cosmwasm that is will to accept tokenizedshares from iqlusion.
+3. There is a staking DAO contract in cosmwasm that is willing to accept tokenizedshares from iqlusion.
 4. Alice excutes a multimsg sending 500_000_000cosmosvaloper1xxxx42 and MsgTransferTokenizeShareRecord to the address of the Staking DAO contract.
 5. The Staking contract queries the state to see shares to atom ratio for iqlusion and the pending rewards in the share record.
 6. Alice recieve 500_000_000ustatom from the staking dao contract.
