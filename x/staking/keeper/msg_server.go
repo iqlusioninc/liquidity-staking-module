@@ -494,6 +494,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
+	// Note: it is needed to get latest validator object to get Keeper.Delegate function work properly
 	validator, found = k.GetValidator(ctx, valAddr)
 	if !found {
 		return nil, sdkstaking.ErrNoValidatorFound
@@ -564,6 +565,7 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		k.bondedTokensToNotBonded(ctx, returnAmount)
 	}
 
+	// Note: since delegation object has been changed from unbond call, it gets latest delegation
 	_, found = k.GetDelegation(ctx, record.GetModuleAddress(), valAddr)
 	if !found {
 		if k.hooks != nil {
@@ -593,6 +595,7 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		return nil, err
 	}
 
+	// Note: it is needed to get latest validator object to get Keeper.Delegate function work properly
 	validator, found = k.GetValidator(ctx, valAddr)
 	if !found {
 		return nil, sdkstaking.ErrNoValidatorFound
