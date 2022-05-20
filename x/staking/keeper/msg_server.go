@@ -608,7 +608,6 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		return nil, err
 	}
 
-<<<<<<< Updated upstream
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeRedeemShares,
@@ -618,12 +617,9 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		),
 	)
 
-	return &types.MsgRedeemTokensforSharesResponse{}, nil
-=======
 	return &types.MsgRedeemTokensforSharesResponse{
 		Amount: returnCoin,
 	}, nil
->>>>>>> Stashed changes
 }
 
 func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types.MsgTransferTokenizeShareRecord) (*types.MsgTransferTokenizeShareRecordResponse, error) {
