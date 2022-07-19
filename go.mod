@@ -3,31 +3,39 @@ module github.com/iqlusioninc/liquidity-staking-module
 go 1.16
 
 require (
-	github.com/armon/go-metrics v0.3.10
-	github.com/cosmos/cosmos-sdk v0.46.0-alpha3
+	cosmossdk.io/math v1.0.0-beta.2 // indirect
+	github.com/armon/go-metrics v0.3.11
+	github.com/cosmos/cosmos-sdk v0.46.0-rc3 // indirect
 	github.com/cosmos/go-bip39 v1.0.0
+	github.com/creachadair/taskgroup v0.3.2 // indirect
+	github.com/creachadair/tomledit v0.0.22 // indirect
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/mock v1.6.0
 	github.com/golang/protobuf v1.5.2
 	github.com/gorilla/mux v1.8.0
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
+	github.com/improbable-eng/grpc-web v0.15.0 // indirect
+	github.com/mroth/weightedrand v0.4.1 // indirect
+	github.com/oasisprotocol/curve25519-voi v0.0.0-20210609091139-0a56a4bca00b // indirect
 	github.com/pkg/errors v0.9.1
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
-	github.com/rs/zerolog v1.26.1
-	github.com/spf13/cast v1.4.1
-	github.com/spf13/cobra v1.3.0
+	github.com/rs/zerolog v1.27.0
+	github.com/spf13/cast v1.5.0
+	github.com/spf13/cobra v1.5.0
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.10.1
-	github.com/stretchr/testify v1.7.0
-	github.com/tendermint/tendermint v0.35.2
-	github.com/tendermint/tm-db v0.6.6
-	google.golang.org/genproto v0.0.0-20220118154757-00ab72f36ad5
-	google.golang.org/grpc v1.44.0
-	google.golang.org/protobuf v1.27.1
+	github.com/spf13/viper v1.12.0
+	github.com/stretchr/testify v1.8.0
+	github.com/tendermint/tendermint v0.34.20-rc1 // indirect
+	github.com/tendermint/tm-db v0.6.7 // indirect
+	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd
+	google.golang.org/grpc v1.47.0
+	google.golang.org/protobuf v1.28.0
 	sigs.k8s.io/yaml v1.3.0
 )
 
-replace github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
-
-replace github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
+replace (
+	github.com/99designs/keyring => github.com/cosmos/keyring v1.1.7-0.20210622111912-ef00f8ac3d76
+	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.7.0
+	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
+)

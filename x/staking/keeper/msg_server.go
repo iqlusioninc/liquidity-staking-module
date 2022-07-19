@@ -415,8 +415,8 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, types.ErrOnlyBondDenomAllowdForTokenize
 	}
 
-	delegationAmount := validator.Tokens.ToDec().Mul(delegation.GetShares()).Quo(validator.DelegatorShares)
-	if msg.Amount.Amount.GT(sdk.Int(delegationAmount)) {
+	delegationAmount := sdk.NewDecFromInt(validator.Tokens).Mul(delegation.GetShares()).Quo(validator.DelegatorShares)
+	if sdk.NewDecFromInt(msg.Amount.Amount).GT(delegationAmount) {
 		return nil, sdkstaking.ErrNotEnoughDelegationShares
 	}
 
@@ -548,7 +548,7 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 	// moduleAccountTotalDelegation * redeemAmount / totalIssue
 	delegation, found := k.GetDelegation(ctx, record.GetModuleAddress(), valAddr)
 	shareDenomSupply := k.bankKeeper.GetSupply(ctx, msg.Amount.Denom)
-	shares := delegation.Shares.Mul(msg.Amount.Amount.ToDec()).QuoInt(shareDenomSupply.Amount)
+	shares := delegation.Shares.Mul(sdk.NewDecFromInt(msg.Amount.Amount)).QuoInt(shareDenomSupply.Amount)
 
 	returnAmount, err := k.Unbond(ctx, record.GetModuleAddress(), valAddr, shares)
 	if err != nil {
