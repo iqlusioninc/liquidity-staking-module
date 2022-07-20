@@ -692,7 +692,7 @@ func (suite *KeeperTestSuite) TestGRPCTokenizeShareRecordReward() {
 
 	// allocate some rewards
 	initial := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
-	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial.ToDec()}}
+	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecFromInt(initial)}}
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// end period

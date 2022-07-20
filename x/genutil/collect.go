@@ -19,7 +19,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
-	"github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/iqlusioninc/liquidity-staking-module/x/genutil/types"
 	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
@@ -27,7 +27,6 @@ import (
 func GenAppStateFromConfig(cdc codec.JSONCodec, txEncodingConfig client.TxEncodingConfig,
 	config *cfg.Config, initCfg types.InitConfig, genDoc tmtypes.GenesisDoc, genBalIterator types.GenesisBalancesIterator,
 ) (appState json.RawMessage, err error) {
-
 	// process genesis transactions, else create default genesis.json
 	appGenTxs, persistentPeers, err := CollectTxs(
 		cdc, txEncodingConfig.TxJSONDecoder(), config.Moniker, initCfg.GenTxsDir, genDoc, genBalIterator,
@@ -37,7 +36,7 @@ func GenAppStateFromConfig(cdc codec.JSONCodec, txEncodingConfig client.TxEncodi
 	}
 
 	config.P2P.PersistentPeers = persistentPeers
-	cfg.WriteConfigFile(config.RootDir, config)
+	cfg.WriteConfigFile(filepath.Join(config.RootDir, "config", "config.toml"), config)
 
 	// if there are no gen txs to be processed, return the default empty state
 	if len(appGenTxs) == 0 {
@@ -111,8 +110,8 @@ func CollectTxs(cdc codec.JSONCodec, txJSONDecoder sdk.TxDecoder, moniker, genTx
 			return appGenTxs, persistentPeers, err
 		}
 
-		var genTx sdk.Tx
-		if genTx, err = txJSONDecoder(jsonRawTx); err != nil {
+		genTx, err := types.ValidateAndGetGenTx(jsonRawTx, txJSONDecoder)
+		if err != nil {
 			return appGenTxs, persistentPeers, err
 		}
 

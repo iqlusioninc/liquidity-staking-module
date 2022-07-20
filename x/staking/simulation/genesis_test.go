@@ -10,6 +10,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
+	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/simulation"
@@ -32,7 +33,7 @@ func TestRandomizedGenState(t *testing.T) {
 		Rand:         r,
 		NumBonded:    3,
 		Accounts:     simtypes.RandomAccounts(r, 3),
-		InitialStake: 1000,
+		InitialStake: sdk.NewInt(1000),
 		GenState:     make(map[string]json.RawMessage),
 	}
 
@@ -94,7 +95,7 @@ func TestRandomizedGenState1(t *testing.T) {
 				Rand:         r,
 				NumBonded:    4,
 				Accounts:     simtypes.RandomAccounts(r, 3),
-				InitialStake: 1000,
+				InitialStake: sdk.NewInt(1000),
 				GenState:     make(map[string]json.RawMessage),
 			}, "invalid memory address or nil pointer dereference"},
 	}

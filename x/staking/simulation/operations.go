@@ -28,6 +28,7 @@ const (
 	OpWeightMsgDelegate                    = "op_weight_msg_delegate"
 	OpWeightMsgUndelegate                  = "op_weight_msg_undelegate"
 	OpWeightMsgBeginRedelegate             = "op_weight_msg_begin_redelegate"
+	OpWeightMsgCancelUnbondingDelegation   = "op_weight_msg_cancel_unbonding_delegation"
 	OpWeightMsgTokenizeShares              = "op_weight_msg_tokenize_shares"
 	OpWeightMsgRedeemTokensforShares       = "op_weight_msg_redeem_tokens_for_shares"
 	OpWeightMsgTransferTokenizeShareRecord = "op_weight_msg_transfer_tokenize_share_record"
@@ -44,6 +45,7 @@ func WeightedOperations(
 		weightMsgDelegate                    int
 		weightMsgUndelegate                  int
 		weightMsgBeginRedelegate             int
+		weightMsgCancelUnbondingDelegation   int
 		weightMsgTokenizeShares              int
 		weightMsgRedeemTokensforShares       int
 		weightMsgTransferTokenizeShareRecord int
@@ -76,6 +78,12 @@ func WeightedOperations(
 	appParams.GetOrGenerate(cdc, OpWeightMsgBeginRedelegate, &weightMsgBeginRedelegate, nil,
 		func(_ *rand.Rand) {
 			weightMsgBeginRedelegate = simappparams.DefaultWeightMsgBeginRedelegate
+		},
+	)
+
+	appParams.GetOrGenerate(cdc, OpWeightMsgCancelUnbondingDelegation, &weightMsgCancelUnbondingDelegation, nil,
+		func(_ *rand.Rand) {
+			weightMsgCancelUnbondingDelegation = simappparams.DefaultWeightMsgCancelUnbondingDelegation
 		},
 	)
 
@@ -117,6 +125,10 @@ func WeightedOperations(
 		simulation.NewWeightedOperation(
 			weightMsgBeginRedelegate,
 			SimulateMsgBeginRedelegate(ak, bk, k),
+		),
+		simulation.NewWeightedOperation(
+			weightMsgCancelUnbondingDelegation,
+			SimulateMsgCancelUnbondingDelegate(ak, bk, k),
 		),
 		simulation.NewWeightedOperation(
 			weightMsgTokenizeShares,
@@ -166,7 +178,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 
 		var fees sdk.Coins
 
-		coins, hasNeg := spendable.SafeSub(sdk.Coins{selfDelegation})
+		coins, hasNeg := spendable.SafeSub(selfDelegation)
 		if !hasNeg {
 			fees, err = simtypes.RandomFees(r, ctx, coins)
 			if err != nil {
@@ -174,7 +186,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 			}
 		}
 
-		description := sdkstaking.NewDescription(
+		description := types.NewDescription(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 10),
@@ -183,18 +195,19 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 		)
 
 		maxCommission := sdk.NewDecWithPrec(int64(simtypes.RandIntBetween(r, 0, 100)), 2)
-		commission := sdkstaking.NewCommissionRates(
+		commission := types.NewCommissionRates(
 			simtypes.RandomDecAmount(r, maxCommission),
 			maxCommission,
 			simtypes.RandomDecAmount(r, maxCommission),
 		)
 
-		msg, err := sdkstaking.NewMsgCreateValidator(address, simAccount.ConsKey.PubKey(), selfDelegation, description, commission, sdk.OneInt())
+		msg, err := types.NewMsgCreateValidator(address, simAccount.ConsKey.PubKey(), selfDelegation, description, commission, sdk.OneInt())
 		if err != nil {
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "unable to create CreateValidator message"), nil, err
 		}
 
 		txCtx := simulation.OperationInput{
+			R:             r,
 			App:           app,
 			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:           nil,
@@ -241,7 +254,7 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k kee
 		account := ak.GetAccount(ctx, simAccount.Address)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		description := sdkstaking.NewDescription(
+		description := types.NewDescription(
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 10),
 			simtypes.RandStringOfLength(r, 10),
@@ -249,7 +262,7 @@ func SimulateMsgEditValidator(ak types.AccountKeeper, bk types.BankKeeper, k kee
 			simtypes.RandStringOfLength(r, 10),
 		)
 
-		msg := sdkstaking.NewMsgEditValidator(address, description, &newCommissionRate, nil)
+		msg := types.NewMsgEditValidator(address, description, &newCommissionRate, nil)
 
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -308,7 +321,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 
 		var fees sdk.Coins
 
-		coins, hasNeg := spendable.SafeSub(sdk.Coins{bondAmt})
+		coins, hasNeg := spendable.SafeSub(bondAmt)
 		if !hasNeg {
 			fees, err = simtypes.RandomFees(r, ctx, coins)
 			if err != nil {
@@ -316,9 +329,10 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 			}
 		}
 
-		msg := sdkstaking.NewMsgDelegate(simAccount.Address, val.GetOperator(), bondAmt)
+		msg := types.NewMsgDelegate(simAccount.Address, val.GetOperator(), bondAmt)
 
 		txCtx := simulation.OperationInput{
+			R:             r,
 			App:           app,
 			TxGen:         simappparams.MakeTestEncodingConfig().TxConfig,
 			Cdc:           nil,
@@ -373,7 +387,7 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgUndelegate, "unbond amount is zero"), nil, nil
 		}
 
-		msg := sdkstaking.NewMsgUndelegate(
+		msg := types.NewMsgUndelegate(
 			delAddr, valAddr, sdk.NewCoin(k.BondDenom(ctx), unbondAmt),
 		)
 
@@ -393,6 +407,74 @@ func SimulateMsgUndelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper
 
 		account := ak.GetAccount(ctx, delAddr)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
+
+		txCtx := simulation.OperationInput{
+			R:               r,
+			App:             app,
+			TxGen:           simappparams.MakeTestEncodingConfig().TxConfig,
+			Cdc:             nil,
+			Msg:             msg,
+			MsgType:         msg.Type(),
+			Context:         ctx,
+			SimAccount:      simAccount,
+			AccountKeeper:   ak,
+			Bankkeeper:      bk,
+			ModuleName:      types.ModuleName,
+			CoinsSpentInMsg: spendable,
+		}
+
+		return simulation.GenAndDeliverTxWithRandFees(txCtx)
+	}
+}
+
+// SimulateMsgCancelUnbondingDelegate generates a MsgCancelUnbondingDelegate with random values
+func SimulateMsgCancelUnbondingDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper) simtypes.Operation {
+	return func(
+		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
+	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
+		if len(k.GetAllValidators(ctx)) == 0 {
+			return simtypes.NoOpMsg(types.ModuleName, types.TypeMsgDelegate, "number of validators equal zero"), nil, nil
+		}
+		// get random account
+		simAccount, _ := simtypes.RandomAcc(r, accs)
+		// get random validator
+		validator, ok := keeper.RandomValidator(r, k, ctx)
+		if !ok {
+			return simtypes.NoOpMsg(types.ModuleName, sdkstaking.TypeMsgCancelUnbondingDelegation, "validator is not ok"), nil, nil
+		}
+
+		if validator.IsJailed() || validator.InvalidExRate() {
+			return simtypes.NoOpMsg(types.ModuleName, sdkstaking.TypeMsgCancelUnbondingDelegation, "validator is jailed"), nil, nil
+		}
+
+		valAddr := validator.GetOperator()
+		unbondingDelegation, found := k.GetUnbondingDelegation(ctx, simAccount.Address, valAddr)
+		if !found {
+			return simtypes.NoOpMsg(types.ModuleName, sdkstaking.TypeMsgCancelUnbondingDelegation, "account does have any unbonding delegation"), nil, nil
+		}
+
+		// get random unbonding delegation entry at block height
+		unbondingDelegationEntry := unbondingDelegation.Entries[r.Intn(len(unbondingDelegation.Entries))]
+
+		if unbondingDelegationEntry.CompletionTime.Before(ctx.BlockTime()) {
+			return simtypes.NoOpMsg(types.ModuleName, sdkstaking.TypeMsgCancelUnbondingDelegation, "unbonding delegation is already processed"), nil, nil
+		}
+
+		if !unbondingDelegationEntry.Balance.IsPositive() {
+			return simtypes.NoOpMsg(types.ModuleName, sdkstaking.TypeMsgCancelUnbondingDelegation, "delegator receiving balance is negative"), nil, nil
+		}
+
+		cancelBondAmt := simtypes.RandomAmount(r, unbondingDelegationEntry.Balance)
+
+		if cancelBondAmt.IsZero() {
+			return simtypes.NoOpMsg(types.ModuleName, sdkstaking.TypeMsgCancelUnbondingDelegation, "cancelBondAmt amount is zero"), nil, nil
+		}
+
+		msg := sdkstaking.NewMsgCancelUnbondingDelegation(
+			simAccount.Address, valAddr, unbondingDelegationEntry.CreationHeight, sdk.NewCoin(k.BondDenom(ctx), cancelBondAmt),
+		)
+
+		spendable := bk.SpendableCoins(ctx, simAccount.Address)
 
 		txCtx := simulation.OperationInput{
 			R:               r,
@@ -491,7 +573,7 @@ func SimulateMsgBeginRedelegate(ak types.AccountKeeper, bk types.BankKeeper, k k
 		account := ak.GetAccount(ctx, delAddr)
 		spendable := bk.SpendableCoins(ctx, account.GetAddress())
 
-		msg := sdkstaking.NewMsgBeginRedelegate(
+		msg := types.NewMsgBeginRedelegate(
 			delAddr, srcAddr, destAddr,
 			sdk.NewCoin(k.BondDenom(ctx), redAmt),
 		)

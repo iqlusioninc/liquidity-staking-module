@@ -142,16 +142,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	querier := keeper.Querier{Keeper: am.keeper}
 	types.RegisterQueryServer(cfg.QueryServer(), querier)
-
-	m := keeper.NewMigrator(am.keeper)
-	err := cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
-	if err != nil {
-		panic(err)
-	}
-	err = cfg.RegisterMigration(types.ModuleName, 2, m.Migrate2to3)
-	if err != nil {
-		panic(err)
-	}
 }
 
 // InitGenesis performs genesis initialization for the staking module. It returns
@@ -161,14 +151,13 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
-	return InitGenesis(ctx, am.keeper, am.accountKeeper, am.bankKeeper, &genesisState)
+	return am.keeper.InitGenesis(ctx, &genesisState)
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the staking
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := ExportGenesis(ctx, am.keeper)
-	return cdc.MustMarshalJSON(gs)
+	return cdc.MustMarshalJSON(am.keeper.ExportGenesis(ctx))
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.

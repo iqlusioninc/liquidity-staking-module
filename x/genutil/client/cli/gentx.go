@@ -23,8 +23,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	authclient "github.com/cosmos/cosmos-sdk/x/auth/client"
-	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/genutil"
+	"github.com/iqlusioninc/liquidity-staking-module/x/genutil/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/client/cli"
 )
 

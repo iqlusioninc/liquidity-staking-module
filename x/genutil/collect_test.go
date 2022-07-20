@@ -15,8 +15,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/types"
 	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
-	gtypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/genutil"
+	gtypes "github.com/iqlusioninc/liquidity-staking-module/x/genutil/types"
 )
 
 type doNothingUnmarshalJSON struct {

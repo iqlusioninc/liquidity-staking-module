@@ -12,14 +12,12 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
-	"testing"
 	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
-	"github.com/tendermint/tendermint/config"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
-	"github.com/tendermint/tendermint/libs/service"
+	"github.com/tendermint/tendermint/node"
 	tmclient "github.com/tendermint/tendermint/rpc/client"
 	dbm "github.com/tendermint/tm-db"
 	"google.golang.org/grpc"
@@ -32,12 +30,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
+	pruningtypes "github.com/cosmos/cosmos-sdk/pruning/types"
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/server/api"
 	srvconfig "github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -61,7 +59,7 @@ func NewAppConstructor(encodingCfg params.EncodingConfig) AppConstructor {
 			val.Ctx.Logger, dbm.NewMemDB(), nil, true, make(map[int64]bool), val.Ctx.Config.RootDir, 0,
 			encodingCfg,
 			simapp.EmptyAppOptions{},
-			baseapp.SetPruning(storetypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
+			baseapp.SetPruning(pruningtypes.NewPruningOptionsFromString(val.AppConfig.Pruning)),
 			baseapp.SetMinGasPrices(val.AppConfig.MinGasPrices),
 		)
 	}
@@ -77,7 +75,7 @@ type Config struct {
 	TxConfig         client.TxConfig
 	AccountRetriever client.AccountRetriever
 	AppConstructor   AppConstructor             // the ABCI application constructor
-	GenesisState     map[string]json.RawMessage // custom gensis state to provide
+	GenesisState     map[string]json.RawMessage // custom genesis state to provide
 	TimeoutCommit    time.Duration              // the consensus commitment timeout
 	ChainID          string                     // the network chain-id
 	NumValidators    int                        // the total number of validators to create and bond
@@ -119,7 +117,7 @@ func DefaultConfig() Config {
 		AccountTokens:     sdk.TokensFromConsensusPower(1000, sdk.DefaultPowerReduction),
 		StakingTokens:     sdk.TokensFromConsensusPower(500, sdk.DefaultPowerReduction),
 		BondedTokens:      sdk.TokensFromConsensusPower(100, sdk.DefaultPowerReduction),
-		PruningStrategy:   storetypes.PruningOptionNothing,
+		PruningStrategy:   pruningtypes.PruningOptionNothing,
 		CleanupDir:        true,
 		SigningAlgo:       string(hd.Secp256k1Type),
 		KeyringOptions:    []keyring.Option{},
@@ -164,7 +162,7 @@ type (
 		ValAddress sdk.ValAddress
 		RPCClient  tmclient.Client
 
-		tmNode  service.Service
+		tmNode  *node.Node
 		api     *api.Server
 		grpc    *grpc.Server
 		grpcWeb *http.Server
@@ -178,21 +176,26 @@ type Logger interface {
 	Logf(format string, args ...interface{})
 }
 
-var _ Logger = (*testing.T)(nil)
-var _ Logger = (*CLILogger)(nil)
+var (
+	_ Logger = (*CLILogger)(nil)
+)
 
+// CLILogger wraps a cobra.Command and provides command logging methods.
 type CLILogger struct {
 	cmd *cobra.Command
 }
 
+// Log logs given args.
 func (s CLILogger) Log(args ...interface{}) {
 	s.cmd.Println(args...)
 }
 
+// Logf logs given args according to a format specifier.
 func (s CLILogger) Logf(format string, args ...interface{}) {
 	s.cmd.Printf(format, args...)
 }
 
+// NewCLILogger creates a new CLILogger.
 func NewCLILogger(cmd *cobra.Command) CLILogger {
 	return CLILogger{cmd}
 }
@@ -236,7 +239,6 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		ctx := server.NewDefaultContext()
 		tmCfg := ctx.Config
 		tmCfg.Consensus.TimeoutCommit = cfg.TimeoutCommit
-		tmCfg.Mode = config.ModeValidator
 
 		// Only allow the first validator to expose an RPC, API and gRPC
 		// server/client due to Tendermint in-process constraints.
@@ -305,12 +307,12 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		clientDir := filepath.Join(network.BaseDir, nodeDirName, "simcli")
 		gentxsDir := filepath.Join(network.BaseDir, "gentxs")
 
-		err := os.MkdirAll(filepath.Join(nodeDir, "config"), 0755)
+		err := os.MkdirAll(filepath.Join(nodeDir, "config"), 0o755)
 		if err != nil {
 			return nil, err
 		}
 
-		err = os.MkdirAll(clientDir, 0755)
+		err = os.MkdirAll(clientDir, 0o755)
 		if err != nil {
 			return nil, err
 		}
@@ -443,6 +445,7 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 		if err != nil {
 			return nil, err
 		}
+
 		srvconfig.WriteConfigFile(filepath.Join(nodeDir, "config", "app.toml"), appCfg)
 
 		clientCtx := client.Context{}.
@@ -602,6 +605,10 @@ func (n *Network) Cleanup() {
 			}
 		}
 	}
+
+	// Give a brief pause for things to finish closing in other processes. Hopefully this helps with the address-in-use errors.
+	// 100ms chosen randomly.
+	time.Sleep(100 * time.Millisecond)
 
 	if n.Config.CleanupDir {
 		_ = os.RemoveAll(n.BaseDir)
