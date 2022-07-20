@@ -9,8 +9,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/genutil/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
+	"github.com/iqlusioninc/liquidity-staking-module/x/genutil/types"
 	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
