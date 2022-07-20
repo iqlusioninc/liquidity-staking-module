@@ -767,7 +767,7 @@ func (s *IntegrationTestSuite) TestGetCmdSubmitProposal() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestNewWithdrawTokenizeShareRecordRewardCmd() {
+func (s *IntegrationTestSuite) TestNewWithdrawAllTokenizeShareRecordRewardCmd() {
 	val := s.network.Validators[0]
 
 	testCases := []struct {
@@ -793,7 +793,7 @@ func (s *IntegrationTestSuite) TestNewWithdrawTokenizeShareRecordRewardCmd() {
 		tc := tc
 
 		s.Run(tc.name, func() {
-			cmd := cli.NewWithdrawTokenizeShareRecordRewardCmd()
+			cmd := cli.NewWithdrawAllTokenizeShareRecordRewardCmd()
 			clientCtx := val.ClientCtx
 
 			out, err := clitestutil.ExecTestCLICmd(clientCtx, cmd, tc.args)
