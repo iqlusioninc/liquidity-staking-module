@@ -19,7 +19,7 @@ func TestWithdrawTokenizeShareRecordReward(t *testing.T) {
 	h := distribution.NewHandler(app.DistrKeeper)
 	delAddr1 = sdk.AccAddress(delPk1.Address())
 
-	res, err := h(ctx, &types.MsgWithdrawTokenizeShareRecordReward{
+	res, err := h(ctx, &types.MsgWithdrawAllTokenizeShareRecordReward{
 		OwnerAddress: delAddr1.String(),
 	})
 	require.NoError(t, err)

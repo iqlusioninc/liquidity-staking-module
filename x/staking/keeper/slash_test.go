@@ -113,7 +113,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	// balance decreased
 	require.Equal(t, sdk.NewInt(5), ubd.Entries[0].Balance)
 	newUnbondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
-	diffTokens := oldUnbondedPoolBalances.Sub(newUnbondedPoolBalances)
+	diffTokens := oldUnbondedPoolBalances.Sub(newUnbondedPoolBalances...)
 	require.True(t, diffTokens.AmountOf(app.StakingKeeper.BondDenom(ctx)).Equal(sdk.NewInt(5)))
 }
 
@@ -181,7 +181,7 @@ func TestSlashRedelegation(t *testing.T) {
 
 	// pool bonded tokens should decrease
 	burnedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), slashAmount))
-	require.Equal(t, balances.Sub(burnedCoins), app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress()))
+	require.Equal(t, balances.Sub(burnedCoins...), app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress()))
 }
 
 // tests Slash at a future height (must panic)
@@ -221,7 +221,7 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 
 	// pool bonded shares decreased
 	newBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	diffTokens := oldBondedPoolBalances.Sub(newBondedPoolBalances).AmountOf(app.StakingKeeper.BondDenom(ctx))
+	diffTokens := oldBondedPoolBalances.Sub(newBondedPoolBalances...).AmountOf(app.StakingKeeper.BondDenom(ctx))
 	require.Equal(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 5).String(), diffTokens.String())
 }
 
@@ -252,7 +252,7 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 
 	// pool bonded shares decreased
 	newBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	diffTokens := oldBondedPoolBalances.Sub(newBondedPoolBalances).AmountOf(app.StakingKeeper.BondDenom(ctx))
+	diffTokens := oldBondedPoolBalances.Sub(newBondedPoolBalances...).AmountOf(app.StakingKeeper.BondDenom(ctx))
 	require.Equal(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 5).String(), diffTokens.String())
 }
 
@@ -291,7 +291,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 
 	// bonded tokens burned
 	newBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	diffTokens := oldBondedPoolBalances.Sub(newBondedPoolBalances).AmountOf(app.StakingKeeper.BondDenom(ctx))
+	diffTokens := oldBondedPoolBalances.Sub(newBondedPoolBalances...).AmountOf(app.StakingKeeper.BondDenom(ctx))
 	require.Equal(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 3), diffTokens)
 
 	// read updated validator
@@ -317,7 +317,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 
 	// bonded tokens burned again
 	newBondedPoolBalances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	diffTokens = oldBondedPoolBalances.Sub(newBondedPoolBalances).AmountOf(app.StakingKeeper.BondDenom(ctx))
+	diffTokens = oldBondedPoolBalances.Sub(newBondedPoolBalances...).AmountOf(app.StakingKeeper.BondDenom(ctx))
 	require.Equal(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 6), diffTokens)
 
 	// read updated validator
@@ -343,7 +343,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 
 	// bonded tokens burned again
 	newBondedPoolBalances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	diffTokens = oldBondedPoolBalances.Sub(newBondedPoolBalances).AmountOf(app.StakingKeeper.BondDenom(ctx))
+	diffTokens = oldBondedPoolBalances.Sub(newBondedPoolBalances...).AmountOf(app.StakingKeeper.BondDenom(ctx))
 	require.Equal(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 9), diffTokens)
 
 	// read updated validator
@@ -369,7 +369,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 
 	// just 1 bonded token burned again since that's all the validator now has
 	newBondedPoolBalances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	diffTokens = oldBondedPoolBalances.Sub(newBondedPoolBalances).AmountOf(app.StakingKeeper.BondDenom(ctx))
+	diffTokens = oldBondedPoolBalances.Sub(newBondedPoolBalances...).AmountOf(app.StakingKeeper.BondDenom(ctx))
 	require.Equal(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 10), diffTokens)
 
 	// apply TM updates
@@ -392,11 +392,11 @@ func TestSlashWithRedelegation(t *testing.T) {
 	// set a redelegation
 	rdTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 6)
 	rd := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11,
-		time.Unix(0, 0), rdTokens, rdTokens.ToDec())
+		time.Unix(0, 0), rdTokens, sdk.NewDecFromInt(rdTokens))
 	app.StakingKeeper.SetRedelegation(ctx, rd)
 
 	// set the associated delegation
-	del := types.NewDelegation(addrDels[0], addrVals[1], rdTokens.ToDec())
+	del := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDecFromInt(rdTokens))
 	app.StakingKeeper.SetDelegation(ctx, del)
 
 	// update bonded tokens
@@ -417,7 +417,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.True(t, found)
 
 	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, fraction) })
-	burnAmount := app.StakingKeeper.TokensFromConsensusPower(ctx, 10).ToDec().Mul(fraction).TruncateInt()
+	burnAmount := sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 10)).Mul(fraction).TruncateInt()
 
 	bondedPool = app.StakingKeeper.GetBondedPool(ctx)
 	notBondedPool = app.StakingKeeper.GetNotBondedPool(ctx)
@@ -483,7 +483,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 
 	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec()) })
 
-	burnAmount = app.StakingKeeper.TokensFromConsensusPower(ctx, 10).ToDec().Mul(sdk.OneDec()).TruncateInt()
+	burnAmount = sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 10)).Mul(sdk.OneDec()).TruncateInt()
 	burnAmount = burnAmount.Sub(sdk.OneDec().MulInt(rdTokens).TruncateInt())
 
 	// read updated pool
@@ -546,11 +546,11 @@ func TestSlashBoth(t *testing.T) {
 	rdATokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 6)
 	rdA := types.NewRedelegation(addrDels[0], addrVals[0], addrVals[1], 11,
 		time.Unix(0, 0), rdATokens,
-		rdATokens.ToDec())
+		sdk.NewDecFromInt(rdATokens))
 	app.StakingKeeper.SetRedelegation(ctx, rdA)
 
 	// set the associated delegation
-	delA := types.NewDelegation(addrDels[0], addrVals[1], rdATokens.ToDec())
+	delA := types.NewDelegation(addrDels[0], addrVals[1], sdk.NewDecFromInt(rdATokens))
 	app.StakingKeeper.SetDelegation(ctx, delA)
 
 	// set an unbonding delegation with expiration timestamp (beyond which the
@@ -583,7 +583,7 @@ func TestSlashBoth(t *testing.T) {
 	app.StakingKeeper.Slash(ctx, consAddr0, 10, 10, fraction)
 
 	burnedNotBondedAmount := fraction.MulInt(ubdATokens).TruncateInt()
-	burnedBondAmount := app.StakingKeeper.TokensFromConsensusPower(ctx, 10).ToDec().Mul(fraction).TruncateInt()
+	burnedBondAmount := sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 10)).Mul(fraction).TruncateInt()
 	burnedBondAmount = burnedBondAmount.Sub(burnedNotBondedAmount)
 
 	// read updated pool

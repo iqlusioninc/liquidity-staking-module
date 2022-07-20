@@ -1,11 +1,5 @@
 package testutil
 
-import (
-	"github.com/cosmos/cosmos-sdk/testutil"
-	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	"github.com/iqlusioninc/liquidity-staking-module/x/genutil/client/cli"
-)
-
 // An example exported genesis file from a 0.37 chain. Note that evidence
 // parameters only contains `max_age`.
 var v037Exported = `{
@@ -65,38 +59,3 @@ var v040Valid = `{
 	"genesis_time": "2020-09-29T20:16:29.172362037Z",
 	"validators": []
 }`
-
-func (s *IntegrationTestSuite) TestValidateGenesis() {
-	val0 := s.network.Validators[0]
-
-	testCases := []struct {
-		name    string
-		genesis string
-		expErr  bool
-	}{
-		{
-			"exported 0.37 genesis file",
-			v037Exported,
-			true,
-		},
-		{
-			"valid 0.40 genesis file",
-			v040Valid,
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			genesisFile := testutil.WriteToNewTempFile(s.T(), tc.genesis)
-			_, err := clitestutil.ExecTestCLICmd(val0.ClientCtx, cli.ValidateGenesisCmd(nil), []string{genesisFile.Name()})
-			if tc.expErr {
-				s.Require().Contains(err.Error(), "Make sure that you have correctly migrated all Tendermint consensus params")
-
-			} else {
-				s.Require().NoError(err)
-			}
-		})
-	}
-}
