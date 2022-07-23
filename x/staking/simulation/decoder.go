@@ -16,7 +16,7 @@ func NewDecodeStore(cdc codec.Codec) func(kvA, kvB kv.Pair) string {
 	return func(kvA, kvB kv.Pair) string {
 		switch {
 		case bytes.Equal(kvA.Key[:1], types.LastTotalPowerKey):
-			var powerA, powerB sdk.IntProto
+			var powerA, powerB math.IntProto
 
 			cdc.MustUnmarshal(kvA.Value, &powerA)
 			cdc.MustUnmarshal(kvB.Value, &powerB)

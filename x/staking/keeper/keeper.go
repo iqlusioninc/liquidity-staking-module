@@ -74,7 +74,7 @@ func (k *Keeper) SetHooks(sh types.StakingHooks) *Keeper {
 }
 
 // Load the last total validator power.
-func (k Keeper) GetLastTotalPower(ctx sdk.Context) sdk.Int {
+func (k Keeper) GetLastTotalPower(ctx sdk.Context) math.Int {
 	store := ctx.KVStore(k.storeKey)
 	bz := store.Get(types.LastTotalPowerKey)
 
@@ -82,15 +82,15 @@ func (k Keeper) GetLastTotalPower(ctx sdk.Context) sdk.Int {
 		return sdk.ZeroInt()
 	}
 
-	ip := sdk.IntProto{}
+	ip := math.IntProto{}
 	k.cdc.MustUnmarshal(bz, &ip)
 
 	return ip.Int
 }
 
 // Set the last total validator power.
-func (k Keeper) SetLastTotalPower(ctx sdk.Context, power sdk.Int) {
+func (k Keeper) SetLastTotalPower(ctx sdk.Context, power math.Int) {
 	store := ctx.KVStore(k.storeKey)
-	bz := k.cdc.MustMarshal(&sdk.IntProto{Int: power})
+	bz := k.cdc.MustMarshal(&math.IntProto{Int: power})
 	store.Set(types.LastTotalPowerKey, bz)
 }

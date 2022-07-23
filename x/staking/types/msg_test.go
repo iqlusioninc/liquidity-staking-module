@@ -3,6 +3,7 @@ package types_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -59,7 +60,7 @@ func TestMsgCreateValidator(t *testing.T) {
 	tests := []struct {
 		name, moniker, identity, website, securityContact, details string
 		CommissionRates                                            types.CommissionRates
-		minSelfDelegation                                          sdk.Int
+		minSelfDelegation                                          math.Int
 		validatorAddr                                              sdk.ValAddress
 		pubkey                                                     cryptotypes.PubKey
 		bond                                                       sdk.Coin
@@ -95,13 +96,13 @@ func TestMsgEditValidator(t *testing.T) {
 		name, moniker, identity, website, securityContact, details string
 		validatorAddr                                              sdk.ValAddress
 		expectPass                                                 bool
-		minSelfDelegation                                          sdk.Int
+		minSelfDelegation                                          math.Int
 	}{
 		{"basic good", "a", "b", "c", "d", "e", valAddr1, true, sdk.OneInt()},
 		{"partial description", "", "", "c", "", "", valAddr1, true, sdk.OneInt()},
 		{"empty description", "", "", "", "", "", valAddr1, false, sdk.OneInt()},
 		{"empty address", "a", "b", "c", "d", "e", emptyAddr, false, sdk.OneInt()},
-		{"nil int", "a", "b", "c", "d", "e", emptyAddr, false, sdk.Int{}},
+		{"nil int", "a", "b", "c", "d", "e", emptyAddr, false, math.Int{}},
 	}
 
 	for _, tc := range tests {

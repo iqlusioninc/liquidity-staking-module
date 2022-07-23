@@ -8,6 +8,7 @@ import (
 	"github.com/stretchr/testify/suite"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
@@ -20,6 +21,8 @@ import (
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/teststaking"
 	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
+
+
 
 type KeeperTestSuite struct {
 	suite.Suite
@@ -699,18 +702,21 @@ func (suite *KeeperTestSuite) TestGRPCTokenizeShareRecordReward() {
 	app.DistrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, initial)}
-	app.MintKeeper.MintCoins(ctx, coins)
-	app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)
+	err := app.MintKeeper.MintCoins(ctx, coins)
+	suite.NoError(err)
+	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)
+	suite.NoError(err)
 
 	// tokenize share amount
 	delTokens := sdk.NewInt(1000000)
 	msgServer := stakingkeeper.NewMsgServerImpl(app.StakingKeeper)
-	_, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &stakingtypes.MsgTokenizeShares{
+	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &stakingtypes.MsgTokenizeShares{
 		DelegatorAddress:    sdk.AccAddress(valAddrs[0]).String(),
 		ValidatorAddress:    valAddrs[0].String(),
 		TokenizedShareOwner: sdk.AccAddress(valAddrs[0]).String(),
 		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, delTokens),
 	})
+	suite.NoError(err)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)

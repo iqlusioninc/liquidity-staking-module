@@ -15,7 +15,7 @@ const (
 )
 
 // NewPool creates a new Pool instance used for queries
-func NewPool(notBonded, bonded sdk.Int) Pool {
+func NewPool(notBonded, bonded math.Int) Pool {
 	return Pool{
 		NotBondedTokens: notBonded,
 		BondedTokens:    bonded,

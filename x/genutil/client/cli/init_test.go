@@ -182,7 +182,7 @@ func TestEmptyState(t *testing.T) {
 	outC := make(chan string)
 	go func() {
 		var buf bytes.Buffer
-		io.Copy(&buf, r)
+		io.Copy(&buf, r) //nolint:errcheck
 		outC <- buf.String()
 	}()
 
@@ -272,7 +272,7 @@ func TestInitConfig(t *testing.T) {
 	outC := make(chan string)
 	go func() {
 		var buf bytes.Buffer
-		io.Copy(&buf, r)
+		io.Copy(&buf, r) //nolint:errcheck
 		outC <- buf.String()
 	}()
 
