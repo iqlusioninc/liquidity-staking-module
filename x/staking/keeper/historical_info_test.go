@@ -14,7 +14,7 @@ import (
 )
 
 // IsValSetSorted reports whether valset is sorted.
-func IsValSetSorted(data []types.Validator, powerReduction sdk.Int) bool {
+func IsValSetSorted(data []types.Validator, powerReduction math.Int) bool {
 	n := len(data)
 	for i := n - 1; i > 0; i-- {
 		if types.ValidatorsByVotingPower(data).Less(i, i-1, powerReduction) {

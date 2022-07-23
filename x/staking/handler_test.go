@@ -3,6 +3,7 @@ package staking_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,7 +13,7 @@ import (
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/teststaking"
 )
 
-func bootstrapHandlerGenesisTest(t *testing.T, power int64, numAddrs int, accAmount sdk.Int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
+func bootstrapHandlerGenesisTest(t *testing.T, power int64, numAddrs int, accAmount math.Int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
 	_, app, ctx := getBaseSimappWithCustomKeeper(t)
 
 	addrDels, addrVals := generateAddresses(app, ctx, numAddrs, accAmount)
@@ -35,7 +36,7 @@ func TestTokenizeShares(t *testing.T) {
 		name      string
 		delIndex  int64
 		valIndex  int64
-		amount    sdk.Int
+		amount    math.Int
 		isSuccess bool
 		expStatus sdkstaking.BondStatus
 		expJailed bool
@@ -124,7 +125,7 @@ func TestRedeemTokensforShares(t *testing.T) {
 
 	testCases := []struct {
 		name      string
-		amount    sdk.Int
+		amount    math.Int
 		isSuccess bool
 	}{
 		{
