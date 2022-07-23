@@ -102,15 +102,19 @@ func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 }
 
 // remove a delegation
-func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) {
+func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) error {
 	delegatorAddress, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
 	if err != nil {
 		panic(err)
 	}
 	// TODO: Consider calling hooks outside of the store wrapper functions, it's unobvious.
-	k.BeforeDelegationRemoved(ctx, delegatorAddress, delegation.GetValidatorAddr())
+	if err := k.BeforeDelegationRemoved(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
+		return err
+	}
+
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetDelegationKey(delegatorAddress, delegation.GetValidatorAddr()))
+	return nil
 }
 
 // return a given amount of all the delegator unbonding-delegations
@@ -553,7 +557,7 @@ func (k Keeper) Delegate(
 	// Validator loses all tokens due to slashing. In this case,
 	// make all future delegations invalid.
 	if validator.InvalidExRate() {
-		return sdk.ZeroDec(), types.ErrDelegatorShareExRateInvalid
+		return sdk.ZeroDec(), sdkstaking.ErrDelegatorShareExRateInvalid
 	}
 
 	// Get or create the delegation object
@@ -564,9 +568,13 @@ func (k Keeper) Delegate(
 
 	// call the appropriate hook if present
 	if found {
-		k.BeforeDelegationSharesModified(ctx, delAddr, validator.GetOperator())
+		err = k.BeforeDelegationSharesModified(ctx, delAddr, validator.GetOperator())
 	} else {
-		k.BeforeDelegationCreated(ctx, delAddr, validator.GetOperator())
+		err = k.BeforeDelegationCreated(ctx, delAddr, validator.GetOperator())
+	}
+
+	if err != nil {
+		return sdk.ZeroDec(), err
 	}
 
 	delegatorAddress, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
@@ -622,7 +630,9 @@ func (k Keeper) Delegate(
 	k.SetDelegation(ctx, delegation)
 
 	// Call the after-modification hook
-	k.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr())
+	if err := k.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr()); err != nil {
+		return newShares, err
+	}
 
 	return newShares, nil
 }
@@ -634,21 +644,23 @@ func (k Keeper) Unbond(
 	// check if a delegation object exists in the store
 	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
 	if !found {
-		return amount, types.ErrNoDelegatorForAddress
+		return amount, sdkstaking.ErrNoDelegatorForAddress
 	}
 
 	// call the before-delegation-modified hook
-	k.BeforeDelegationSharesModified(ctx, delAddr, valAddr)
+	if err := k.BeforeDelegationSharesModified(ctx, delAddr, valAddr); err != nil {
+		return amount, err
+	}
 
 	// ensure that we have enough shares to remove
 	if delegation.Shares.LT(shares) {
-		return amount, sdkerrors.Wrap(types.ErrNotEnoughDelegationShares, delegation.Shares.String())
+		return amount, sdkerrors.Wrap(sdkstaking.ErrNotEnoughDelegationShares, delegation.Shares.String())
 	}
 
 	// get validator
 	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
-		return amount, types.ErrNoValidatorFound
+		return amount, sdkstaking.ErrNoValidatorFound
 	}
 
 	// subtract shares from delegation
@@ -669,19 +681,21 @@ func (k Keeper) Unbond(
 		validator = k.mustGetValidator(ctx, validator.GetOperator())
 	}
 
-	// remove the delegation
 	if delegation.Shares.IsZero() {
-		k.RemoveDelegation(ctx, delegation)
+		err = k.RemoveDelegation(ctx, delegation)
 	} else {
 		k.SetDelegation(ctx, delegation)
 		// call the after delegation modification hook
-		k.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr())
+		err = k.AfterDelegationModified(ctx, delegatorAddress, delegation.GetValidatorAddr())
+	}
+
+	if err != nil {
+		return amount, err
 	}
 
 	// remove the shares and coins from the validator
 	// NOTE that the amount is later (in keeper.Delegation) moved between staking module pools
 	validator, amount = k.RemoveValidatorTokensAndShares(ctx, validator, shares)
-
 	if validator.DelegatorShares.IsZero() && validator.IsUnbonded() {
 		// if not unbonded, we must instead remove validator in EndBlocker once it finishes its unbonding period
 		k.RemoveValidator(ctx, validator.GetOperator())
@@ -728,11 +742,11 @@ func (k Keeper) Undelegate(
 ) (time.Time, error) {
 	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
-		return time.Time{}, types.ErrNoDelegatorForAddress
+		return time.Time{}, sdkstaking.ErrNoDelegatorForAddress
 	}
 
 	if k.HasMaxUnbondingDelegationEntries(ctx, delAddr, valAddr) {
-		return time.Time{}, types.ErrMaxUnbondingDelegationEntries
+		return time.Time{}, sdkstaking.ErrMaxUnbondingDelegationEntries
 	}
 
 	returnAmount, err := k.Unbond(ctx, delAddr, valAddr, sharesAmount)
@@ -758,7 +772,7 @@ func (k Keeper) Undelegate(
 func (k Keeper) CompleteUnbonding(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (sdk.Coins, error) {
 	ubd, found := k.GetUnbondingDelegation(ctx, delAddr, valAddr)
 	if !found {
-		return nil, types.ErrNoUnbondingDelegation
+		return nil, sdkstaking.ErrNoUnbondingDelegation
 	}
 
 	bondDenom := k.GetParams(ctx).BondDenom
@@ -806,26 +820,26 @@ func (k Keeper) BeginRedelegation(
 	ctx sdk.Context, delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, sharesAmount sdk.Dec,
 ) (completionTime time.Time, err error) {
 	if bytes.Equal(valSrcAddr, valDstAddr) {
-		return time.Time{}, types.ErrSelfRedelegation
+		return time.Time{}, sdkstaking.ErrSelfRedelegation
 	}
 
 	dstValidator, found := k.GetValidator(ctx, valDstAddr)
 	if !found {
-		return time.Time{}, types.ErrBadRedelegationDst
+		return time.Time{}, sdkstaking.ErrBadRedelegationDst
 	}
 
 	srcValidator, found := k.GetValidator(ctx, valSrcAddr)
 	if !found {
-		return time.Time{}, types.ErrBadRedelegationDst
+		return time.Time{}, sdkstaking.ErrBadRedelegationDst
 	}
 
 	// check if this is a transitive redelegation
 	if k.HasReceivingRedelegation(ctx, delAddr, valSrcAddr) {
-		return time.Time{}, types.ErrTransitiveRedelegation
+		return time.Time{}, sdkstaking.ErrTransitiveRedelegation
 	}
 
 	if k.HasMaxRedelegationEntries(ctx, delAddr, valSrcAddr, valDstAddr) {
-		return time.Time{}, types.ErrMaxRedelegationEntries
+		return time.Time{}, sdkstaking.ErrMaxRedelegationEntries
 	}
 
 	returnAmount, err := k.Unbond(ctx, delAddr, valSrcAddr, sharesAmount)
@@ -834,7 +848,7 @@ func (k Keeper) BeginRedelegation(
 	}
 
 	if returnAmount.IsZero() {
-		return time.Time{}, types.ErrTinyRedelegationAmount
+		return time.Time{}, sdkstaking.ErrTinyRedelegationAmount
 	}
 
 	sharesCreated, err := k.Delegate(ctx, delAddr, returnAmount, srcValidator.GetStatus(), dstValidator, false)
@@ -866,7 +880,7 @@ func (k Keeper) CompleteRedelegation(
 ) (sdk.Coins, error) {
 	red, found := k.GetRedelegation(ctx, delAddr, valSrcAddr, valDstAddr)
 	if !found {
-		return nil, types.ErrNoRedelegation
+		return nil, sdkstaking.ErrNoRedelegation
 	}
 
 	bondDenom := k.GetParams(ctx).BondDenom
@@ -904,12 +918,12 @@ func (k Keeper) ValidateUnbondAmount(
 ) (shares sdk.Dec, err error) {
 	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
-		return shares, types.ErrNoValidatorFound
+		return shares, sdkstaking.ErrNoValidatorFound
 	}
 
 	del, found := k.GetDelegation(ctx, delAddr, valAddr)
 	if !found {
-		return shares, types.ErrNoDelegation
+		return shares, sdkstaking.ErrNoDelegation
 	}
 
 	shares, err = validator.SharesFromTokens(amt)

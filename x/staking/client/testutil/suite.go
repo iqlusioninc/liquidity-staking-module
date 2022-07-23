@@ -17,10 +17,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
-	"github.com/cosmos/cosmos-sdk/testutil/network"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+	"github.com/iqlusioninc/liquidity-staking-module/testutil/network"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/client/cli"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
@@ -43,9 +43,11 @@ func (s *IntegrationTestSuite) SetupSuite() {
 		s.T().Skip("skipping test in unit-tests mode.")
 	}
 
-	s.network = network.New(s.T(), s.cfg)
+	var err error
+	s.network, err = network.New(s.T(), s.T().TempDir(), s.cfg)
+	s.Require().NoError(err)
 
-	_, err := s.network.WaitForHeight(1)
+	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 
 	unbond, err := sdk.ParseCoinNormalized("10stake")
@@ -55,20 +57,24 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	val2 := s.network.Validators[1]
 
 	// redelegate
-	_, err = MsgRedelegateExec(
+	out, err := MsgRedelegateExec(
 		val.ClientCtx,
 		val.Address,
 		val.ValAddress,
 		val2.ValAddress,
 		unbond,
-		fmt.Sprintf("--%s=%d", flags.FlagGas, 202954), //  202954 is the required
+		fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
 	)
 	s.Require().NoError(err)
+	var txRes sdk.TxResponse
+	s.Require().NoError(val.ClientCtx.Codec.UnmarshalJSON(out.Bytes(), &txRes))
+	s.Require().Equal(uint32(0), txRes.Code)
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 	// unbonding
 	_, err = MsgUnbondExec(val.ClientCtx, val.Address, val.ValAddress, unbond)
 	s.Require().NoError(err)
+
 	_, err = s.network.WaitForHeight(1)
 	s.Require().NoError(err)
 }
@@ -87,10 +93,13 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 	require.NoError(err)
 	require.NotNil(consPubKeyBz)
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	k, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(err)
 
-	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+	pub, err := k.GetPubKey()
+	require.NoError(err)
+
+	newAddr := sdk.AccAddress(pub.Address())
 	_, err = banktestutil.MsgSendExec(
 		val.ClientCtx,
 		val.Address,
@@ -876,12 +885,13 @@ func (s *IntegrationTestSuite) TestGetCmdQueryParams() {
 historical_entries: 10000
 max_entries: 7
 max_validators: 100
+min_commission_rate: "0.000000000000000000"
 unbonding_time: 1814400s`,
 		},
 		{
 			"with json output",
 			[]string{fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
-			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake"}`,
+			`{"unbonding_time":"1814400s","max_validators":100,"max_entries":7,"historical_entries":10000,"bond_denom":"stake","min_commission_rate":"0.000000000000000000"}`,
 		},
 	}
 	for _, tc := range testCases {
@@ -1052,10 +1062,13 @@ func (s *IntegrationTestSuite) TestNewEditValidatorCmd() {
 func (s *IntegrationTestSuite) TestNewDelegateCmd() {
 	val := s.network.Validators[0]
 
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	k, _, err := val.ClientCtx.Keyring.NewMnemonic("NewAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
-	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+	pub, err := k.GetPubKey()
+	s.Require().NoError(err)
+
+	newAddr := sdk.AccAddress(pub.Address())
 
 	_, err = banktestutil.MsgSendExec(
 		val.ClientCtx,
@@ -1187,7 +1200,7 @@ func (s *IntegrationTestSuite) TestNewRedelegateCmd() {
 				val2.ValAddress.String(),                               // dst-validator-addr
 				sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(150)).String(), // amount
 				fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
-				fmt.Sprintf("--%s=%s", flags.FlagGas, "auto"),
+				fmt.Sprintf("--%s=%d", flags.FlagGas, 300000),
 				fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
 				fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
 				fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
@@ -1537,9 +1550,11 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 	val := s.network.Validators[0]
 
 	// Create new account in the keyring.
-	info, _, err := val.ClientCtx.Keyring.NewMnemonic("NewDelegator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
+	k, _, err := val.ClientCtx.Keyring.NewMnemonic("NewDelegator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(err)
-	newAddr := sdk.AccAddress(info.GetPubKey().Address())
+	pub, err := k.GetPubKey()
+	require.NoError(err)
+	newAddr := sdk.AccAddress(pub.Address())
 
 	// Send some funds to the new account.
 	_, err = banktestutil.MsgSendExec(
@@ -1597,4 +1612,52 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 
 		s.network.WaitForNextBlock()
 	}
+}
+
+// https://github.com/cosmos/cosmos-sdk/issues/10660
+func (s *IntegrationTestSuite) TestEditValidatorMoniker() {
+	val := s.network.Validators[0]
+	require := s.Require()
+
+	txCmd := cli.NewEditValidatorCmd()
+	moniker := "testing"
+	_, err := clitestutil.ExecTestCLICmd(val.ClientCtx, txCmd, []string{
+		val.ValAddress.String(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=%s", cli.FlagEditMoniker, moniker),
+		fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	})
+	require.NoError(err)
+
+	queryCmd := cli.GetCmdQueryValidator()
+	res, err := clitestutil.ExecTestCLICmd(
+		val.ClientCtx, queryCmd,
+		[]string{val.ValAddress.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+	)
+	require.NoError(err)
+	var result types.Validator
+	require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &result))
+	require.Equal(result.GetMoniker(), moniker)
+
+	_, err = clitestutil.ExecTestCLICmd(val.ClientCtx, txCmd, []string{
+		val.ValAddress.String(),
+		fmt.Sprintf("--%s=%s", flags.FlagFrom, val.Address.String()),
+		fmt.Sprintf("--%s=true", flags.FlagSkipConfirmation),
+		fmt.Sprintf("--%s=%s", flags.FlagBroadcastMode, flags.BroadcastBlock),
+		fmt.Sprintf("--%s=https://newvalidator.io", cli.FlagWebsite),
+		fmt.Sprintf("--%s=%s", flags.FlagFees, sdk.NewCoins(sdk.NewCoin(s.cfg.BondDenom, sdk.NewInt(10))).String()),
+	})
+	require.NoError(err)
+
+	res, err = clitestutil.ExecTestCLICmd(
+		val.ClientCtx, queryCmd,
+		[]string{val.ValAddress.String(), fmt.Sprintf("--%s=json", tmcli.OutputFlag)},
+	)
+	require.NoError(err)
+
+	require.NoError(val.ClientCtx.Codec.UnmarshalJSON(res.Bytes(), &result))
+	require.Equal(result.GetMoniker(), moniker)
 }

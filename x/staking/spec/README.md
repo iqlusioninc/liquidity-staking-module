@@ -23,6 +23,8 @@ network.
 
 This module has been extended with a liquid staking implementation to enable the creation of nonfungible tokenized staking shares to be used to be synthetic staked assets. The governing philosphy of this design is that it optimizes for allowing a smooth upgrade path from the existing cosmos staking module at the expense of the usability of the native staking token. It is anticipated that DAOs will form that accept these assets and issue a more usable underlying asset.
 
+When a user receive tokenized shares, the user is taking on slashing risk while holding the token based on validator's performance.
+
 ## Contents
 
 1. **[State](01_state.md)**

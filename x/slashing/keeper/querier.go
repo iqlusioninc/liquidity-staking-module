@@ -7,6 +7,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkslashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
 )
 
@@ -50,7 +51,7 @@ func querySigningInfo(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQu
 
 	signingInfo, found := k.GetValidatorSigningInfo(ctx, sdk.ConsAddress(params.ConsAddress))
 	if !found {
-		return nil, sdkerrors.Wrap(types.ErrNoSigningInfoFound, params.ConsAddress)
+		return nil, sdkerrors.Wrap(sdkslashingtypes.ErrNoSigningInfoFound, params.ConsAddress)
 	}
 
 	res, err := codec.MarshalJSONIndent(legacyQuerierCdc, signingInfo)

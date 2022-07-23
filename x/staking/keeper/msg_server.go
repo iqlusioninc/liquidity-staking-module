@@ -3,7 +3,6 @@ package keeper
 import (
 	"context"
 	"fmt"
-	"strconv"
 	"time"
 
 	metrics "github.com/armon/go-metrics"
@@ -40,9 +39,13 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 		return nil, err
 	}
 
+	if msg.Commission.Rate.LT(k.MinCommissionRate(ctx)) {
+		return nil, sdkerrors.Wrapf(sdkstaking.ErrCommissionLTMinRate, "cannot set validator commission to less than minimum rate of %s", k.MinCommissionRate(ctx))
+	}
+
 	// check to see if the pubkey or sender has been registered before
 	if _, found := k.GetValidator(ctx, valAddr); found {
-		return nil, types.ErrValidatorOwnerExists
+		return nil, sdkstaking.ErrValidatorOwnerExists
 	}
 
 	pk, ok := msg.Pubkey.GetCachedValue().(cryptotypes.PubKey)
@@ -51,7 +54,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	}
 
 	if _, found := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk)); found {
-		return nil, types.ErrValidatorPubKeyExists
+		return nil, sdkstaking.ErrValidatorPubKeyExists
 	}
 
 	bondDenom := k.BondDenom(ctx)
@@ -69,7 +72,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	if cp != nil && cp.Validator != nil {
 		if !tmstrings.StringInSlice(pk.Type(), cp.Validator.PubKeyTypes) {
 			return nil, sdkerrors.Wrapf(
-				types.ErrValidatorPubKeyTypeNotSupported,
+				sdkstaking.ErrValidatorPubKeyTypeNotSupported,
 				"got: %s, expected: %s", pk.Type(), cp.Validator.PubKeyTypes,
 			)
 		}
@@ -79,6 +82,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	if err != nil {
 		return nil, err
 	}
+
 	commission := types.NewCommissionWithTime(
 		msg.Commission.Rate, msg.Commission.MaxRate,
 		msg.Commission.MaxChangeRate, ctx.BlockHeader().Time,
@@ -97,11 +101,16 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	validator.MinSelfDelegation = msg.MinSelfDelegation
 
 	k.SetValidator(ctx, validator)
-	k.SetValidatorByConsAddr(ctx, validator)
+	err = k.SetValidatorByConsAddr(ctx, validator)
+	if err != nil {
+		return nil, err
+	}
 	k.SetNewValidatorByPowerIndex(ctx, validator)
 
 	// call the after-creation hook
-	k.AfterValidatorCreated(ctx, validator.GetOperator())
+	if err := k.AfterValidatorCreated(ctx, validator.GetOperator()); err != nil {
+		return nil, err
+	}
 
 	// move coins from the msg.Address account to a (self-delegation) delegator account
 	// the validator account and global shares are updated within here
@@ -137,7 +146,7 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 	// validator must already be registered
 	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
-		return nil, types.ErrNoValidatorFound
+		return nil, sdkstaking.ErrNoValidatorFound
 	}
 
 	// replace all editable fields (clients should autofill existing values)
@@ -155,18 +164,20 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 		}
 
 		// call the before-modification hook since we're about to update the commission
-		k.BeforeValidatorModified(ctx, valAddr)
+		if err := k.BeforeValidatorModified(ctx, valAddr); err != nil {
+			return nil, err
+		}
 
 		validator.Commission = commission
 	}
 
 	if msg.MinSelfDelegation != nil {
 		if !msg.MinSelfDelegation.GT(validator.MinSelfDelegation) {
-			return nil, types.ErrMinSelfDelegationDecreased
+			return nil, sdkstaking.ErrMinSelfDelegationDecreased
 		}
 
 		if msg.MinSelfDelegation.GT(validator.Tokens) {
-			return nil, types.ErrSelfDelegationBelowMinimum
+			return nil, sdkstaking.ErrSelfDelegationBelowMinimum
 		}
 
 		validator.MinSelfDelegation = (*msg.MinSelfDelegation)
@@ -200,7 +211,7 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 
 	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
-		return nil, types.ErrNoValidatorFound
+		return nil, sdkstaking.ErrNoValidatorFound
 	}
 
 	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
@@ -378,10 +389,6 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	}, nil
 }
 
-func getShareTokenDenom(validatorAddress string, tokenizeShareRecordId uint64) string {
-	return validatorAddress + strconv.Itoa(int(tokenizeShareRecordId))
-}
-
 func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeShares) (*types.MsgTokenizeSharesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
@@ -391,10 +398,8 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	}
 	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
-		return nil, types.ErrNoValidatorFound
+		return nil, sdkstaking.ErrNoValidatorFound
 	}
-
-	_ = validator
 
 	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
@@ -403,16 +408,16 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 
 	delegation, found := k.GetDelegation(ctx, delegatorAddress, valAddr)
 	if !found {
-		return nil, types.ErrNoDelegatorForAddress
+		return nil, sdkstaking.ErrNoDelegatorForAddress
 	}
 
 	if msg.Amount.Denom != k.BondDenom(ctx) {
 		return nil, types.ErrOnlyBondDenomAllowdForTokenize
 	}
 
-	delegationAmount := validator.Tokens.ToDec().Mul(delegation.GetShares()).Quo(validator.DelegatorShares)
-	if msg.Amount.Amount.GT(sdk.Int(delegationAmount)) {
-		return nil, types.ErrNotEnoughDelegationShares
+	delegationAmount := sdk.NewDecFromInt(validator.Tokens).Mul(delegation.GetShares()).Quo(validator.DelegatorShares)
+	if sdk.NewDecFromInt(msg.Amount.Amount).GT(delegationAmount) {
+		return nil, sdkstaking.ErrNotEnoughDelegationShares
 	}
 
 	acc := k.authKeeper.GetAccount(ctx, delegatorAddress)
@@ -433,16 +438,14 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	recordId := k.GetLastTokenizeShareRecordId(ctx) + 1
 	k.SetLastTokenizeShareRecordId(ctx, recordId)
 
-	shareTokenDenom := getShareTokenDenom(msg.ValidatorAddress, recordId)
 	record := types.TokenizeShareRecord{
-		Id:              recordId,
-		Owner:           msg.TokenizedShareOwner,
-		ShareTokenDenom: shareTokenDenom,
-		ModuleAccount:   fmt.Sprintf("tokenizeshare_%d", recordId),
-		Validator:       msg.ValidatorAddress,
+		Id:            recordId,
+		Owner:         msg.TokenizedShareOwner,
+		ModuleAccount: fmt.Sprintf("tokenizeshare_%d", recordId),
+		Validator:     msg.ValidatorAddress,
 	}
 
-	shareToken := sdk.NewCoin(shareTokenDenom, msg.Amount.Amount)
+	shareToken := sdk.NewCoin(record.GetShareTokenDenom(), msg.Amount.Amount)
 
 	err = k.bankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.Coins{shareToken})
 	if err != nil {
@@ -457,6 +460,9 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	shares, err := k.ValidateUnbondAmount(
 		ctx, delegatorAddress, valAddr, msg.Amount.Amount,
 	)
+	if err != nil {
+		return nil, err
+	}
 
 	returnAmount, err := k.Unbond(ctx, delegatorAddress, valAddr, shares)
 	if err != nil {
@@ -482,9 +488,10 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
+	// Note: it is needed to get latest validator object to get Keeper.Delegate function work properly
 	validator, found = k.GetValidator(ctx, valAddr)
 	if !found {
-		return nil, types.ErrNoValidatorFound
+		return nil, sdkstaking.ErrNoValidatorFound
 	}
 
 	// delegate from module account
@@ -492,6 +499,17 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	if err != nil {
 		return nil, err
 	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeTokenizeShares,
+			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
+			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+			sdk.NewAttribute(types.AttributeKeyShareOwner, msg.TokenizedShareOwner),
+			sdk.NewAttribute(types.AttributeKeyShareRecordId, fmt.Sprintf("%d", record.Id)),
+			sdk.NewAttribute(types.AttributeKeyAmount, msg.Amount.String()),
+		),
+	)
 
 	return &types.MsgTokenizeSharesResponse{
 		Amount: shareToken,
@@ -523,14 +541,14 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 
 	validator, found := k.GetValidator(ctx, valAddr)
 	if !found {
-		return nil, types.ErrNoValidatorFound
+		return nil, sdkstaking.ErrNoValidatorFound
 	}
 
 	// calculate the ratio between shares and redeem amount
 	// moduleAccountTotalDelegation * redeemAmount / totalIssue
 	delegation, found := k.GetDelegation(ctx, record.GetModuleAddress(), valAddr)
 	shareDenomSupply := k.bankKeeper.GetSupply(ctx, msg.Amount.Denom)
-	shares := delegation.Shares.Mul(msg.Amount.Amount.ToDec()).QuoInt(shareDenomSupply.Amount)
+	shares := delegation.Shares.Mul(sdk.NewDecFromInt(msg.Amount.Amount)).QuoInt(shareDenomSupply.Amount)
 
 	returnAmount, err := k.Unbond(ctx, record.GetModuleAddress(), valAddr, shares)
 	if err != nil {
@@ -541,13 +559,17 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		k.bondedTokensToNotBonded(ctx, returnAmount)
 	}
 
+	// Note: since delegation object has been changed from unbond call, it gets latest delegation
 	_, found = k.GetDelegation(ctx, record.GetModuleAddress(), valAddr)
 	if !found {
 		if k.hooks != nil {
 			k.hooks.BeforeTokenizeShareRecordRemoved(ctx, record.Id)
 		}
 
-		k.DeleteTokenizeShareRecord(ctx, record.Id)
+		err = k.DeleteTokenizeShareRecord(ctx, record.Id)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	// send share tokens to NotBondedPool and burn
@@ -567,9 +589,10 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		return nil, err
 	}
 
+	// Note: it is needed to get latest validator object to get Keeper.Delegate function work properly
 	validator, found = k.GetValidator(ctx, valAddr)
 	if !found {
-		return nil, types.ErrNoValidatorFound
+		return nil, sdkstaking.ErrNoValidatorFound
 	}
 
 	// convert the share tokens to delegated status
@@ -579,7 +602,18 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		return nil, err
 	}
 
-	return &types.MsgRedeemTokensforSharesResponse{}, nil
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeRedeemShares,
+			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
+			sdk.NewAttribute(types.AttributeKeyValidator, validator.OperatorAddress),
+			sdk.NewAttribute(types.AttributeKeyAmount, msg.Amount.String()),
+		),
+	)
+
+	return &types.MsgRedeemTokensforSharesResponse{
+		Amount: returnCoin,
+	}, nil
 }
 
 func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types.MsgTransferTokenizeShareRecord) (*types.MsgTransferTokenizeShareRecordResponse, error) {
@@ -596,6 +630,9 @@ func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types
 
 	// Remove old account reference
 	oldOwner, err := sdk.AccAddressFromBech32(record.Owner)
+	if err != nil {
+		return nil, sdkerrors.ErrInvalidAddress
+	}
 	k.deleteTokenizeShareRecordWithOwner(ctx, oldOwner, record.Id)
 
 	record.Owner = msg.NewOwner
@@ -607,6 +644,15 @@ func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types
 		return nil, sdkerrors.ErrInvalidAddress
 	}
 	k.setTokenizeShareRecordWithOwner(ctx, newOwner, record.Id)
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			types.EventTypeTransferTokenizeShareRecord,
+			sdk.NewAttribute(types.AttributeKeyShareRecordId, fmt.Sprintf("%d", msg.TokenizeShareRecordId)),
+			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
+			sdk.NewAttribute(types.AttributeKeyShareOwner, msg.NewOwner),
+		),
+	)
 
 	return &types.MsgTransferTokenizeShareRecordResponse{}, nil
 }

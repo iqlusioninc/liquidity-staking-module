@@ -17,7 +17,7 @@ import (
 )
 
 func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
-	_, app, ctx := createTestInput()
+	_, app, ctx := createTestInput(t)
 
 	testCases := []struct {
 		name                          string
@@ -117,7 +117,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, app, ctx = createTestInput()
+			_, app, ctx = createTestInput(t)
 			addrs := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
 			addrAcc1, addrAcc2 := addrs[0], addrs[1]
 			addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
@@ -255,7 +255,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			require.True(t, found, "delegation not found after redeem tokens")
 			require.Equal(t, delegation.DelegatorAddress, addrAcc2.String())
 			require.Equal(t, delegation.ValidatorAddress, addrVal1.String())
-			require.Equal(t, delegation.Shares, tc.delegationAmount.Sub(tc.tokenizeShareAmount).Add(tc.redeemAmount).ToDec())
+			require.Equal(t, delegation.Shares, sdk.NewDecFromInt(tc.delegationAmount.Sub(tc.tokenizeShareAmount).Add(tc.redeemAmount)))
 
 			// check delegator balance is not changed
 			bondDenomAmountAfter := app.BankKeeper.GetBalance(ctx, addrAcc2, app.StakingKeeper.BondDenom(ctx))
@@ -269,7 +269,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 				delegation = types.Delegation{Shares: sdk.ZeroDec()}
 			}
 			delAmountAfter := val1.TokensFromShares(delegation.Shares)
-			require.Equal(t, delAmountAfter.String(), delAmountBefore.Add(tc.redeemAmount.ToDec().Mul(sdk.OneDec().Sub(tc.slashFactor))).String())
+			require.Equal(t, delAmountAfter.String(), delAmountBefore.Add(sdk.NewDecFromInt(tc.redeemAmount).Mul(sdk.OneDec().Sub(tc.slashFactor))).String())
 
 			shareToken = app.BankKeeper.GetBalance(ctx, addrAcc2, resp.Amount.Denom)
 			require.Equal(t, shareToken.Amount.String(), tc.tokenizeShareAmount.Sub(tc.redeemAmount).String())
@@ -294,7 +294,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 }
 
 func TestTransferTokenizeShareRecord(t *testing.T) {
-	_, app, ctx := createTestInput()
+	_, app, ctx := createTestInput(t)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 3, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
 	addrAcc1, addrAcc2, valAcc := addrs[0], addrs[1], addrs[2]
@@ -313,11 +313,10 @@ func TestTransferTokenizeShareRecord(t *testing.T) {
 	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
 
 	err := app.StakingKeeper.AddTokenizeShareRecord(ctx, types.TokenizeShareRecord{
-		Id:              1,
-		Owner:           addrAcc1.String(),
-		ShareTokenDenom: "share_token_denom",
-		ModuleAccount:   "module_account",
-		Validator:       val.String(),
+		Id:            1,
+		Owner:         addrAcc1.String(),
+		ModuleAccount: "module_account",
+		Validator:     val.String(),
 	})
 	require.NoError(t, err)
 

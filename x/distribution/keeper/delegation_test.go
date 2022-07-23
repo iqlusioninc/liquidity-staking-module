@@ -7,6 +7,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
@@ -17,8 +18,11 @@ import (
 )
 
 func TestCalculateRewardsBasic(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	app.DistrKeeper.DeleteAllValidatorHistoricalRewards(ctx)
+
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000))
@@ -71,7 +75,7 @@ func TestCalculateRewardsBasic(t *testing.T) {
 }
 
 func TestWithdrawTokenizeShareRecordReward(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(100000000))
@@ -113,7 +117,7 @@ func TestWithdrawTokenizeShareRecordReward(t *testing.T) {
 
 	// allocate some rewards
 	initial := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
-	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial.ToDec()}}
+	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecFromInt(initial)}}
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// end period
@@ -136,7 +140,7 @@ func TestWithdrawTokenizeShareRecordReward(t *testing.T) {
 	})
 
 	// try withdrawing rewards before no reward is allocated
-	coins, err = app.DistrKeeper.WithdrawTokenizeShareRecordReward(ctx, sdk.AccAddress(valAddrs[1]))
+	coins, err = app.DistrKeeper.WithdrawAllTokenizeShareRecordReward(ctx, sdk.AccAddress(valAddrs[1]))
 	require.Nil(t, err)
 	require.Equal(t, coins, sdk.Coins{})
 
@@ -156,7 +160,7 @@ func TestWithdrawTokenizeShareRecordReward(t *testing.T) {
 	beforeBalance := app.BankKeeper.GetBalance(ctx, sdk.AccAddress(valAddrs[1]), sdk.DefaultBondDenom)
 
 	// withdraw rewards
-	coins, err = app.DistrKeeper.WithdrawTokenizeShareRecordReward(ctx, sdk.AccAddress(valAddrs[1]))
+	coins, err = app.DistrKeeper.WithdrawAllTokenizeShareRecordReward(ctx, sdk.AccAddress(valAddrs[1]))
 	require.Nil(t, err)
 
 	// check return value
@@ -174,7 +178,7 @@ func TestWithdrawTokenizeShareRecordReward(t *testing.T) {
 	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, record.GetModuleAddress(), coins)
 	require.NoError(t, err)
 
-	shareTokenBalance := app.BankKeeper.GetBalance(ctx, sdk.AccAddress(valAddrs[0]), record.ShareTokenDenom)
+	shareTokenBalance := app.BankKeeper.GetBalance(ctx, sdk.AccAddress(valAddrs[0]), record.GetShareTokenDenom())
 
 	_, err = msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &stakingtypes.MsgRedeemTokensforShares{
 		DelegatorAddress: sdk.AccAddress(valAddrs[0]).String(),
@@ -187,7 +191,7 @@ func TestWithdrawTokenizeShareRecordReward(t *testing.T) {
 }
 
 func TestCalculateRewardsAfterSlash(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(100000000))
@@ -232,7 +236,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 
 	// allocate some rewards
 	initial := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
-	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial.ToDec()}}
+	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecFromInt(initial)}}
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// end period
@@ -242,15 +246,15 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	rewards = app.DistrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards should be half the tokens
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial.QuoRaw(2).ToDec()}}, rewards)
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecFromInt(initial.QuoRaw(2))}}, rewards)
 
 	// commission should be the other half
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial.QuoRaw(2).ToDec()}},
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecFromInt(initial.QuoRaw(2))}},
 		app.DistrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission)
 }
 
 func TestCalculateRewardsAfterManySlashes(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
@@ -295,7 +299,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 
 	// allocate some rewards
 	initial := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
-	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial.ToDec()}}
+	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecFromInt(initial)}}
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// slash the validator by 50% again
@@ -317,15 +321,15 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	rewards = app.DistrKeeper.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
 	// rewards should be half the tokens
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial.ToDec()}}, rewards)
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecFromInt(initial)}}, rewards)
 
 	// commission should be the other half
-	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial.ToDec()}},
+	require.Equal(t, sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDecFromInt(initial)}},
 		app.DistrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission)
 }
 
 func TestCalculateRewardsMultiDelegator(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
@@ -388,8 +392,10 @@ func TestCalculateRewardsMultiDelegator(t *testing.T) {
 }
 
 func TestWithdrawDelegationRewardsBasic(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	app.DistrKeeper.DeleteAllValidatorHistoricalRewards(ctx)
 
 	balancePower := int64(1000)
 	balanceTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, balancePower)
@@ -399,7 +405,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 
 	// set module account coins
 	distrAcc := app.DistrKeeper.GetDistributionAccount(ctx)
-	require.NoError(t, simapp.FundModuleAccount(app.BankKeeper, ctx, distrAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, balanceTokens))))
+	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, distrAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, balanceTokens))))
 	app.AccountKeeper.SetModuleAccount(ctx, distrAcc)
 
 	// create validator with 50% commission
@@ -459,7 +465,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 }
 
 func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	addr := simapp.AddTestAddrs(app, ctx, 1, sdk.NewInt(1000000000))
@@ -494,7 +500,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
 	// allocate some rewards
-	initial := app.StakingKeeper.TokensFromConsensusPower(ctx, 10).ToDec()
+	initial := sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 10))
 	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial}}
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
@@ -527,7 +533,7 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 }
 
 func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
@@ -550,7 +556,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 	del1 := app.StakingKeeper.Delegation(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
 
 	// allocate some rewards
-	initial := app.StakingKeeper.TokensFromConsensusPower(ctx, 30).ToDec()
+	initial := sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 30))
 	tokens := sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: initial}}
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
@@ -601,8 +607,10 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 }
 
 func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	app.DistrKeeper.DeleteAllValidatorHistoricalRewards(ctx)
 
 	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000000000))
@@ -611,7 +619,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 
 	// set module account coins
 	distrAcc := app.DistrKeeper.GetDistributionAccount(ctx)
-	require.NoError(t, simapp.FundModuleAccount(app.BankKeeper, ctx, distrAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)))))
+	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, distrAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)))))
 	app.AccountKeeper.SetModuleAccount(ctx, distrAcc)
 
 	tokens := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(initial))}
@@ -743,4 +751,73 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 
 	// commission should be zero
 	require.True(t, app.DistrKeeper.GetValidatorAccumulatedCommission(ctx, valAddrs[0]).Commission.IsZero())
+}
+
+func Test100PercentCommissionReward(t *testing.T) {
+	app := simapp.Setup(t, false)
+	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
+
+	tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
+	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1000000000))
+	valAddrs := simapp.ConvertAddrsToValAddrs(addr)
+	initial := int64(20)
+
+	// set module account coins
+	distrAcc := app.DistrKeeper.GetDistributionAccount(ctx)
+	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, distrAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)))))
+	app.AccountKeeper.SetModuleAccount(ctx, distrAcc)
+
+	tokens := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(initial))}
+
+	// create validator with 100% commission
+	tstaking.Commission = stakingtypes.NewCommissionRates(sdk.NewDecWithPrec(10, 1), sdk.NewDecWithPrec(10, 1), sdk.NewDec(0))
+	tstaking.CreateValidator(valAddrs[0], valConsPk1, sdk.NewInt(100), true)
+	app.StakingKeeper.Delegation(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
+
+	// end block to bond validator
+	staking.EndBlocker(ctx, app.StakingKeeper)
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	// fetch validator
+	val := app.StakingKeeper.Validator(ctx, valAddrs[0])
+
+	// allocate some rewards
+	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
+
+	// end block
+	staking.EndBlocker(ctx, app.StakingKeeper)
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	// allocate some more rewards
+	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
+
+	// next block
+	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
+
+	// allocate some more rewards
+	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
+
+	rewards, err := app.DistrKeeper.WithdrawDelegationRewards(ctx, sdk.AccAddress(valAddrs[0]), valAddrs[0])
+	require.NoError(t, err)
+
+	denom, _ := sdk.GetBaseDenom()
+	zeroRewards := sdk.Coins{
+		sdk.Coin{
+			Denom:  denom,
+			Amount: sdk.ZeroInt(),
+		},
+	}
+	require.True(t, rewards.IsEqual(zeroRewards))
+	events := ctx.EventManager().Events()
+	lastEvent := events[len(events)-1]
+	hasValue := false
+	for _, attr := range lastEvent.Attributes {
+		if string(attr.Key) == "amount" && string(attr.Value) == "0" {
+			hasValue = true
+		}
+	}
+	require.True(t, hasValue)
 }

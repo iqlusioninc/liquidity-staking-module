@@ -164,7 +164,9 @@ message MsgRedeemTokensforShares {
   cosmos.base.v1beta1.Coin amount = 2 [ (gogoproto.nullable) = false ];
 }
 
-message MsgRedeemTokensforSharesResponse {}
+message MsgRedeemTokensforSharesResponse {
+  cosmos.base.v1beta1.Coin amount = 1 [ (gogoproto.nullable) = false ];
+}
 
 message MsgTransferTokenizeShareRecord {
   option (gogoproto.equal) = false;
