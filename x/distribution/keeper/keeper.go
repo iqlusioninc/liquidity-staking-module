@@ -23,8 +23,6 @@ type Keeper struct {
 	bankKeeper    types.BankKeeper
 	stakingKeeper types.StakingKeeper
 
-	blockedAddrs map[string]bool
-
 	feeCollectorName string // name of the FeeCollector ModuleAccount
 }
 
@@ -34,7 +32,6 @@ func NewKeeper(
 	ak types.AccountKeeper, bk types.BankKeeper, sk types.StakingKeeper,
 	feeCollectorName string,
 ) Keeper {
-
 	// ensure distribution module account is set
 	if addr := ak.GetModuleAddress(types.ModuleName); addr == nil {
 		panic(fmt.Sprintf("%s module account has not been set", types.ModuleName))

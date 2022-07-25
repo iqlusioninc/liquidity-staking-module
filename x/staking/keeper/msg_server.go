@@ -3,10 +3,12 @@ package keeper
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"time"
 
 	metrics "github.com/armon/go-metrics"
-	tmstrings "github.com/tendermint/tendermint/libs/strings"
+	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/telemetry"
@@ -70,7 +72,15 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 
 	cp := ctx.ConsensusParams()
 	if cp != nil && cp.Validator != nil {
-		if !tmstrings.StringInSlice(pk.Type(), cp.Validator.PubKeyTypes) {
+		pkType := pk.Type()
+		hasKeyType := false
+		for _, keyType := range cp.Validator.PubKeyTypes {
+			if pkType == keyType {
+				hasKeyType = true
+				break
+			}
+		}
+		if !hasKeyType {
 			return nil, sdkerrors.Wrapf(
 				sdkstaking.ErrValidatorPubKeyTypeNotSupported,
 				"got: %s, expected: %s", pk.Type(), cp.Validator.PubKeyTypes,
@@ -101,10 +111,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	validator.MinSelfDelegation = msg.MinSelfDelegation
 
 	k.SetValidator(ctx, validator)
-	err = k.SetValidatorByConsAddr(ctx, validator)
-	if err != nil {
-		return nil, err
-	}
+	k.SetValidatorByConsAddr(ctx, validator)
 	k.SetNewValidatorByPowerIndex(ctx, validator)
 
 	// call the after-creation hook
@@ -180,7 +187,7 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 			return nil, sdkstaking.ErrSelfDelegationBelowMinimum
 		}
 
-		validator.MinSelfDelegation = (*msg.MinSelfDelegation)
+		validator.MinSelfDelegation = *msg.MinSelfDelegation
 	}
 
 	k.SetValidator(ctx, validator)
@@ -387,6 +394,113 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	return &types.MsgUndelegateResponse{
 		CompletionTime: completionTime,
 	}, nil
+}
+
+// CancelUnbondingDelegation defines a method for canceling the unbonding delegation
+// and delegate back to the validator.
+func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.MsgCancelUnbondingDelegation) (*types.MsgCancelUnbondingDelegationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	delegatorAddress, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	bondDenom := k.BondDenom(ctx)
+	if msg.Amount.Denom != bondDenom {
+		return nil, sdkerrors.Wrapf(
+			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", msg.Amount.Denom, bondDenom,
+		)
+	}
+
+	validator, found := k.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, sdkstaking.ErrNoValidatorFound
+	}
+
+	// In some situations, the exchange rate becomes invalid, e.g. if
+	// Validator loses all tokens due to slashing. In this case,
+	// make all future delegations invalid.
+	if validator.InvalidExRate() {
+		return nil, sdkstaking.ErrDelegatorShareExRateInvalid
+	}
+
+	if validator.IsJailed() {
+		return nil, sdkstaking.ErrValidatorJailed
+	}
+
+	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddress, valAddr)
+	if !found {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"unbonding delegation with delegator %s not found for validator %s",
+			msg.DelegatorAddress, msg.ValidatorAddress,
+		)
+	}
+
+	var (
+		unbondEntry      types.UnbondingDelegationEntry
+		unbondEntryIndex int64 = -1
+	)
+
+	for i, entry := range ubd.Entries {
+		if entry.CreationHeight == msg.CreationHeight {
+			unbondEntry = entry
+			unbondEntryIndex = int64(i)
+			break
+		}
+	}
+	if unbondEntryIndex == -1 {
+		return nil, sdkerrors.ErrNotFound.Wrapf("unbonding delegation entry is not found at block height %d", msg.CreationHeight)
+	}
+
+	if unbondEntry.Balance.LT(msg.Amount.Amount) {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("amount is greater than the unbonding delegation entry balance")
+	}
+
+	if unbondEntry.CompletionTime.Before(ctx.BlockTime()) {
+		return nil, sdkerrors.ErrInvalidRequest.Wrap("unbonding delegation is already processed")
+	}
+
+	// delegate back the unbonding delegation amount to the validator
+	_, err = k.Keeper.Delegate(ctx, delegatorAddress, msg.Amount.Amount, sdkstaking.Unbonding, validator, false)
+	if err != nil {
+		return nil, err
+	}
+
+	amount := unbondEntry.Balance.Sub(msg.Amount.Amount)
+	if amount.IsZero() {
+		ubd.RemoveEntry(unbondEntryIndex)
+	} else {
+		// update the unbondingDelegationEntryBalance and InitialBalance for ubd entry
+		unbondEntry.Balance = amount
+		unbondEntry.InitialBalance = unbondEntry.InitialBalance.Sub(msg.Amount.Amount)
+		ubd.Entries[unbondEntryIndex] = unbondEntry
+	}
+
+	// set the unbonding delegation or remove it if there are no more entries
+	if len(ubd.Entries) == 0 {
+		k.RemoveUnbondingDelegation(ctx, ubd)
+	} else {
+		k.SetUnbondingDelegation(ctx, ubd)
+	}
+
+	ctx.EventManager().EmitEvent(
+		sdk.NewEvent(
+			sdkstaking.EventTypeCancelUnbondingDelegation,
+			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
+			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
+			sdk.NewAttribute(sdkstaking.AttributeKeyCreationHeight, strconv.FormatInt(msg.CreationHeight, 10)),
+		),
+	)
+
+	return &types.MsgCancelUnbondingDelegationResponse{}, nil
 }
 
 func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeShares) (*types.MsgTokenizeSharesResponse, error) {
