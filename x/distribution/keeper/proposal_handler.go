@@ -8,7 +8,6 @@ import (
 
 // HandleCommunityPoolSpendProposal is a handler for executing a passed community spend proposal
 func HandleCommunityPoolSpendProposal(ctx sdk.Context, k Keeper, p *types.CommunityPoolSpendProposal) error {
-
 	recipient, addrErr := sdk.AccAddressFromBech32(p.Recipient)
 	if addrErr != nil {
 		return addrErr
