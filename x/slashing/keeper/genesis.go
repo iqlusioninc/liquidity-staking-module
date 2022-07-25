@@ -1,25 +1,21 @@
-package slashing
+package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/keeper"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
 )
 
 // InitGenesis initialize default parameters
 // and the keeper's address to pubkey map
-func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.StakingKeeper, data *types.GenesisState) {
+func (keeper Keeper) InitGenesis(ctx sdk.Context, stakingKeeper types.StakingKeeper, data *types.GenesisState) {
 	stakingKeeper.IterateValidators(ctx,
 		func(index int64, validator sdkstaking.ValidatorI) bool {
 			consPk, err := validator.ConsPubKey()
 			if err != nil {
 				panic(err)
 			}
-			err = keeper.AddPubkey(ctx, consPk)
-			if err != nil {
-				panic(err)
-			}
+			keeper.AddPubkey(ctx, consPk)
 			return false
 		},
 	)
@@ -48,7 +44,7 @@ func InitGenesis(ctx sdk.Context, keeper keeper.Keeper, stakingKeeper types.Stak
 // ExportGenesis writes the current store values
 // to a genesis file, which can be imported again
 // with InitGenesis
-func ExportGenesis(ctx sdk.Context, keeper keeper.Keeper) (data *types.GenesisState) {
+func (keeper Keeper) ExportGenesis(ctx sdk.Context) (data *types.GenesisState) {
 	params := keeper.GetParams(ctx)
 	signingInfos := make([]types.SigningInfo, 0)
 	missedBlocks := make([]types.ValidatorMissedBlocks, 0)
