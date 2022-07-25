@@ -35,6 +35,7 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgDelegate{},
 		&MsgUndelegate{},
 		&MsgBeginRedelegate{},
+		&MsgCancelUnbondingDelegation{},
 		&MsgTokenizeShares{},
 		&MsgRedeemTokensforShares{},
 		&MsgTransferTokenizeShareRecord{},
