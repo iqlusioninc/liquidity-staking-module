@@ -204,3 +204,14 @@ message MsgTransferTokenizeShareRecord {
 }
 
 message MsgTransferTokenizeShareRecordResponse {}
+
+// MsgExemptDelegation defines a SDK message for performing exemption of delegated coins
+// from a delegator to a validator.
+message MsgExemptDelegation {
+  option (gogoproto.equal)           = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string                   delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
+  string                   validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+}
+message MsgExemptDelegationResponse {}

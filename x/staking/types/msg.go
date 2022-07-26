@@ -504,3 +504,10 @@ func (msg MsgCancelUnbondingDelegation) ValidateBasic() error {
 
 	return nil
 }
+
+// Core business logic
+// Remove min self delegation from the code base and all logic that uses it.
+// MsgTokenizeShares must check the total exempt delegation from the validator, the governance parameter and the total tokenized shares to see if a tokenization is permitted
+// MsgExemptDelegation increases the sum of total exempt delegation.
+// Calls to MsgRedelegate a Delegation that is Exempt always fails.
+// Calls to MsgUndelegate must check if the (exempt_shares - undelegated shares) * exemption_factor >= total_tokeniz_shares
