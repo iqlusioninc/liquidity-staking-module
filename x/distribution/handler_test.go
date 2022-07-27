@@ -13,13 +13,13 @@ import (
 
 // test msg registration
 func TestWithdrawTokenizeShareRecordReward(t *testing.T) {
-	app := simapp.Setup(false)
+	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	h := distribution.NewHandler(app.DistrKeeper)
 	delAddr1 = sdk.AccAddress(delPk1.Address())
 
-	res, err := h(ctx, &types.MsgWithdrawTokenizeShareRecordReward{
+	res, err := h(ctx, &types.MsgWithdrawAllTokenizeShareRecordReward{
 		OwnerAddress: delAddr1.String(),
 	})
 	require.NoError(t, err)

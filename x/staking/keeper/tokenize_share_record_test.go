@@ -18,25 +18,22 @@ func (suite *KeeperTestSuite) TestGetTokenizeShareRecord() {
 	owner1, owner2 := suite.addrs[0], suite.addrs[1]
 
 	tokenizeShareRecord1 := types.TokenizeShareRecord{
-		Id:              0,
-		Owner:           owner1.String(),
-		ShareTokenDenom: "test-share-token-denom-1",
-		ModuleAccount:   "test-module-account-1",
-		Validator:       "test-validator",
+		Id:            0,
+		Owner:         owner1.String(),
+		ModuleAccount: "test-module-account-1",
+		Validator:     "test-validator",
 	}
 	tokenizeShareRecord2 := types.TokenizeShareRecord{
-		Id:              1,
-		Owner:           owner2.String(),
-		ShareTokenDenom: "test-share-token-denom-2",
-		ModuleAccount:   "test-module-account-2",
-		Validator:       "test-validator",
+		Id:            1,
+		Owner:         owner2.String(),
+		ModuleAccount: "test-module-account-2",
+		Validator:     "test-validator",
 	}
 	tokenizeShareRecord3 := types.TokenizeShareRecord{
-		Id:              2,
-		Owner:           owner1.String(),
-		ShareTokenDenom: "test-share-token-denom-3",
-		ModuleAccount:   "test-module-account-3",
-		Validator:       "test-validator",
+		Id:            2,
+		Owner:         owner1.String(),
+		ModuleAccount: "test-module-account-3",
+		Validator:     "test-validator",
 	}
 	app.StakingKeeper.AddTokenizeShareRecord(ctx, tokenizeShareRecord1)
 	app.StakingKeeper.AddTokenizeShareRecord(ctx, tokenizeShareRecord2)
@@ -46,7 +43,7 @@ func (suite *KeeperTestSuite) TestGetTokenizeShareRecord() {
 	suite.NoError(err)
 	suite.Equal(tokenizeShareRecord, tokenizeShareRecord3)
 
-	tokenizeShareRecord, err = app.StakingKeeper.GetTokenizeShareRecordByDenom(ctx, "test-share-token-denom-2")
+	tokenizeShareRecord, err = app.StakingKeeper.GetTokenizeShareRecordByDenom(ctx, tokenizeShareRecord2.GetShareTokenDenom())
 	suite.NoError(err)
 	suite.Equal(tokenizeShareRecord, tokenizeShareRecord2)
 

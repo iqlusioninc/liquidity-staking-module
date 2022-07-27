@@ -40,10 +40,8 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 		if err != nil {
 			panic(err)
 		}
-		delegatorAddress, err := sdk.AccAddressFromBech32(dvPair.DelegatorAddress)
-		if err != nil {
-			panic(err)
-		}
+		delegatorAddress := sdk.MustAccAddressFromBech32(dvPair.DelegatorAddress)
+
 		balances, err := k.CompleteUnbonding(ctx, delegatorAddress, addr)
 		if err != nil {
 			continue
@@ -70,10 +68,8 @@ func (k Keeper) BlockValidatorUpdates(ctx sdk.Context) []abci.ValidatorUpdate {
 		if err != nil {
 			panic(err)
 		}
-		delegatorAddress, err := sdk.AccAddressFromBech32(dvvTriplet.DelegatorAddress)
-		if err != nil {
-			panic(err)
-		}
+		delegatorAddress := sdk.MustAccAddressFromBech32(dvvTriplet.DelegatorAddress)
+
 		balances, err := k.CompleteRedelegation(
 			ctx,
 			delegatorAddress,

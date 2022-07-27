@@ -13,6 +13,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	sdkslashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
@@ -58,7 +59,7 @@ func TestSlashingMsgs(t *testing.T) {
 		},
 	}
 
-	app := simapp.SetupWithGenesisAccounts(accs, balances...)
+	app := simapp.SetupWithGenesisAccounts(t, accs, balances...)
 	simapp.CheckBalance(t, app, addr1, sdk.Coins{genCoin})
 
 	description := stakingtypes.NewDescription("foo_moniker", "", "", "", "")
@@ -91,5 +92,5 @@ func TestSlashingMsgs(t *testing.T) {
 	_, res, err := simapp.SignCheckDeliver(t, txGen, app.BaseApp, header, []sdk.Msg{unjailMsg}, "", []uint64{0}, []uint64{1}, false, false, priv1)
 	require.Error(t, err)
 	require.Nil(t, res)
-	require.True(t, errors.Is(types.ErrValidatorNotJailed, err))
+	require.True(t, errors.Is(sdkslashingtypes.ErrValidatorNotJailed, err))
 }

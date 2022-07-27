@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
@@ -23,7 +24,7 @@ func (k Keeper) GetDelegatorValidators(
 
 		validator, found := k.GetValidator(ctx, delegation.GetValidatorAddr())
 		if !found {
-			panic(types.ErrNoValidatorFound)
+			panic(sdkstaking.ErrNoValidatorFound)
 		}
 
 		validators[i] = validator
@@ -39,12 +40,12 @@ func (k Keeper) GetDelegatorValidator(
 ) (validator types.Validator, err error) {
 	delegation, found := k.GetDelegation(ctx, delegatorAddr, validatorAddr)
 	if !found {
-		return validator, types.ErrNoDelegation
+		return validator, sdkstaking.ErrNoDelegation
 	}
 
 	validator, found = k.GetValidator(ctx, delegation.GetValidatorAddr())
 	if !found {
-		panic(types.ErrNoValidatorFound)
+		panic(sdkstaking.ErrNoValidatorFound)
 	}
 
 	return validator, nil

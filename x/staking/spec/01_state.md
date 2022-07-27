@@ -236,3 +236,9 @@ There are helper queues to manage the tokenize share records by owner and by sha
 
 `0x62 | owner | id -> TokenizeShareRecordId`
 `0x63 | denom -> TokenizeShareRecordId`
+
+## LastTokenizeShareRecordIdKey
+
+LastTokenizeShareRecordIdKey is used to maintain unique id of tokenize share record.
+
+It is stored on `0x64 -> LastTokenizeShareRecordId`

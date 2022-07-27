@@ -2,6 +2,7 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkdistr "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 )
 
@@ -15,7 +16,7 @@ func (k Keeper) DistributeFromFeePool(ctx sdk.Context, amount sdk.Coins, receive
 	// must be reduced separately from the SendCoinsFromModuleToAccount call
 	newPool, negative := feePool.CommunityPool.SafeSub(sdk.NewDecCoinsFromCoins(amount...))
 	if negative {
-		return types.ErrBadDistribution
+		return sdkdistr.ErrBadDistribution
 	}
 
 	feePool.CommunityPool = newPool

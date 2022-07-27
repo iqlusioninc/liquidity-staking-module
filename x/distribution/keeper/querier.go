@@ -8,6 +8,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	sdkdistr "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 )
@@ -134,12 +135,12 @@ func queryDelegationRewards(ctx sdk.Context, _ []string, req abci.RequestQuery, 
 
 	val := k.stakingKeeper.Validator(ctx, params.ValidatorAddress)
 	if val == nil {
-		return nil, sdkerrors.Wrap(types.ErrNoValidatorExists, params.ValidatorAddress.String())
+		return nil, sdkerrors.Wrap(sdkdistr.ErrNoValidatorExists, params.ValidatorAddress.String())
 	}
 
 	del := k.stakingKeeper.Delegation(ctx, params.DelegatorAddress, params.ValidatorAddress)
 	if del == nil {
-		return nil, types.ErrNoDelegationExists
+		return nil, sdkdistr.ErrNoDelegationExists
 	}
 
 	endingPeriod := k.IncrementValidatorPeriod(ctx, val)

@@ -96,7 +96,7 @@ func (k Keeper) AddTokenizeShareRecord(ctx sdk.Context, tokenizeShareRecord type
 	}
 
 	k.setTokenizeShareRecordWithOwner(ctx, owner, tokenizeShareRecord.Id)
-	k.setTokenizeShareRecordWithDenom(ctx, tokenizeShareRecord.ShareTokenDenom, tokenizeShareRecord.Id)
+	k.setTokenizeShareRecordWithDenom(ctx, tokenizeShareRecord.GetShareTokenDenom(), tokenizeShareRecord.Id)
 
 	return nil
 }
@@ -114,7 +114,7 @@ func (k Keeper) DeleteTokenizeShareRecord(ctx sdk.Context, recordId uint64) erro
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetTokenizeShareRecordByIndexKey(recordId))
 	store.Delete(types.GetTokenizeShareRecordIdByOwnerAndIdKey(owner, recordId))
-	store.Delete(types.GetTokenizeShareRecordIdByDenomKey(record.ShareTokenDenom))
+	store.Delete(types.GetTokenizeShareRecordIdByDenomKey(record.GetShareTokenDenom()))
 	return nil
 }
 
