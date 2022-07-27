@@ -12,10 +12,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
+	genutiltest "github.com/iqlusioninc/liquidity-staking-module/x/genutil/client/testutil"
+	genutiltypes "github.com/iqlusioninc/liquidity-staking-module/x/genutil/types"
 )
 
 func Test_TestnetCmd(t *testing.T) {
