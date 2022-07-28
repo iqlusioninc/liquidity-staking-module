@@ -32,13 +32,12 @@ The staking module emits the following events:
 
 ### MsgEditValidator
 
-| Type           | Attribute Key       | Attribute Value     |
-| -------------- | ------------------- | ------------------- |
-| edit_validator | commission_rate     | {commissionRate}    |
-| edit_validator | min_self_delegation | {minSelfDelegation} |
-| message        | module              | staking             |
-| message        | action              | edit_validator      |
-| message        | sender              | {senderAddress}     |
+| Type           | Attribute Key   | Attribute Value  |
+| -------------- | --------------- | ---------------- |
+| edit_validator | commission_rate | {commissionRate} |
+| message        | module          | staking          |
+| message        | action          | edit_validator   |
+| message        | sender          | {senderAddress}  |
 
 ### MsgDelegate
 

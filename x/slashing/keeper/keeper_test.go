@@ -41,7 +41,6 @@ func TestUnJailNotBonded(t *testing.T) {
 	addr, val := valAddrs[5], pks[5]
 	amt := app.StakingKeeper.TokensFromConsensusPower(ctx, 50)
 	msg := tstaking.CreateValidatorMsg(addr, val, amt)
-	msg.MinSelfDelegation = amt
 	res, err := tstaking.CreateValidatorWithMsg(sdk.WrapSDKContext(ctx), msg)
 	require.NoError(t, err)
 	require.NotNil(t, res)

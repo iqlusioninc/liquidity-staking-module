@@ -875,7 +875,6 @@
             "website": ""
           },
           "jailed": false,
-          "min_self_delegation": "1",
           "operator_address": "cosmosvaloper1qp49fdjtlsrv6jkx3gc8urp2ncg88s6mcversm",
           "status": "BOND_STATUS_BONDED",
           "tokens": "11000000",
@@ -904,7 +903,6 @@
             "website": ""
           },
           "jailed": false,
-          "min_self_delegation": "1",
           "operator_address": "cosmosvaloper1yh60qk8lp0fz05zna43zjdmwj8y32wrhsq8rzj",
           "status": "BOND_STATUS_BONDED",
           "tokens": "100000000",
@@ -933,7 +931,6 @@
             "website": ""
           },
           "jailed": false,
-          "min_self_delegation": "1",
           "operator_address": "cosmosvaloper186luay4vll7yv8w6z6amhxjczf4k5yzr67tmgg",
           "status": "BOND_STATUS_BONDED",
           "tokens": "100000000",
@@ -962,7 +959,6 @@
             "website": ""
           },
           "jailed": false,
-          "min_self_delegation": "1",
           "operator_address": "cosmosvaloper1sjq7jgd4r3al0875ysvpk3yw6c7250a75uk2rs",
           "status": "BOND_STATUS_BONDED",
           "tokens": "100000000",
@@ -991,7 +987,6 @@
             "website": ""
           },
           "jailed": false,
-          "min_self_delegation": "1",
           "operator_address": "cosmosvaloper1jefsuvgwwt4pc0cntdwlzcjewckvdjrllh4668",
           "status": "BOND_STATUS_BONDED",
           "tokens": "100000000",
