@@ -2,7 +2,6 @@ package keeper
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	sdkslashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 )
 
@@ -18,14 +17,6 @@ func (k Keeper) Unjail(ctx sdk.Context, validatorAddr sdk.ValAddress) error {
 	selfDel := k.sk.Delegation(ctx, sdk.AccAddress(validatorAddr), validatorAddr)
 	if selfDel == nil {
 		return sdkslashingtypes.ErrMissingSelfDelegation
-	}
-
-	tokens := validator.TokensFromShares(selfDel.GetShares()).TruncateInt()
-	minSelfBond := validator.GetMinSelfDelegation()
-	if tokens.LT(minSelfBond) {
-		return sdkerrors.Wrapf(
-			sdkslashingtypes.ErrSelfDelegationTooLowToUnjail, "%s less than %s", tokens, minSelfBond,
-		)
 	}
 
 	// cannot be unjailed if not jailed

@@ -20,6 +20,7 @@ const (
 	TypeMsgTokenizeShares              = "tokenize_shares"
 	TypeMsgRedeemTokensforShares       = "redeem_tokens_for_shares"
 	TypeMsgTransferTokenizeShareRecord = "transfer_tokenize_share_record"
+	TypeMsgExemptDelegation            = "exempt_delegation"
 )
 
 var (
@@ -40,7 +41,7 @@ var (
 // Delegator address and validator address are the same.
 func NewMsgCreateValidator(
 	valAddr sdk.ValAddress, pubKey cryptotypes.PubKey, //nolint:interfacer
-	selfDelegation sdk.Coin, description Description, commission CommissionRates, minSelfDelegation sdk.Int,
+	selfDelegation sdk.Coin, description Description, commission CommissionRates,
 ) (*MsgCreateValidator, error) {
 	var pkAny *codectypes.Any
 	if pubKey != nil {
@@ -50,13 +51,12 @@ func NewMsgCreateValidator(
 		}
 	}
 	return &MsgCreateValidator{
-		Description:       description,
-		DelegatorAddress:  sdk.AccAddress(valAddr).String(),
-		ValidatorAddress:  valAddr.String(),
-		Pubkey:            pkAny,
-		Value:             selfDelegation,
-		Commission:        commission,
-		MinSelfDelegation: minSelfDelegation,
+		Description:      description,
+		DelegatorAddress: sdk.AccAddress(valAddr).String(),
+		ValidatorAddress: valAddr.String(),
+		Pubkey:           pkAny,
+		Value:            selfDelegation,
+		Commission:       commission,
 	}, nil
 }
 
@@ -125,17 +125,6 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 		return err
 	}
 
-	if !msg.MinSelfDelegation.IsPositive() {
-		return sdkerrors.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"minimum self delegation must be a positive integer",
-		)
-	}
-
-	if msg.Value.Amount.LT(msg.MinSelfDelegation) {
-		return sdkstaking.ErrSelfDelegationBelowMinimum
-	}
-
 	return nil
 }
 
@@ -147,12 +136,11 @@ func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) 
 
 // NewMsgEditValidator creates a new MsgEditValidator instance
 //nolint:interfacer
-func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec, newMinSelfDelegation *sdk.Int) *MsgEditValidator {
+func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec) *MsgEditValidator {
 	return &MsgEditValidator{
-		Description:       description,
-		CommissionRate:    newRate,
-		ValidatorAddress:  valAddr.String(),
-		MinSelfDelegation: newMinSelfDelegation,
+		Description:      description,
+		CommissionRate:   newRate,
+		ValidatorAddress: valAddr.String(),
 	}
 }
 
@@ -182,13 +170,6 @@ func (msg MsgEditValidator) ValidateBasic() error {
 
 	if msg.Description == (Description{}) {
 		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
-	}
-
-	if msg.MinSelfDelegation != nil && !msg.MinSelfDelegation.IsPositive() {
-		return sdkerrors.Wrap(
-			sdkerrors.ErrInvalidRequest,
-			"minimum self delegation must be a positive integer",
-		)
 	}
 
 	if msg.CommissionRate != nil {
@@ -505,9 +486,44 @@ func (msg MsgCancelUnbondingDelegation) ValidateBasic() error {
 	return nil
 }
 
-// Core business logic
-// Remove min self delegation from the code base and all logic that uses it.
-// MsgTokenizeShares must check the total exempt delegation from the validator, the governance parameter and the total tokenized shares to see if a tokenization is permitted
-// MsgExemptDelegation increases the sum of total exempt delegation.
-// Calls to MsgRedelegate a Delegation that is Exempt always fails.
-// Calls to MsgUndelegate must check if the (exempt_shares - undelegated shares) * exemption_factor >= total_tokeniz_shares
+// NewMsgExemptDelegation creates a new MsgExemptDelegation instance.
+//nolint:interfacer
+func NewMsgExemptDelegation(delAddr sdk.AccAddress, valAddr sdk.ValAddress) *MsgExemptDelegation {
+	return &MsgExemptDelegation{
+		DelegatorAddress: delAddr.String(),
+		ValidatorAddress: valAddr.String(),
+	}
+}
+
+// Route implements the sdk.Msg interface.
+func (msg MsgExemptDelegation) Route() string { return RouterKey }
+
+// Type implements the sdk.Msg interface.
+func (msg MsgExemptDelegation) Type() string { return TypeMsgExemptDelegation }
+
+// GetSigners implements the sdk.Msg interface.
+func (msg MsgExemptDelegation) GetSigners() []sdk.AccAddress {
+	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{delegator}
+}
+
+// GetSignBytes implements the sdk.Msg interface.
+func (msg MsgExemptDelegation) GetSignBytes() []byte {
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgExemptDelegation) ValidateBasic() error {
+	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
+	}
+	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
+	}
+
+	return nil
+}

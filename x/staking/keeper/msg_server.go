@@ -108,8 +108,6 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 		return nil, err
 	}
 
-	validator.MinSelfDelegation = msg.MinSelfDelegation
-
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByConsAddr(ctx, validator)
 	k.SetNewValidatorByPowerIndex(ctx, validator)
@@ -178,25 +176,12 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 		validator.Commission = commission
 	}
 
-	if msg.MinSelfDelegation != nil {
-		if !msg.MinSelfDelegation.GT(validator.MinSelfDelegation) {
-			return nil, sdkstaking.ErrMinSelfDelegationDecreased
-		}
-
-		if msg.MinSelfDelegation.GT(validator.Tokens) {
-			return nil, sdkstaking.ErrSelfDelegationBelowMinimum
-		}
-
-		validator.MinSelfDelegation = *msg.MinSelfDelegation
-	}
-
 	k.SetValidator(ctx, validator)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeEditValidator,
 			sdk.NewAttribute(types.AttributeKeyCommissionRate, validator.Commission.String()),
-			sdk.NewAttribute(types.AttributeKeyMinSelfDelegation, validator.MinSelfDelegation.String()),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -770,3 +755,49 @@ func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types
 
 	return &types.MsgTransferTokenizeShareRecordResponse{}, nil
 }
+
+func (k msgServer) ExemptDelegation(goCtx context.Context, msg *types.MsgExemptDelegation) (*types.MsgExemptDelegationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	valAddr, valErr := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if valErr != nil {
+		return nil, valErr
+	}
+
+	validator, found := k.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, sdkstaking.ErrNoValidatorFound
+	}
+
+	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
+	if !found {
+		return nil, sdkstaking.ErrNoDelegation
+	}
+
+	if !delegation.Exempt {
+		delegation.Exempt = true
+		k.SetDelegation(ctx, delegation)
+		validator.TotalExemptShares = validator.TotalExemptShares.Add(delegation.Shares)
+		k.SetValidator(ctx, validator)
+
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeExemptDelegation,
+				sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
+				sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+			),
+		)
+	}
+
+	return &types.MsgExemptDelegationResponse{}, nil
+}
+
+// Remove min self delegation from the code base and all logic that uses it.
+// MsgTokenizeShares must check the total exempt delegation from the validator, the governance parameter and the total tokenized shares to see if a tokenization is permitted
+// Calls to MsgRedelegate a Delegation that is Exempt always fails.
+// Calls to MsgUndelegate must check if the (exempt_shares - undelegated shares) * exemption_factor >= total_tokeniz_shares
