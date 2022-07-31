@@ -797,6 +797,7 @@ func (k msgServer) ExemptDelegation(goCtx context.Context, msg *types.MsgExemptD
 	return &types.MsgExemptDelegationResponse{}, nil
 }
 
+// TODO: implement min self delegation
 // Remove min self delegation from the code base and all logic that uses it.
 // MsgTokenizeShares must check the total exempt delegation from the validator, the governance parameter and the total tokenized shares to see if a tokenization is permitted
 // Calls to MsgRedelegate a Delegation that is Exempt always fails.

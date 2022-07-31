@@ -86,15 +86,6 @@ func (v Validators) String() (out string) {
 	return strings.TrimSpace(out)
 }
 
-// ToSDKValidators -  convenience function convert []Validator to []sdk.ValidatorI
-func (v Validators) ToSDKValidators() (validators []sdkstaking.ValidatorI) {
-	for _, val := range v {
-		validators = append(validators, val)
-	}
-
-	return validators
-}
-
 // Sort Validators sorts validator array in ascending operator address order
 func (v Validators) Sort() {
 	sort.Sort(v)
@@ -518,6 +509,8 @@ func (v Validator) GetConsensusPower(r sdk.Int) int64 {
 }
 func (v Validator) GetCommission() sdk.Dec      { return v.Commission.Rate }
 func (v Validator) GetDelegatorShares() sdk.Dec { return v.DelegatorShares }
+
+func (v Validator) GetMinSelfDelegation() sdk.Int { return sdk.ZeroInt() }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (v Validator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {
