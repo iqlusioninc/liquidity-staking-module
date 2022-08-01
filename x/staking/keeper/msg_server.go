@@ -263,6 +263,20 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 	if err != nil {
 		return nil, err
 	}
+
+	delegation, found := k.GetDelegation(ctx, delegatorAddress, valSrcAddr)
+	if !found {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"delegation with delegator %s not found for validator %s",
+			msg.DelegatorAddress, msg.ValidatorSrcAddress,
+		)
+	}
+
+	if delegation.Exempt {
+		return nil, types.ErrRedelegationNotAllowedForExemptDelegation
+	}
+
 	shares, err := k.ValidateUnbondAmount(
 		ctx, delegatorAddress, valSrcAddr, msg.Amount.Amount,
 	)
@@ -337,6 +351,28 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	validator, found := k.GetValidator(ctx, addr)
+	if !found {
+		return nil, sdkstaking.ErrNoValidatorFound
+	}
+
+	delegation, found := k.GetDelegation(ctx, delegatorAddress, addr)
+	if !found {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"delegation with delegator %s not found for validator %s",
+			msg.DelegatorAddress, msg.ValidatorAddress,
+		)
+	}
+
+	// tokenize share vs exempt delegation check if exempt delegation
+	if delegation.Exempt {
+		maxTokenizeShareAfter := validator.TotalExemptShares.Sub(shares).Mul(k.ExemptionFactor(ctx))
+		if maxTokenizeShareAfter.GT(validator.TotalTokenizedShares) {
+			return nil, types.ErrInsufficientExemptShares
+		}
 	}
 
 	bondDenom := k.BondDenom(ctx)
@@ -534,6 +570,19 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		}
 	}
 
+	shares, err := k.ValidateUnbondAmount(
+		ctx, delegatorAddress, valAddr, msg.Amount.Amount,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// exempt shares check before tokenize operation
+	maxValTotalShare := validator.TotalExemptShares.Mul(k.ExemptionFactor(ctx))
+	if validator.TotalTokenizedShares.Add(shares).GT(maxValTotalShare) {
+		return nil, types.ErrInsufficientExemptShares
+	}
+
 	recordId := k.GetLastTokenizeShareRecordId(ctx) + 1
 	k.SetLastTokenizeShareRecordId(ctx, recordId)
 
@@ -552,13 +601,6 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	}
 
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delegatorAddress, sdk.Coins{shareToken})
-	if err != nil {
-		return nil, err
-	}
-
-	shares, err := k.ValidateUnbondAmount(
-		ctx, delegatorAddress, valAddr, msg.Amount.Amount,
-	)
 	if err != nil {
 		return nil, err
 	}
@@ -598,6 +640,10 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	if err != nil {
 		return nil, err
 	}
+
+	validator, _ = k.GetValidator(ctx, valAddr)
+	validator.TotalTokenizedShares = validator.TotalTokenizedShares.Add(shares)
+	k.SetValidator(ctx, validator)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -796,9 +842,3 @@ func (k msgServer) ExemptDelegation(goCtx context.Context, msg *types.MsgExemptD
 
 	return &types.MsgExemptDelegationResponse{}, nil
 }
-
-// TODO: implement min self delegation
-// Remove min self delegation from the code base and all logic that uses it.
-// MsgTokenizeShares must check the total exempt delegation from the validator, the governance parameter and the total tokenized shares to see if a tokenization is permitted
-// Calls to MsgRedelegate a Delegation that is Exempt always fails.
-// Calls to MsgUndelegate must check if the (exempt_shares - undelegated shares) * exemption_factor >= total_tokeniz_shares
