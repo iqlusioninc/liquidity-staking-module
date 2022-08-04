@@ -273,15 +273,25 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		)
 	}
 
-	if delegation.Exempt {
-		return nil, types.ErrRedelegationNotAllowedForExemptDelegation
-	}
-
 	shares, err := k.ValidateUnbondAmount(
 		ctx, delegatorAddress, valSrcAddr, msg.Amount.Amount,
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	// tokenize share vs exempt delegation check if exempt delegation
+	exemptionFactor := k.ExemptionFactor(ctx)
+	if delegation.Exempt && !exemptionFactor.IsNegative() {
+		validator, found := k.GetValidator(ctx, valSrcAddr)
+		if !found {
+			return nil, sdkstaking.ErrNoValidatorFound
+		}
+
+		maxTokenizeShareAfter := validator.TotalExemptShares.Sub(shares).Mul(exemptionFactor)
+		if maxTokenizeShareAfter.GT(validator.TotalTokenizedShares) {
+			return nil, types.ErrInsufficientExemptShares
+		}
 	}
 
 	bondDenom := k.BondDenom(ctx)
