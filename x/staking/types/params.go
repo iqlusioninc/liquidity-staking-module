@@ -250,11 +250,8 @@ func validateExemptionFactor(i interface{}) error {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
-	if v.IsNegative() {
-		return fmt.Errorf("exemption factor cannot be negative: %s", v)
-	}
-	if v.GT(sdk.OneDec()) {
-		return fmt.Errorf("exemption factor cannot be greater than 100%%: %s", v)
+	if v.IsNegative() && !v.Equal(sdk.NewDec(-1)) {
+		return fmt.Errorf("invalid exemption factor: %s", v)
 	}
 
 	return nil

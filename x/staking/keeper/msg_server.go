@@ -368,8 +368,9 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	}
 
 	// tokenize share vs exempt delegation check if exempt delegation
-	if delegation.Exempt {
-		maxTokenizeShareAfter := validator.TotalExemptShares.Sub(shares).Mul(k.ExemptionFactor(ctx))
+	exemptionFactor := k.ExemptionFactor(ctx)
+	if delegation.Exempt && !exemptionFactor.IsNegative() {
+		maxTokenizeShareAfter := validator.TotalExemptShares.Sub(shares).Mul(exemptionFactor)
 		if maxTokenizeShareAfter.GT(validator.TotalTokenizedShares) {
 			return nil, types.ErrInsufficientExemptShares
 		}
@@ -578,9 +579,12 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	}
 
 	// exempt shares check before tokenize operation
-	maxValTotalShare := validator.TotalExemptShares.Mul(k.ExemptionFactor(ctx))
-	if validator.TotalTokenizedShares.Add(shares).GT(maxValTotalShare) {
-		return nil, types.ErrInsufficientExemptShares
+	exemptionFactor := k.ExemptionFactor(ctx)
+	if !exemptionFactor.IsNegative() {
+		maxValTotalShare := validator.TotalExemptShares.Mul(exemptionFactor)
+		if validator.TotalTokenizedShares.Add(shares).GT(maxValTotalShare) {
+			return nil, types.ErrInsufficientExemptShares
+		}
 	}
 
 	recordId := k.GetLastTokenizeShareRecordId(ctx) + 1
