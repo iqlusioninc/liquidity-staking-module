@@ -35,8 +35,8 @@ const (
 var (
 	// DefaultMinCommissionRate is set to 0%
 	DefaultMinCommissionRate = sdk.ZeroDec()
-	// DefaultExemptionFactor is set to 0%
-	DefaultExemptionFactor = sdk.ZeroDec()
+	// DefaultExemptionFactor is set to -1 (disabled)
+	DefaultExemptionFactor = sdk.NewDecFromInt(sdk.NewInt(-1))
 )
 
 var (
