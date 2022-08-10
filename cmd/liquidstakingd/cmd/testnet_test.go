@@ -12,8 +12,8 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/simapp"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	genutiltest "github.com/iqlusioninc/liquidity-staking-module/x/genutil/client/testutil"
 	genutiltypes "github.com/iqlusioninc/liquidity-staking-module/x/genutil/types"
 )
