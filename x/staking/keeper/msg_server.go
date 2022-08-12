@@ -289,7 +289,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		}
 
 		maxTokenizeShareAfter := validator.TotalExemptShares.Sub(shares).Mul(exemptionFactor)
-		if maxTokenizeShareAfter.GT(validator.TotalTokenizedShares) {
+		if maxTokenizeShareAfter.LT(validator.TotalTokenizedShares) {
 			return nil, types.ErrInsufficientExemptShares
 		}
 	}
@@ -381,7 +381,7 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	exemptionFactor := k.ExemptionFactor(ctx)
 	if delegation.Exempt && !exemptionFactor.IsNegative() {
 		maxTokenizeShareAfter := validator.TotalExemptShares.Sub(shares).Mul(exemptionFactor)
-		if maxTokenizeShareAfter.GT(validator.TotalTokenizedShares) {
+		if maxTokenizeShareAfter.LT(validator.TotalTokenizedShares) {
 			return nil, types.ErrInsufficientExemptShares
 		}
 	}
@@ -760,6 +760,10 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 	if err != nil {
 		return nil, err
 	}
+
+	validator, _ = k.GetValidator(ctx, valAddr)
+	validator.TotalTokenizedShares = validator.TotalTokenizedShares.Sub(shares)
+	k.SetValidator(ctx, validator)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
