@@ -8,5 +8,7 @@ liquidstakingd add-genesis-account $(liquidstakingd keys show validator -a --key
 liquidstakingd gentx validator 100000000stake --keyring-backend="test" --chain-id test
 liquidstakingd collect-gentxs
 
+sed -i '' 's/"exemption_factor": "-1.000000000000000000"/"exemption_factor": "10.000000000000000000"/g' ~/.simapp/config/genesis.json
+
 liquidstakingd start
 # liquidstakingd start --home=home --mode=validator

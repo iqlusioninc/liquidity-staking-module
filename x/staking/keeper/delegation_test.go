@@ -44,7 +44,7 @@ func TestDelegation(t *testing.T) {
 	validators[2] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[2], true)
 
 	// first add a validators[0] to delegate too
-	bond1to1 := types.NewDelegation(addrDels[0], valAddrs[0], sdk.NewDec(9))
+	bond1to1 := types.NewDelegation(addrDels[0], valAddrs[0], sdk.NewDec(9), false)
 
 	// check the empty keeper first
 	_, found := app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
@@ -64,11 +64,11 @@ func TestDelegation(t *testing.T) {
 	require.Equal(t, bond1to1, resBond)
 
 	// add some more records
-	bond1to2 := types.NewDelegation(addrDels[0], valAddrs[1], sdk.NewDec(9))
-	bond1to3 := types.NewDelegation(addrDels[0], valAddrs[2], sdk.NewDec(9))
-	bond2to1 := types.NewDelegation(addrDels[1], valAddrs[0], sdk.NewDec(9))
-	bond2to2 := types.NewDelegation(addrDels[1], valAddrs[1], sdk.NewDec(9))
-	bond2to3 := types.NewDelegation(addrDels[1], valAddrs[2], sdk.NewDec(9))
+	bond1to2 := types.NewDelegation(addrDels[0], valAddrs[1], sdk.NewDec(9), false)
+	bond1to3 := types.NewDelegation(addrDels[0], valAddrs[2], sdk.NewDec(9), false)
+	bond2to1 := types.NewDelegation(addrDels[1], valAddrs[0], sdk.NewDec(9), false)
+	bond2to2 := types.NewDelegation(addrDels[1], valAddrs[1], sdk.NewDec(9), false)
+	bond2to3 := types.NewDelegation(addrDels[1], valAddrs[2], sdk.NewDec(9), false)
 	app.StakingKeeper.SetDelegation(ctx, bond1to2)
 	app.StakingKeeper.SetDelegation(ctx, bond1to3)
 	app.StakingKeeper.SetDelegation(ctx, bond2to1)
@@ -208,7 +208,7 @@ func TestUnbondDelegation(t *testing.T) {
 
 	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
 
-	delegation := types.NewDelegation(delAddrs[0], valAddrs[0], issuedShares)
+	delegation := types.NewDelegation(delAddrs[0], valAddrs[0], issuedShares, false)
 	app.StakingKeeper.SetDelegation(ctx, delegation)
 
 	bondTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 6)
@@ -250,7 +250,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	require.True(sdk.IntEq(t, startTokens, validator.BondedTokens()))
 	require.True(t, validator.IsBonded())
 
-	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares)
+	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares, false)
 	app.StakingKeeper.SetDelegation(ctx, delegation)
 
 	maxEntries := app.StakingKeeper.MaxEntries(ctx)
@@ -419,7 +419,7 @@ func TestRedelegateToSameValidator(t *testing.T) {
 	require.True(t, validator.IsBonded())
 
 	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
-	selfDelegation := types.NewDelegation(val0AccAddr, addrVals[0], issuedShares)
+	selfDelegation := types.NewDelegation(val0AccAddr, addrVals[0], issuedShares, false)
 	app.StakingKeeper.SetDelegation(ctx, selfDelegation)
 
 	_, err := app.StakingKeeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[0], sdk.NewDec(5))
@@ -447,7 +447,7 @@ func TestRedelegationMaxEntries(t *testing.T) {
 	require.Equal(t, valTokens, issuedShares.RoundInt())
 	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
 	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
-	selfDelegation := types.NewDelegation(val0AccAddr, addrVals[0], issuedShares)
+	selfDelegation := types.NewDelegation(val0AccAddr, addrVals[0], issuedShares, false)
 	app.StakingKeeper.SetDelegation(ctx, selfDelegation)
 
 	// create a second validator

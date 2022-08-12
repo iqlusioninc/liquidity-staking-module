@@ -46,6 +46,7 @@ func NewTxCmd() *cobra.Command {
 		NewTokenizeSharesCmd(),
 		NewRedeemTokensCmd(),
 		NewTransferTokenizeShareRecordCmd(),
+		NewExemptDelegationCmd(),
 	)
 
 	return stakingTxCmd
@@ -638,6 +639,41 @@ $ %s tx staking transfer-tokenize-share-record 1 %s1gghjut3ccd8ay0zduzj64hwre2fx
 				Sender:                clientCtx.GetFromAddress().String(),
 				TokenizeShareRecordId: uint64(recordId),
 				NewOwner:              ownerAddr.String(),
+			}
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+// NewExemptDelegationCmd defines a command to make delegation to a validator as exempt delegation
+func NewExemptDelegationCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "exempt-delegation [validator]",
+		Short: "Make delegation to a validator as exempt delegation",
+		Args:  cobra.ExactArgs(1),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Make delegation to a validator as exempt delegation.
+
+Example:
+$ %s tx staking exempt-delegation cosmosvaloper13h5xdxhsdaugwdrkusf8lkgu406h8t62jkqv3h --from mykey
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := &types.MsgExemptDelegation{
+				DelegatorAddress: clientCtx.GetFromAddress().String(),
+				ValidatorAddress: args[0],
 			}
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
