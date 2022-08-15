@@ -481,3 +481,155 @@ func TestRedelegationMaxEntries(t *testing.T) {
 	_, err = app.StakingKeeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], sdk.NewDec(1))
 	require.NoError(t, err)
 }
+
+func TestExemptDelegationUndelegate(t *testing.T) {
+	_, app, ctx := createTestInput(t)
+
+	addrDels := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
+	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
+
+	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
+
+	bondDenom := app.StakingKeeper.BondDenom(ctx)
+	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
+
+	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
+	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
+
+	// create a validator and a delegator to that validator
+	validator := teststaking.NewValidator(t, addrVals[0], PKs[0])
+	app.StakingKeeper.SetValidator(ctx, validator)
+
+	// set exemption factor
+	params := app.StakingKeeper.GetParams(ctx)
+	params.ExemptionFactor = sdk.NewDec(1)
+	app.StakingKeeper.SetParams(ctx, params)
+
+	// convert to exempt delegation
+	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
+
+	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	err := delegateCoinsFromAccount(ctx, app, addrDels[0], startTokens, validator)
+	require.NoError(t, err)
+	_, err = msgServer.ExemptDelegation(sdk.WrapSDKContext(ctx), &types.MsgExemptDelegation{
+		DelegatorAddress: addrDels[0].String(),
+		ValidatorAddress: addrVals[0].String(),
+	})
+	require.NoError(t, err)
+
+	// tokenize share for 2nd account delegation
+	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	err = delegateCoinsFromAccount(ctx, app, addrDels[1], startTokens, validator)
+	require.NoError(t, err)
+	tokenizeShareResp, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
+		DelegatorAddress:    addrDels[1].String(),
+		ValidatorAddress:    addrVals[0].String(),
+		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, startTokens),
+		TokenizedShareOwner: addrDels[0].String(),
+	})
+	require.NoError(t, err)
+
+	// try undelegating
+	_, err = msgServer.Undelegate(ctx, &types.MsgUndelegate{
+		DelegatorAddress: addrDels[1].String(),
+		ValidatorAddress: addrVals[0].String(),
+		Amount:           sdk.NewCoin(sdk.DefaultBondDenom, startTokens),
+	})
+	require.Error(t, err)
+
+	// redeem full amount on 2nd account and try undelegation
+	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	err = delegateCoinsFromAccount(ctx, app, addrDels[1], startTokens, validator)
+	require.NoError(t, err)
+	_, err = msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensforShares{
+		DelegatorAddress: addrDels[1].String(),
+		Amount:           tokenizeShareResp.Amount,
+	})
+	require.NoError(t, err)
+
+	// try undelegating
+	_, err = msgServer.Undelegate(ctx, &types.MsgUndelegate{
+		DelegatorAddress: addrDels[1].String(),
+		ValidatorAddress: addrVals[0].String(),
+		Amount:           sdk.NewCoin(sdk.DefaultBondDenom, startTokens),
+	})
+	require.NoError(t, err)
+}
+
+func TestExemptDelegationRedelegate(t *testing.T) {
+	_, app, ctx := createTestInput(t)
+
+	addrDels := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
+	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
+
+	startTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
+
+	bondDenom := app.StakingKeeper.BondDenom(ctx)
+	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
+
+	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(bondDenom, startTokens))))
+	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
+
+	// create a validator and a delegator to that validator
+	validator := teststaking.NewValidator(t, addrVals[0], PKs[0])
+	app.StakingKeeper.SetValidator(ctx, validator)
+	validator2 := teststaking.NewValidator(t, addrVals[1], PKs[1])
+	app.StakingKeeper.SetValidator(ctx, validator2)
+
+	// set exemption factor
+	params := app.StakingKeeper.GetParams(ctx)
+	params.ExemptionFactor = sdk.NewDec(1)
+	app.StakingKeeper.SetParams(ctx, params)
+
+	// convert to exempt delegation
+	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
+
+	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	err := delegateCoinsFromAccount(ctx, app, addrDels[0], startTokens, validator)
+	require.NoError(t, err)
+	_, err = msgServer.ExemptDelegation(sdk.WrapSDKContext(ctx), &types.MsgExemptDelegation{
+		DelegatorAddress: addrDels[0].String(),
+		ValidatorAddress: addrVals[0].String(),
+	})
+	require.NoError(t, err)
+
+	// tokenize share for 2nd account delegation
+	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	err = delegateCoinsFromAccount(ctx, app, addrDels[1], startTokens, validator)
+	require.NoError(t, err)
+	tokenizeShareResp, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
+		DelegatorAddress:    addrDels[1].String(),
+		ValidatorAddress:    addrVals[0].String(),
+		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, startTokens),
+		TokenizedShareOwner: addrDels[0].String(),
+	})
+	require.NoError(t, err)
+
+	// try undelegating
+	_, err = msgServer.BeginRedelegate(ctx, &types.MsgBeginRedelegate{
+		DelegatorAddress:    addrDels[1].String(),
+		ValidatorSrcAddress: addrVals[0].String(),
+		ValidatorDstAddress: addrVals[1].String(),
+		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, startTokens),
+	})
+	require.Error(t, err)
+
+	// redeem full amount on 2nd account and try undelegation
+	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	err = delegateCoinsFromAccount(ctx, app, addrDels[1], startTokens, validator)
+	require.NoError(t, err)
+	_, err = msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensforShares{
+		DelegatorAddress: addrDels[1].String(),
+		Amount:           tokenizeShareResp.Amount,
+	})
+	require.NoError(t, err)
+
+	// try undelegating
+	_, err = msgServer.BeginRedelegate(ctx, &types.MsgBeginRedelegate{
+		DelegatorAddress:    addrDels[1].String(),
+		ValidatorSrcAddress: addrVals[0].String(),
+		ValidatorDstAddress: addrVals[1].String(),
+		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, startTokens),
+	})
+	require.NoError(t, err)
+}

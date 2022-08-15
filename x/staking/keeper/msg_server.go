@@ -557,6 +557,10 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, sdkstaking.ErrNoDelegatorForAddress
 	}
 
+	if delegation.Exempt {
+		return nil, types.ErrExemptDelegationNotAllowedForTokenizeShare
+	}
+
 	if msg.Amount.Denom != k.BondDenom(ctx) {
 		return nil, types.ErrOnlyBondDenomAllowdForTokenize
 	}
