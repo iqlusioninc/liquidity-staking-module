@@ -531,7 +531,7 @@ func TestExemptDelegationUndelegate(t *testing.T) {
 
 	// try undelegating
 	_, err = msgServer.Undelegate(ctx, &types.MsgUndelegate{
-		DelegatorAddress: addrDels[1].String(),
+		DelegatorAddress: addrDels[0].String(),
 		ValidatorAddress: addrVals[0].String(),
 		Amount:           sdk.NewCoin(sdk.DefaultBondDenom, startTokens),
 	})
@@ -549,11 +549,14 @@ func TestExemptDelegationUndelegate(t *testing.T) {
 
 	// try undelegating
 	_, err = msgServer.Undelegate(ctx, &types.MsgUndelegate{
-		DelegatorAddress: addrDels[1].String(),
+		DelegatorAddress: addrDels[0].String(),
 		ValidatorAddress: addrVals[0].String(),
 		Amount:           sdk.NewCoin(sdk.DefaultBondDenom, startTokens),
 	})
 	require.NoError(t, err)
+
+	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	require.Equal(t, validator.TotalExemptShares, sdk.ZeroDec())
 }
 
 func TestExemptDelegationRedelegate(t *testing.T) {
@@ -607,7 +610,7 @@ func TestExemptDelegationRedelegate(t *testing.T) {
 
 	// try undelegating
 	_, err = msgServer.BeginRedelegate(ctx, &types.MsgBeginRedelegate{
-		DelegatorAddress:    addrDels[1].String(),
+		DelegatorAddress:    addrDels[0].String(),
 		ValidatorSrcAddress: addrVals[0].String(),
 		ValidatorDstAddress: addrVals[1].String(),
 		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, startTokens),
@@ -626,10 +629,13 @@ func TestExemptDelegationRedelegate(t *testing.T) {
 
 	// try undelegating
 	_, err = msgServer.BeginRedelegate(ctx, &types.MsgBeginRedelegate{
-		DelegatorAddress:    addrDels[1].String(),
+		DelegatorAddress:    addrDels[0].String(),
 		ValidatorSrcAddress: addrVals[0].String(),
 		ValidatorDstAddress: addrVals[1].String(),
 		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, startTokens),
 	})
 	require.NoError(t, err)
+
+	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	require.Equal(t, validator.TotalExemptShares, sdk.ZeroDec())
 }
