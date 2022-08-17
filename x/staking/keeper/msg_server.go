@@ -292,6 +292,10 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		if maxTokenizeShareAfter.LT(validator.TotalTokenizedShares) {
 			return nil, types.ErrInsufficientExemptShares
 		}
+
+		// reduce exempt delegation on redelegation
+		validator.TotalExemptShares = validator.TotalExemptShares.Sub(shares)
+		k.SetValidator(ctx, validator)
 	}
 
 	bondDenom := k.BondDenom(ctx)
@@ -384,6 +388,10 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 		if maxTokenizeShareAfter.LT(validator.TotalTokenizedShares) {
 			return nil, types.ErrInsufficientExemptShares
 		}
+
+		// reduce total exempt delegation on unbond
+		validator.TotalExemptShares = validator.TotalExemptShares.Sub(shares)
+		k.SetValidator(ctx, validator)
 	}
 
 	bondDenom := k.BondDenom(ctx)
