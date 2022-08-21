@@ -111,10 +111,15 @@ message Validator {
       [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"unbonding_time\""];
   // commission defines the commission parameters.
   Commission commission = 10 [(gogoproto.nullable) = false];
-  // min_self_delegation is the validator's self declared minimum self delegation.
-  string min_self_delegation = 11 [
-    (gogoproto.moretags)   = "yaml:\"min_self_delegation\"",
-    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+  // Number of shares marked_exempt_to_this_validator
+  string total_exempt_shares = 11[
+    (gogoproto.moretags)   = "yaml:\"total_exempt_shares\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  string total_tokenized_shares = 12[
+    (gogoproto.moretags)   = "yaml:\"total_tokenized_shares\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
 }
@@ -191,6 +196,8 @@ message Delegation {
   string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
   // shares define the delegation shares received.
   string shares = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
+  // has this delegation been marked as exempt.
+  bool exempt = 4;
 }
 
 // UnbondingDelegation stores all of a single delegator's unbonding bonds
@@ -286,6 +293,12 @@ message Params {
     (gogoproto.moretags)   = "yaml:\"min_commission_rate\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
+  ];
+  // exemption_factor is required for tokenize share and undelegation check for network safety
+  string exemption_factor = 7 [
+    (gogoproto.moretags) = "yaml:\"exemption_factor\"",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable) = false
   ];
 }
 

@@ -18,10 +18,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/testutil/testdata"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-	genutiltest "github.com/cosmos/cosmos-sdk/x/genutil/client/testutil"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	simcmd "github.com/iqlusioninc/liquidity-staking-module/cmd/liquidstakingd/cmd"
+	"github.com/iqlusioninc/liquidity-staking-module/x/genutil"
+	genutiltest "github.com/iqlusioninc/liquidity-staking-module/x/genutil/client/testutil"
 )
 
 var testMbm = module.NewBasicManager(genutil.AppModuleBasic{})

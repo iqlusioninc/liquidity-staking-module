@@ -61,8 +61,8 @@ func TestTokenizeShares(t *testing.T) {
 			0, 0,
 			sdk.TokensFromConsensusPower(50, sdk.DefaultPowerReduction),
 			true,
-			sdkstaking.Unbonding,
-			true,
+			sdkstaking.Bonded,
+			false,
 		},
 		{
 			"tokenize shares for less than delegation",

@@ -28,6 +28,9 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 		targetVestingDelAfterShare    sdk.Int
 		targetVestingDelAfterRedeem   sdk.Int
 		slashFactor                   sdk.Dec
+		exemptionFactor               sdk.Dec
+		exemptDelegate                bool
+		exemptDelegatorIndex          int
 		expTokenizeErr                bool
 		expRedeemErr                  bool
 		prevAccountDelegationExists   bool
@@ -40,6 +43,8 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			tokenizeShareAmount:           app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			redeemAmount:                  app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			slashFactor:                   sdk.ZeroDec(),
+			exemptionFactor:               sdk.NewDec(-1),
+			exemptDelegate:                false,
 			expTokenizeErr:                false,
 			expRedeemErr:                  false,
 			prevAccountDelegationExists:   false,
@@ -52,6 +57,8 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			tokenizeShareAmount:           app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			redeemAmount:                  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			slashFactor:                   sdk.NewDecWithPrec(10, 2),
+			exemptionFactor:               sdk.NewDec(-1),
+			exemptDelegate:                false,
 			expTokenizeErr:                false,
 			expRedeemErr:                  false,
 			prevAccountDelegationExists:   false,
@@ -64,6 +71,8 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			tokenizeShareAmount:           app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			redeemAmount:                  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			slashFactor:                   sdk.ZeroDec(),
+			exemptionFactor:               sdk.NewDec(-1),
+			exemptDelegate:                false,
 			expTokenizeErr:                false,
 			expRedeemErr:                  false,
 			prevAccountDelegationExists:   true,
@@ -76,6 +85,8 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			tokenizeShareAmount: app.StakingKeeper.TokensFromConsensusPower(ctx, 30),
 			redeemAmount:        app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			slashFactor:         sdk.ZeroDec(),
+			exemptionFactor:     sdk.NewDec(-1),
+			exemptDelegate:      false,
 			expTokenizeErr:      true,
 			expRedeemErr:        false,
 		},
@@ -86,6 +97,8 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			tokenizeShareAmount: app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			redeemAmount:        app.StakingKeeper.TokensFromConsensusPower(ctx, 40),
 			slashFactor:         sdk.ZeroDec(),
+			exemptionFactor:     sdk.NewDec(-1),
+			exemptDelegate:      false,
 			expTokenizeErr:      false,
 			expRedeemErr:        true,
 		},
@@ -96,6 +109,8 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			tokenizeShareAmount:         app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			redeemAmount:                app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			slashFactor:                 sdk.ZeroDec(),
+			exemptionFactor:             sdk.NewDec(-1),
+			exemptDelegate:              false,
 			expTokenizeErr:              true,
 			expRedeemErr:                false,
 			prevAccountDelegationExists: true,
@@ -109,6 +124,55 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			targetVestingDelAfterShare:  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			slashFactor:                 sdk.ZeroDec(),
+			exemptionFactor:             sdk.NewDec(-1),
+			exemptDelegate:              false,
+			expTokenizeErr:              false,
+			expRedeemErr:                false,
+			prevAccountDelegationExists: true,
+		},
+		{
+			name:                        "try tokenize share for exempt delegation",
+			vestingAmount:               app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			delegationAmount:            app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			tokenizeShareAmount:         app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			redeemAmount:                app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			targetVestingDelAfterShare:  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			targetVestingDelAfterRedeem: app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			slashFactor:                 sdk.ZeroDec(),
+			exemptionFactor:             sdk.NewDec(10),
+			exemptDelegate:              true,
+			exemptDelegatorIndex:        1,
+			expTokenizeErr:              true,
+			expRedeemErr:                false,
+			prevAccountDelegationExists: true,
+		},
+		{
+			name:                        "exempt factor enabled without exempt delegation tokenize share",
+			vestingAmount:               app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			delegationAmount:            app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			tokenizeShareAmount:         app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			redeemAmount:                app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			targetVestingDelAfterShare:  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			targetVestingDelAfterRedeem: app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			slashFactor:                 sdk.ZeroDec(),
+			exemptionFactor:             sdk.NewDec(10),
+			exemptDelegate:              false,
+			expTokenizeErr:              true,
+			expRedeemErr:                false,
+			prevAccountDelegationExists: true,
+		},
+		{
+			name:                        "exempt factor enabled with exempt delegation - successful tokenize share",
+			vestingAmount:               app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			delegationAmount:            app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			tokenizeShareAmount:         app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			redeemAmount:                app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			targetVestingDelAfterShare:  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			targetVestingDelAfterRedeem: app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			slashFactor:                 sdk.ZeroDec(),
+			exemptionFactor:             sdk.NewDec(10),
+			exemptDelegate:              true,
+			exemptDelegatorIndex:        0,
 			expTokenizeErr:              false,
 			expRedeemErr:                false,
 			prevAccountDelegationExists: true,
@@ -121,6 +185,11 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			addrs := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
 			addrAcc1, addrAcc2 := addrs[0], addrs[1]
 			addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
+
+			// set exemption factor
+			params := app.StakingKeeper.GetParams(ctx)
+			params.ExemptionFactor = tc.exemptionFactor
+			app.StakingKeeper.SetParams(ctx, params)
 
 			if !tc.vestingAmount.IsZero() {
 				// create vesting account
@@ -163,6 +232,16 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			require.True(t, found)
 
 			msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
+			if tc.exemptDelegate {
+				err := delegateCoinsFromAccount(ctx, app, addrs[tc.exemptDelegatorIndex], delTokens, val1)
+				require.NoError(t, err)
+				_, err = msgServer.ExemptDelegation(sdk.WrapSDKContext(ctx), &types.MsgExemptDelegation{
+					DelegatorAddress: addrs[tc.exemptDelegatorIndex].String(),
+					ValidatorAddress: addrVal1.String(),
+				})
+				require.NoError(t, err)
+			}
+
 			resp, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
 				DelegatorAddress:    addrAcc2.String(),
 				ValidatorAddress:    addrVal1.String(),
@@ -335,4 +414,80 @@ func TestTransferTokenizeShareRecord(t *testing.T) {
 	require.Len(t, records, 0)
 	records = app.StakingKeeper.GetTokenizeShareRecordsByOwner(ctx, addrAcc2)
 	require.Len(t, records, 1)
+}
+
+func TestExemptDelegation(t *testing.T) {
+	_, app, ctx := createTestInput(t)
+
+	testCases := []struct {
+		name             string
+		delegationAmount sdk.Int
+		alreadyExempt    bool
+		expectErr        bool
+	}{
+		{
+			name:             "delegation not exist case",
+			delegationAmount: app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			alreadyExempt:    false,
+			expectErr:        false,
+		},
+		{
+			name:             "already exempt delegation case",
+			delegationAmount: app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			alreadyExempt:    true,
+			expectErr:        false,
+		},
+		{
+			name:             "successful exempt share case",
+			delegationAmount: app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			alreadyExempt:    false,
+			expectErr:        false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			_, app, ctx = createTestInput(t)
+			addrs := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
+			addrAcc1 := addrs[0]
+			addrVal1 := sdk.ValAddress(addrAcc1)
+
+			pubKeys := simapp.CreateTestPubKeys(1)
+			pk1 := pubKeys[0]
+
+			// Create Validators and Delegation
+			val1 := teststaking.NewValidator(t, addrVal1, pk1)
+			val1.Status = sdkstaking.Bonded
+			app.StakingKeeper.SetValidator(ctx, val1)
+			app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
+			app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
+
+			delTokens := tc.delegationAmount
+			if delTokens.IsPositive() {
+				err := delegateCoinsFromAccount(ctx, app, addrAcc1, delTokens, val1)
+				require.NoError(t, err)
+			}
+
+			msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
+			_, err := msgServer.ExemptDelegation(sdk.WrapSDKContext(ctx), &types.MsgExemptDelegation{
+				DelegatorAddress: addrAcc1.String(),
+				ValidatorAddress: addrVal1.String(),
+			})
+			if tc.expectErr {
+				require.Error(t, err)
+			} else {
+				require.NoError(t, err)
+
+				// check exempt true
+				delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc1, addrVal1)
+				require.True(t, found)
+				require.True(t, delegation.Exempt)
+
+				// check total exempt shares value increase
+				validator, found := app.StakingKeeper.GetValidator(ctx, addrVal1)
+				require.True(t, found)
+				require.True(t, validator.TotalExemptShares.Equal(delegation.Shares))
+			}
+		})
+	}
 }

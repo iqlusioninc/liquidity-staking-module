@@ -1,6 +1,7 @@
 package types
 
 import (
+	fmt "fmt"
 	"strconv"
 	"strings"
 
@@ -13,5 +14,5 @@ func (r TokenizeShareRecord) GetModuleAddress() sdk.AccAddress {
 }
 
 func (r TokenizeShareRecord) GetShareTokenDenom() string {
-	return strings.ToLower(r.Validator) + strconv.Itoa(int(r.Id))
+	return fmt.Sprintf("%s/%s", strings.ToLower(r.Validator), strconv.Itoa(int(r.Id)))
 }

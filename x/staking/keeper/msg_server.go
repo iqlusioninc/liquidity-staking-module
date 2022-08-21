@@ -108,8 +108,6 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 		return nil, err
 	}
 
-	validator.MinSelfDelegation = msg.MinSelfDelegation
-
 	k.SetValidator(ctx, validator)
 	k.SetValidatorByConsAddr(ctx, validator)
 	k.SetNewValidatorByPowerIndex(ctx, validator)
@@ -178,25 +176,12 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 		validator.Commission = commission
 	}
 
-	if msg.MinSelfDelegation != nil {
-		if !msg.MinSelfDelegation.GT(validator.MinSelfDelegation) {
-			return nil, sdkstaking.ErrMinSelfDelegationDecreased
-		}
-
-		if msg.MinSelfDelegation.GT(validator.Tokens) {
-			return nil, sdkstaking.ErrSelfDelegationBelowMinimum
-		}
-
-		validator.MinSelfDelegation = *msg.MinSelfDelegation
-	}
-
 	k.SetValidator(ctx, validator)
 
 	ctx.EventManager().EmitEvents(sdk.Events{
 		sdk.NewEvent(
 			types.EventTypeEditValidator,
 			sdk.NewAttribute(types.AttributeKeyCommissionRate, validator.Commission.String()),
-			sdk.NewAttribute(types.AttributeKeyMinSelfDelegation, validator.MinSelfDelegation.String()),
 		),
 		sdk.NewEvent(
 			sdk.EventTypeMessage,
@@ -278,11 +263,39 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 	if err != nil {
 		return nil, err
 	}
+
+	delegation, found := k.GetDelegation(ctx, delegatorAddress, valSrcAddr)
+	if !found {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"delegation with delegator %s not found for validator %s",
+			msg.DelegatorAddress, msg.ValidatorSrcAddress,
+		)
+	}
+
 	shares, err := k.ValidateUnbondAmount(
 		ctx, delegatorAddress, valSrcAddr, msg.Amount.Amount,
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	// tokenize share vs exempt delegation check if exempt delegation
+	exemptionFactor := k.ExemptionFactor(ctx)
+	if delegation.Exempt && !exemptionFactor.IsNegative() {
+		validator, found := k.GetValidator(ctx, valSrcAddr)
+		if !found {
+			return nil, sdkstaking.ErrNoValidatorFound
+		}
+
+		maxTokenizeShareAfter := validator.TotalExemptShares.Sub(shares).Mul(exemptionFactor)
+		if maxTokenizeShareAfter.LT(validator.TotalTokenizedShares) {
+			return nil, types.ErrInsufficientExemptShares
+		}
+
+		// reduce exempt delegation on redelegation
+		validator.TotalExemptShares = validator.TotalExemptShares.Sub(shares)
+		k.SetValidator(ctx, validator)
 	}
 
 	bondDenom := k.BondDenom(ctx)
@@ -352,6 +365,33 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	)
 	if err != nil {
 		return nil, err
+	}
+
+	validator, found := k.GetValidator(ctx, addr)
+	if !found {
+		return nil, sdkstaking.ErrNoValidatorFound
+	}
+
+	delegation, found := k.GetDelegation(ctx, delegatorAddress, addr)
+	if !found {
+		return nil, status.Errorf(
+			codes.NotFound,
+			"delegation with delegator %s not found for validator %s",
+			msg.DelegatorAddress, msg.ValidatorAddress,
+		)
+	}
+
+	// tokenize share vs exempt delegation check if exempt delegation
+	exemptionFactor := k.ExemptionFactor(ctx)
+	if delegation.Exempt && !exemptionFactor.IsNegative() {
+		maxTokenizeShareAfter := validator.TotalExemptShares.Sub(shares).Mul(exemptionFactor)
+		if maxTokenizeShareAfter.LT(validator.TotalTokenizedShares) {
+			return nil, types.ErrInsufficientExemptShares
+		}
+
+		// reduce total exempt delegation on unbond
+		validator.TotalExemptShares = validator.TotalExemptShares.Sub(shares)
+		k.SetValidator(ctx, validator)
 	}
 
 	bondDenom := k.BondDenom(ctx)
@@ -525,6 +565,10 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, sdkstaking.ErrNoDelegatorForAddress
 	}
 
+	if delegation.Exempt {
+		return nil, types.ErrExemptDelegationNotAllowedForTokenizeShare
+	}
+
 	if msg.Amount.Denom != k.BondDenom(ctx) {
 		return nil, types.ErrOnlyBondDenomAllowdForTokenize
 	}
@@ -549,6 +593,22 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		}
 	}
 
+	shares, err := k.ValidateUnbondAmount(
+		ctx, delegatorAddress, valAddr, msg.Amount.Amount,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	// exempt shares check before tokenize operation
+	exemptionFactor := k.ExemptionFactor(ctx)
+	if !exemptionFactor.IsNegative() {
+		maxValTotalShare := validator.TotalExemptShares.Mul(exemptionFactor)
+		if validator.TotalTokenizedShares.Add(shares).GT(maxValTotalShare) {
+			return nil, types.ErrInsufficientExemptShares
+		}
+	}
+
 	recordId := k.GetLastTokenizeShareRecordId(ctx) + 1
 	k.SetLastTokenizeShareRecordId(ctx, recordId)
 
@@ -567,13 +627,6 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	}
 
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delegatorAddress, sdk.Coins{shareToken})
-	if err != nil {
-		return nil, err
-	}
-
-	shares, err := k.ValidateUnbondAmount(
-		ctx, delegatorAddress, valAddr, msg.Amount.Amount,
-	)
 	if err != nil {
 		return nil, err
 	}
@@ -613,6 +666,10 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	if err != nil {
 		return nil, err
 	}
+
+	validator, _ = k.GetValidator(ctx, valAddr)
+	validator.TotalTokenizedShares = validator.TotalTokenizedShares.Add(shares)
+	k.SetValidator(ctx, validator)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
@@ -716,6 +773,10 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		return nil, err
 	}
 
+	validator, _ = k.GetValidator(ctx, valAddr)
+	validator.TotalTokenizedShares = validator.TotalTokenizedShares.Sub(shares)
+	k.SetValidator(ctx, validator)
+
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeRedeemShares,
@@ -769,4 +830,45 @@ func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types
 	)
 
 	return &types.MsgTransferTokenizeShareRecordResponse{}, nil
+}
+
+func (k msgServer) ExemptDelegation(goCtx context.Context, msg *types.MsgExemptDelegation) (*types.MsgExemptDelegationResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	delAddr, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
+	if err != nil {
+		return nil, err
+	}
+
+	valAddr, valErr := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if valErr != nil {
+		return nil, valErr
+	}
+
+	validator, found := k.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, sdkstaking.ErrNoValidatorFound
+	}
+
+	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
+	if !found {
+		return nil, sdkstaking.ErrNoDelegation
+	}
+
+	if !delegation.Exempt {
+		delegation.Exempt = true
+		k.SetDelegation(ctx, delegation)
+		validator.TotalExemptShares = validator.TotalExemptShares.Add(delegation.Shares)
+		k.SetValidator(ctx, validator)
+
+		ctx.EventManager().EmitEvent(
+			sdk.NewEvent(
+				types.EventTypeExemptDelegation,
+				sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
+				sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
+			),
+		)
+	}
+
+	return &types.MsgExemptDelegationResponse{}, nil
 }

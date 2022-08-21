@@ -31,9 +31,9 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/iqlusioninc/liquidity-staking-module/testutil/network"
+	"github.com/iqlusioninc/liquidity-staking-module/x/genutil"
+	genutiltypes "github.com/iqlusioninc/liquidity-staking-module/x/genutil/types"
 	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
@@ -114,7 +114,7 @@ or a similar setup where each node has a manually configurable IP address.
 Note, strict routability for addresses is turned off in the config file.
 
 Example:
-	simd testnet init-files --v 4 --output-dir ./.testnets --starting-ip-address 192.168.10.2
+	liquidstakingd testnet init-files --keyring-backend=test --chain-id="liquidstaking-2" --v 4 --output-dir ./testnet --starting-ip-address 192.168.10.2
 	`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			clientCtx, err := client.GetClientQueryContext(cmd)
@@ -160,7 +160,7 @@ and generate "v" directories, populated with necessary validator configuration f
 (private validator, genesis, config, etc.).
 
 Example:
-	simd testnet --v 4 --output-dir ./.testnets
+	liquidstakingd testnet start --v 4 --output-dir ./.testnets
 	`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 
@@ -298,7 +298,6 @@ func initTestnetFiles(
 			sdk.NewCoin(sdk.DefaultBondDenom, valTokens),
 			stakingtypes.NewDescription(nodeDirName, "", "", "", ""),
 			stakingtypes.NewCommissionRates(sdk.OneDec(), sdk.OneDec(), sdk.OneDec()),
-			sdk.OneInt(),
 		)
 		if err != nil {
 			return err
