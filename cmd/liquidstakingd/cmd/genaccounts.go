@@ -16,8 +16,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/genutil"
-	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
+	"github.com/iqlusioninc/liquidity-staking-module/x/genutil"
+	genutiltypes "github.com/iqlusioninc/liquidity-staking-module/x/genutil/types"
 )
 
 const (
@@ -39,7 +39,6 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			clientCtx := client.GetClientContextFromCmd(cmd)
-
 			serverCtx := server.GetServerContextFromCmd(cmd)
 			config := serverCtx.Config
 
@@ -50,9 +49,10 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 			if err != nil {
 				inBuf := bufio.NewReader(cmd.InOrStdin())
 				keyringBackend, _ := cmd.Flags().GetString(flags.FlagKeyringBackend)
+
 				if keyringBackend != "" && clientCtx.Keyring == nil {
 					var err error
-					kr, err = keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf)
+					kr, err = keyring.New(sdk.KeyringServiceName(), keyringBackend, clientCtx.HomeDir, inBuf, clientCtx.Codec)
 					if err != nil {
 						return err
 					}
@@ -60,11 +60,15 @@ contain valid denominations. Accounts may optionally be supplied with vesting pa
 					kr = clientCtx.Keyring
 				}
 
-				info, err := kr.Key(args[0])
+				k, err := kr.Key(args[0])
 				if err != nil {
 					return fmt.Errorf("failed to get address from Keyring: %w", err)
 				}
-				addr = info.GetAddress()
+
+				addr, err = k.GetAddress()
+				if err != nil {
+					return err
+				}
 			}
 
 			coins, err := sdk.ParseCoinsNormalized(args[1])

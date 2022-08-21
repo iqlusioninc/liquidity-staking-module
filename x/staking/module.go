@@ -6,9 +6,8 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/grpc-ecosystem/grpc-gateway/runtime"
-
 	"github.com/gorilla/mux"
+	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/spf13/cobra"
 	abci "github.com/tendermint/tendermint/abci/types"
 
@@ -19,10 +18,13 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/client/cli"
-	"github.com/iqlusioninc/liquidity-staking-module/x/staking/client/rest"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/keeper"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/simulation"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
+)
+
+const (
+	consensusVersion uint64 = 3
 )
 
 var (
@@ -70,13 +72,15 @@ func (AppModuleBasic) ValidateGenesis(cdc codec.JSONCodec, config client.TxEncod
 }
 
 // RegisterRESTRoutes registers the REST routes for the staking module.
-func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {
-	rest.RegisterHandlers(clientCtx, rtr)
-}
+// Deprecated: RegisterRESTRoutes is deprecated. `x/staking` legacy REST implementation
+// has been removed from the SDK.
+func (AppModuleBasic) RegisterRESTRoutes(clientCtx client.Context, rtr *mux.Router) {}
 
 // RegisterGRPCGatewayRoutes registers the gRPC Gateway routes for the staking module.
 func (AppModuleBasic) RegisterGRPCGatewayRoutes(clientCtx client.Context, mux *runtime.ServeMux) {
-	types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx))
+	if err := types.RegisterQueryHandlerClient(context.Background(), mux, types.NewQueryClient(clientCtx)); err != nil {
+		panic(err)
+	}
 }
 
 // GetTxCmd returns the root tx command for the staking module.
@@ -118,9 +122,9 @@ func (am AppModule) RegisterInvariants(ir sdk.InvariantRegistry) {
 	keeper.RegisterInvariants(ir, am.keeper)
 }
 
-// Route returns the message routing key for the staking module.
+// Deprecated: Route returns the message routing key for the staking module.
 func (am AppModule) Route() sdk.Route {
-	return sdk.NewRoute(types.RouterKey, NewHandler(am.keeper))
+	return sdk.Route{}
 }
 
 // QuerierRoute returns the staking module's querier route name.
@@ -138,9 +142,6 @@ func (am AppModule) RegisterServices(cfg module.Configurator) {
 	types.RegisterMsgServer(cfg.MsgServer(), keeper.NewMsgServerImpl(am.keeper))
 	querier := keeper.Querier{Keeper: am.keeper}
 	types.RegisterQueryServer(cfg.QueryServer(), querier)
-
-	m := keeper.NewMigrator(am.keeper)
-	cfg.RegisterMigration(types.ModuleName, 1, m.Migrate1to2)
 }
 
 // InitGenesis performs genesis initialization for the staking module. It returns
@@ -150,18 +151,17 @@ func (am AppModule) InitGenesis(ctx sdk.Context, cdc codec.JSONCodec, data json.
 
 	cdc.MustUnmarshalJSON(data, &genesisState)
 
-	return InitGenesis(ctx, am.keeper, am.accountKeeper, am.bankKeeper, &genesisState)
+	return am.keeper.InitGenesis(ctx, &genesisState)
 }
 
 // ExportGenesis returns the exported genesis state as raw bytes for the staking
 // module.
 func (am AppModule) ExportGenesis(ctx sdk.Context, cdc codec.JSONCodec) json.RawMessage {
-	gs := ExportGenesis(ctx, am.keeper)
-	return cdc.MustMarshalJSON(gs)
+	return cdc.MustMarshalJSON(am.keeper.ExportGenesis(ctx))
 }
 
 // ConsensusVersion implements AppModule/ConsensusVersion.
-func (AppModule) ConsensusVersion() uint64 { return 2 }
+func (AppModule) ConsensusVersion() uint64 { return consensusVersion }
 
 // BeginBlock returns the begin blocker for the staking module.
 func (am AppModule) BeginBlock(ctx sdk.Context, _ abci.RequestBeginBlock) {

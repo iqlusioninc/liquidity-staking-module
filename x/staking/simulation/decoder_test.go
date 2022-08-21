@@ -32,13 +32,13 @@ func makeTestCodec() (cdc *codec.LegacyAmino) {
 }
 
 func TestDecodeStore(t *testing.T) {
-	cdc := simapp.MakeTestEncodingConfig().Marshaler
+	cdc := simapp.MakeTestEncodingConfig().Codec
 	dec := simulation.NewDecodeStore(cdc)
 	bondTime := time.Now().UTC()
 
 	val, err := types.NewValidator(valAddr1, delPk1, types.NewDescription("test", "test", "test", "test", "test"))
 	require.NoError(t, err)
-	del := types.NewDelegation(delAddr1, valAddr1, sdk.OneDec())
+	del := types.NewDelegation(delAddr1, valAddr1, sdk.OneDec(), false)
 	ubd := types.NewUnbondingDelegation(delAddr1, valAddr1, 15, bondTime, sdk.OneInt())
 	red := types.NewRedelegation(delAddr1, valAddr1, valAddr1, 12, bondTime, sdk.OneInt(), sdk.OneDec())
 

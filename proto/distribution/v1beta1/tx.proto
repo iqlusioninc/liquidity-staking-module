@@ -21,10 +21,13 @@ service Msg {
   // full commission to the validator address.
   rpc WithdrawValidatorCommission(MsgWithdrawValidatorCommission) returns (MsgWithdrawValidatorCommissionResponse);
 
-  // WithdrawTokenizeShareRecordReward defines a method to withdraw reward for
-  // owning TokenizeShareRecord
+  // WithdrawTokenizeShareRecordReward defines a method to withdraw reward for an owning TokenizeShareRecord
   rpc WithdrawTokenizeShareRecordReward(MsgWithdrawTokenizeShareRecordReward)
       returns (MsgWithdrawTokenizeShareRecordRewardResponse);
+
+  // WithdrawAllTokenizeShareRecordReward defines a method to withdraw reward for all owning TokenizeShareRecord
+  rpc WithdrawAllTokenizeShareRecordReward(MsgWithdrawAllTokenizeShareRecordReward)
+      returns (MsgWithdrawAllTokenizeShareRecordRewardResponse);
 
   // FundCommunityPool defines a method to allow an account to directly
   // fund the community pool.
@@ -74,9 +77,19 @@ message MsgWithdrawTokenizeShareRecordReward {
   option (gogoproto.goproto_getters) = false;
 
   string owner_address = 1 [ (gogoproto.moretags) = "yaml:\"owner_address\"" ];
+  uint64 record_id = 2;
 }
 
 message MsgWithdrawTokenizeShareRecordRewardResponse {}
+
+message MsgWithdrawAllTokenizeShareRecordReward {
+  option (gogoproto.equal) = false;
+  option (gogoproto.goproto_getters) = false;
+
+  string owner_address = 1 [ (gogoproto.moretags) = "yaml:\"owner_address\"" ];
+}
+
+message MsgWithdrawAllTokenizeShareRecordRewardResponse {}
 
 // MsgFundCommunityPool allows an account to directly
 // fund the community pool.

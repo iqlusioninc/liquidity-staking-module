@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	yaml "gopkg.in/yaml.v2"
+	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -30,11 +30,12 @@ func (dvv DVVTriplet) String() string {
 
 // NewDelegation creates a new delegation object
 //nolint:interfacer
-func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec) Delegation {
+func NewDelegation(delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec, exempt bool) Delegation {
 	return Delegation{
 		DelegatorAddress: delegatorAddr.String(),
 		ValidatorAddress: validatorAddr.String(),
 		Shares:           shares,
+		Exempt:           exempt,
 	}
 }
 
@@ -295,10 +296,10 @@ func (d Redelegations) String() (out string) {
 
 // NewDelegationResp creates a new DelegationResponse instance
 func NewDelegationResp(
-	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec, balance sdk.Coin,
+	delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress, shares sdk.Dec, exempt bool, balance sdk.Coin,
 ) DelegationResponse {
 	return DelegationResponse{
-		Delegation: NewDelegation(delegatorAddr, validatorAddr, shares),
+		Delegation: NewDelegation(delegatorAddr, validatorAddr, shares, exempt),
 		Balance:    balance,
 	}
 }

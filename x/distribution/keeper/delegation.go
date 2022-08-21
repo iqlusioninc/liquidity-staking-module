@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	sdkdistr "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 )
@@ -29,7 +30,8 @@ func (k Keeper) initializeDelegation(ctx sdk.Context, val sdk.ValAddress, del sd
 
 // calculate the rewards accrued by a delegation between two periods
 func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val sdkstaking.ValidatorI,
-	startingPeriod, endingPeriod uint64, stake sdk.Dec) (rewards sdk.DecCoins) {
+	startingPeriod, endingPeriod uint64, stake sdk.Dec,
+) (rewards sdk.DecCoins) {
 	// sanity check
 	if startingPeriod > endingPeriod {
 		panic("startingPeriod cannot be greater than endingPeriod")
@@ -139,7 +141,7 @@ func (k Keeper) CalculateDelegationRewards(ctx sdk.Context, val sdkstaking.Valid
 func (k Keeper) withdrawDelegationRewards(ctx sdk.Context, val sdkstaking.ValidatorI, del sdkstaking.DelegationI) (sdk.Coins, error) {
 	// check existence of delegator starting info
 	if !k.HasDelegatorStartingInfo(ctx, del.GetValidatorAddr(), del.GetDelegatorAddr()) {
-		return nil, types.ErrEmptyDelegationDistInfo
+		return nil, sdkdistr.ErrEmptyDelegationDistInfo
 	}
 
 	// end current period and calculate rewards
