@@ -39,14 +39,14 @@ func TestHistoricalInfo(t *testing.T) {
 	hi := types.NewHistoricalInfo(ctx.BlockHeader(), validators, app.StakingKeeper.PowerReduction(ctx))
 	app.StakingKeeper.SetHistoricalInfo(ctx, 2, &hi)
 
-	recv, found := app.StakingKeeper.GetHistoricalInfo(ctx, 2)
+	recv, found := app.StakingKeeper.GetLiquidStakingHistoricalInfo(ctx, 2)
 	require.True(t, found, "HistoricalInfo not found after set")
 	require.Equal(t, hi, recv, "HistoricalInfo not equal")
 	require.True(t, IsValSetSorted(recv.Valset, app.StakingKeeper.PowerReduction(ctx)), "HistoricalInfo validators is not sorted")
 
 	app.StakingKeeper.DeleteHistoricalInfo(ctx, 2)
 
-	recv, found = app.StakingKeeper.GetHistoricalInfo(ctx, 2)
+	recv, found = app.StakingKeeper.GetLiquidStakingHistoricalInfo(ctx, 2)
 	require.False(t, found, "HistoricalInfo found after delete")
 	require.Equal(t, types.HistoricalInfo{}, recv, "HistoricalInfo is not empty")
 }
