@@ -175,3 +175,8 @@ This message can be executed by any user who owns share tokens and after executi
 
 The `MsgTransferTokenizeShareRecord` message is used to transfer the ownership of rewards generated from the tokenized amount of delegation.
 The tokenize share record is created when a user tokenize his/her delegation and deleted and full amount of share tokens are redeemed.
+
+
+## MsgExemptDelegation
+
+The `MsgExemptDelegation` message is used to exempt a delegation to a validator. If the `exemption` factor is greater than 0, this will enable more delegation to the validator 
