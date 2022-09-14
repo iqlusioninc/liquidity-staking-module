@@ -12,6 +12,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
+	sdkdistr "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
@@ -363,8 +364,8 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 
 	// test command delegation rewards grpc
 	var (
-		req    *types.QueryDelegationRewardsRequest
-		expRes *types.QueryDelegationRewardsResponse
+		req    *sdkdistr.QueryDelegationRewardsRequest
+		expRes *sdkdistr.QueryDelegationRewardsResponse
 	)
 
 	testCases := []struct {
@@ -375,14 +376,14 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 		{
 			"empty request",
 			func() {
-				req = &types.QueryDelegationRewardsRequest{}
+				req = &sdkdistr.QueryDelegationRewardsRequest{}
 			},
 			false,
 		},
 		{
 			"empty delegator request",
 			func() {
-				req = &types.QueryDelegationRewardsRequest{
+				req = &sdkdistr.QueryDelegationRewardsRequest{
 					DelegatorAddress: "",
 					ValidatorAddress: valAddrs[0].String(),
 				}
@@ -392,7 +393,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 		{
 			"empty validator request",
 			func() {
-				req = &types.QueryDelegationRewardsRequest{
+				req = &sdkdistr.QueryDelegationRewardsRequest{
 					DelegatorAddress: addrs[1].String(),
 					ValidatorAddress: "",
 				}
@@ -402,7 +403,7 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 		{
 			"request with wrong delegator and validator",
 			func() {
-				req = &types.QueryDelegationRewardsRequest{
+				req = &sdkdistr.QueryDelegationRewardsRequest{
 					DelegatorAddress: addrs[1].String(),
 					ValidatorAddress: valAddrs[1].String(),
 				}
@@ -412,12 +413,12 @@ func (suite *KeeperTestSuite) TestGRPCDelegationRewards() {
 		{
 			"valid request",
 			func() {
-				req = &types.QueryDelegationRewardsRequest{
+				req = &sdkdistr.QueryDelegationRewardsRequest{
 					DelegatorAddress: addrs[0].String(),
 					ValidatorAddress: valAddrs[0].String(),
 				}
 
-				expRes = &types.QueryDelegationRewardsResponse{
+				expRes = &sdkdistr.QueryDelegationRewardsResponse{
 					Rewards: sdk.DecCoins{{Denom: sdk.DefaultBondDenom, Amount: sdk.NewDec(initial / 2)}},
 				}
 			},

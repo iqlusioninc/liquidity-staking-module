@@ -6,6 +6,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "distribution/v1beta1/distribution.proto";
+import "cosmos/distribution/v1beta1/query.proto";
 
 option go_package = "github.com/iqlusioninc/liquidity-staking-module/x/distribution/types";
 
@@ -33,7 +34,7 @@ service Query {
   }
 
   // DelegationRewards queries the total rewards accrued by a delegation.
-  rpc DelegationRewards(QueryDelegationRewardsRequest) returns (QueryDelegationRewardsResponse) {
+  rpc DelegationRewards(cosmos.distribution.v1beta1.QueryDelegationRewardsRequest) returns (cosmos.distribution.v1beta1.QueryDelegationRewardsResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards/{validator_address}";
   }
 
@@ -125,26 +126,6 @@ message QueryValidatorSlashesResponse {
 
   // pagination defines the pagination in the response.
   cosmos.base.query.v1beta1.PageResponse pagination = 2;
-}
-
-// QueryDelegationRewardsRequest is the request type for the
-// Query/DelegationRewards RPC method.
-message QueryDelegationRewardsRequest {
-  option (gogoproto.equal)           = false;
-  option (gogoproto.goproto_getters) = false;
-
-  // delegator_address defines the delegator address to query for.
-  string delegator_address = 1;
-  // validator_address defines the validator address to query for.
-  string validator_address = 2;
-}
-
-// QueryDelegationRewardsResponse is the response type for the
-// Query/DelegationRewards RPC method.
-message QueryDelegationRewardsResponse {
-  // rewards defines the rewards accrued by a delegation.
-  repeated cosmos.base.v1beta1.DecCoin rewards = 1
-      [(gogoproto.nullable) = false, (gogoproto.castrepeated) = "github.com/cosmos/cosmos-sdk/types.DecCoins"];
 }
 
 // QueryDelegationTotalRewardsRequest is the request type for the
