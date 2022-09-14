@@ -101,7 +101,7 @@ func (m *GenesisState) GetValidators() []Validator {
 	return nil
 }
 
-func (m *GenesisState) GetDelegations() []Delegation {
+func (m *GenesisState) GetLiquidDelegations() []Delegation {
 	if m != nil {
 		return m.Delegations
 	}

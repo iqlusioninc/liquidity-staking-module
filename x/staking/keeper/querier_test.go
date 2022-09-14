@@ -290,7 +290,7 @@ func TestQueryDelegation(t *testing.T) {
 		Data: bz,
 	}
 
-	delegation, found := app.StakingKeeper.GetDelegation(ctx, addrAcc2, addrVal1)
+	delegation, found := app.StakingKeeper.GetLiquidDelegation(ctx, addrAcc2, addrVal1)
 	require.True(t, found)
 
 	res, err = querier(ctx, []string{types.QueryDelegation}, query)
@@ -470,7 +470,7 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 
 	// Create Validators and Delegation
 	for _, addr := range addrs {
-		validator, found := app.StakingKeeper.GetValidator(ctx, valAddress)
+		validator, found := app.StakingKeeper.GetLiquidValidator(ctx, valAddress)
 		if !found {
 			t.Error("expected validator not found")
 		}

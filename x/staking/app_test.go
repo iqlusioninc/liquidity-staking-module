@@ -17,7 +17,7 @@ import (
 
 func checkValidator(t *testing.T, app *simapp.SimApp, addr sdk.ValAddress, expFound bool) types.Validator {
 	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
-	validator, found := app.StakingKeeper.GetValidator(ctxCheck, addr)
+	validator, found := app.StakingKeeper.GetLiquidValidator(ctxCheck, addr)
 
 	require.Equal(t, expFound, found)
 	return validator
@@ -29,7 +29,7 @@ func checkDelegation(
 ) {
 
 	ctxCheck := app.BaseApp.NewContext(true, tmproto.Header{})
-	delegation, found := app.StakingKeeper.GetDelegation(ctxCheck, delegatorAddr, validatorAddr)
+	delegation, found := app.StakingKeeper.GetLiquidDelegation(ctxCheck, delegatorAddr, validatorAddr)
 	if expFound {
 		require.True(t, found)
 		require.True(sdk.DecEq(t, expShares, delegation.Shares))

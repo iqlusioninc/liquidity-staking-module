@@ -15,7 +15,7 @@ import (
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
-// tests GetDelegation, GetDelegatorDelegations, SetDelegation, RemoveDelegation, GetDelegatorDelegations
+// tests GetLiquidDelegation, GetDelegatorDelegations, SetDelegation, RemoveDelegation, GetDelegatorDelegations
 func TestDelegation(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
@@ -47,19 +47,19 @@ func TestDelegation(t *testing.T) {
 	bond1to1 := types.NewDelegation(addrDels[0], valAddrs[0], sdk.NewDec(9), false)
 
 	// check the empty keeper first
-	_, found := app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
+	_, found := app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[0], valAddrs[0])
 	require.False(t, found)
 
 	// set and retrieve a record
 	app.StakingKeeper.SetDelegation(ctx, bond1to1)
-	resBond, found := app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
+	resBond, found := app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[0], valAddrs[0])
 	require.True(t, found)
 	require.Equal(t, bond1to1, resBond)
 
 	// modify a records, save, and retrieve
 	bond1to1.Shares = sdk.NewDec(99)
 	app.StakingKeeper.SetDelegation(ctx, bond1to1)
-	resBond, found = app.StakingKeeper.GetDelegation(ctx, addrDels[0], valAddrs[0])
+	resBond, found = app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[0], valAddrs[0])
 	require.True(t, found)
 	require.Equal(t, bond1to1, resBond)
 
@@ -81,7 +81,7 @@ func TestDelegation(t *testing.T) {
 	require.Equal(t, bond1to1, resBonds[0])
 	require.Equal(t, bond1to2, resBonds[1])
 	require.Equal(t, bond1to3, resBonds[2])
-	resBonds = app.StakingKeeper.GetAllDelegatorDelegations(ctx, addrDels[0])
+	resBonds = app.StakingKeeper.GetAllLiquidDelegatorDelegations(ctx, addrDels[0])
 	require.Equal(t, 3, len(resBonds))
 	resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[0], 2)
 	require.Equal(t, 2, len(resBonds))
@@ -119,22 +119,22 @@ func TestDelegation(t *testing.T) {
 
 	// delete a record
 	app.StakingKeeper.RemoveDelegation(ctx, bond2to3)
-	_, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[2])
+	_, found = app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[1], valAddrs[2])
 	require.False(t, found)
 	resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.Equal(t, 2, len(resBonds))
 	require.Equal(t, bond2to1, resBonds[0])
 	require.Equal(t, bond2to2, resBonds[1])
 
-	resBonds = app.StakingKeeper.GetAllDelegatorDelegations(ctx, addrDels[1])
+	resBonds = app.StakingKeeper.GetAllLiquidDelegatorDelegations(ctx, addrDels[1])
 	require.Equal(t, 2, len(resBonds))
 
 	// delete all the records from delegator 2
 	app.StakingKeeper.RemoveDelegation(ctx, bond2to1)
 	app.StakingKeeper.RemoveDelegation(ctx, bond2to2)
-	_, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[0])
+	_, found = app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[1], valAddrs[0])
 	require.False(t, found)
-	_, found = app.StakingKeeper.GetDelegation(ctx, addrDels[1], valAddrs[1])
+	_, found = app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[1], valAddrs[1])
 	require.False(t, found)
 	resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
 	require.Equal(t, 0, len(resBonds))
@@ -216,9 +216,9 @@ func TestUnbondDelegation(t *testing.T) {
 	require.NoError(t, err)
 	require.Equal(t, bondTokens, amount) // shares to be added to an unbonding delegation
 
-	delegation, found := app.StakingKeeper.GetDelegation(ctx, delAddrs[0], valAddrs[0])
+	delegation, found := app.StakingKeeper.GetLiquidDelegation(ctx, delAddrs[0], valAddrs[0])
 	require.True(t, found)
-	validator, found = app.StakingKeeper.GetValidator(ctx, valAddrs[0])
+	validator, found = app.StakingKeeper.GetLiquidValidator(ctx, valAddrs[0])
 	require.True(t, found)
 
 	remainingTokens := startTokens.Sub(bondTokens)
@@ -508,7 +508,7 @@ func TestExemptDelegationUndelegate(t *testing.T) {
 	// convert to exempt delegation
 	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
 
-	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
 	err := delegateCoinsFromAccount(ctx, app, addrDels[0], startTokens, validator)
 	require.NoError(t, err)
 	_, err = msgServer.ExemptDelegation(sdk.WrapSDKContext(ctx), &types.MsgExemptDelegation{
@@ -518,7 +518,7 @@ func TestExemptDelegationUndelegate(t *testing.T) {
 	require.NoError(t, err)
 
 	// tokenize share for 2nd account delegation
-	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
 	err = delegateCoinsFromAccount(ctx, app, addrDels[1], startTokens, validator)
 	require.NoError(t, err)
 	tokenizeShareResp, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
@@ -538,7 +538,7 @@ func TestExemptDelegationUndelegate(t *testing.T) {
 	require.Error(t, err)
 
 	// redeem full amount on 2nd account and try undelegation
-	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
 	err = delegateCoinsFromAccount(ctx, app, addrDels[1], startTokens, validator)
 	require.NoError(t, err)
 	_, err = msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensforShares{
@@ -555,7 +555,7 @@ func TestExemptDelegationUndelegate(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
 	require.Equal(t, validator.TotalExemptShares, sdk.ZeroDec())
 }
 
@@ -587,7 +587,7 @@ func TestExemptDelegationRedelegate(t *testing.T) {
 	// convert to exempt delegation
 	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
 
-	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
 	err := delegateCoinsFromAccount(ctx, app, addrDels[0], startTokens, validator)
 	require.NoError(t, err)
 	_, err = msgServer.ExemptDelegation(sdk.WrapSDKContext(ctx), &types.MsgExemptDelegation{
@@ -597,7 +597,7 @@ func TestExemptDelegationRedelegate(t *testing.T) {
 	require.NoError(t, err)
 
 	// tokenize share for 2nd account delegation
-	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
 	err = delegateCoinsFromAccount(ctx, app, addrDels[1], startTokens, validator)
 	require.NoError(t, err)
 	tokenizeShareResp, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &types.MsgTokenizeShares{
@@ -618,7 +618,7 @@ func TestExemptDelegationRedelegate(t *testing.T) {
 	require.Error(t, err)
 
 	// redeem full amount on 2nd account and try undelegation
-	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
 	err = delegateCoinsFromAccount(ctx, app, addrDels[1], startTokens, validator)
 	require.NoError(t, err)
 	_, err = msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &types.MsgRedeemTokensforShares{
@@ -636,6 +636,6 @@ func TestExemptDelegationRedelegate(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	validator, _ = app.StakingKeeper.GetValidator(ctx, addrVals[0])
+	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
 	require.Equal(t, validator.TotalExemptShares, sdk.ZeroDec())
 }

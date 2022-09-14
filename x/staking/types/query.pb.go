@@ -226,7 +226,7 @@ func (m *QueryValidatorResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryValidatorResponse proto.InternalMessageInfo
 
-func (m *QueryValidatorResponse) GetValidator() Validator {
+func (m *QueryValidatorResponse) GetLiquidValidator() Validator {
 	if m != nil {
 		return m.Validator
 	}
@@ -330,7 +330,7 @@ func (m *QueryValidatorDelegationsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryValidatorDelegationsResponse proto.InternalMessageInfo
 
-func (m *QueryValidatorDelegationsResponse) GetDelegationResponses() DelegationResponses {
+func (m *QueryValidatorDelegationsResponse) GetLiquidDelegationResponses() DelegationResponses {
 	if m != nil {
 		return m.DelegationResponses
 	}
@@ -543,7 +543,7 @@ func (m *QueryDelegationResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryDelegationResponse proto.InternalMessageInfo
 
-func (m *QueryDelegationResponse) GetDelegationResponse() *DelegationResponse {
+func (m *QueryDelegationResponse) GetLiquidDelegationResponse() *DelegationResponse {
 	if m != nil {
 		return m.DelegationResponse
 	}
@@ -723,7 +723,7 @@ func (m *QueryDelegatorDelegationsResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryDelegatorDelegationsResponse proto.InternalMessageInfo
 
-func (m *QueryDelegatorDelegationsResponse) GetDelegationResponses() []DelegationResponse {
+func (m *QueryDelegatorDelegationsResponse) GetLiquidDelegationResponses() []DelegationResponse {
 	if m != nil {
 		return m.DelegationResponses
 	}
@@ -1123,7 +1123,7 @@ func (m *QueryDelegatorValidatorResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_QueryDelegatorValidatorResponse proto.InternalMessageInfo
 
-func (m *QueryDelegatorValidatorResponse) GetValidator() Validator {
+func (m *QueryDelegatorValidatorResponse) GetLiquidValidator() Validator {
 	if m != nil {
 		return m.Validator
 	}
