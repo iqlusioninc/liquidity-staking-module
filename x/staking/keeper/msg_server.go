@@ -46,7 +46,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	}
 
 	// check to see if the pubkey or sender has been registered before
-	if _, found := k.GetValidator(ctx, valAddr); found {
+	if _, found := k.GetLiquidValidator(ctx, valAddr); found {
 		return nil, sdkstaking.ErrValidatorOwnerExists
 	}
 
@@ -149,7 +149,7 @@ func (k msgServer) EditValidator(goCtx context.Context, msg *types.MsgEditValida
 		return nil, err
 	}
 	// validator must already be registered
-	validator, found := k.GetValidator(ctx, valAddr)
+	validator, found := k.GetLiquidValidator(ctx, valAddr)
 	if !found {
 		return nil, sdkstaking.ErrNoValidatorFound
 	}
@@ -201,7 +201,7 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 		return nil, valErr
 	}
 
-	validator, found := k.GetValidator(ctx, valAddr)
+	validator, found := k.GetLiquidValidator(ctx, valAddr)
 	if !found {
 		return nil, sdkstaking.ErrNoValidatorFound
 	}
@@ -264,7 +264,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		return nil, err
 	}
 
-	delegation, found := k.GetDelegation(ctx, delegatorAddress, valSrcAddr)
+	delegation, found := k.GetLiquidDelegation(ctx, delegatorAddress, valSrcAddr)
 	if !found {
 		return nil, status.Errorf(
 			codes.NotFound,
@@ -283,7 +283,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 	// tokenize share vs exempt delegation check if exempt delegation
 	exemptionFactor := k.ExemptionFactor(ctx)
 	if delegation.Exempt && !exemptionFactor.IsNegative() {
-		validator, found := k.GetValidator(ctx, valSrcAddr)
+		validator, found := k.GetLiquidValidator(ctx, valSrcAddr)
 		if !found {
 			return nil, sdkstaking.ErrNoValidatorFound
 		}
@@ -367,12 +367,12 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 		return nil, err
 	}
 
-	validator, found := k.GetValidator(ctx, addr)
+	validator, found := k.GetLiquidValidator(ctx, addr)
 	if !found {
 		return nil, sdkstaking.ErrNoValidatorFound
 	}
 
-	delegation, found := k.GetDelegation(ctx, delegatorAddress, addr)
+	delegation, found := k.GetLiquidDelegation(ctx, delegatorAddress, addr)
 	if !found {
 		return nil, status.Errorf(
 			codes.NotFound,
@@ -458,7 +458,7 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 		)
 	}
 
-	validator, found := k.GetValidator(ctx, valAddr)
+	validator, found := k.GetLiquidValidator(ctx, valAddr)
 	if !found {
 		return nil, sdkstaking.ErrNoValidatorFound
 	}
@@ -550,7 +550,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	if valErr != nil {
 		return nil, valErr
 	}
-	validator, found := k.GetValidator(ctx, valAddr)
+	validator, found := k.GetLiquidValidator(ctx, valAddr)
 	if !found {
 		return nil, sdkstaking.ErrNoValidatorFound
 	}
@@ -560,7 +560,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
-	delegation, found := k.GetDelegation(ctx, delegatorAddress, valAddr)
+	delegation, found := k.GetLiquidDelegation(ctx, delegatorAddress, valAddr)
 	if !found {
 		return nil, sdkstaking.ErrNoDelegatorForAddress
 	}
@@ -656,7 +656,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	}
 
 	// Note: it is needed to get latest validator object to get Keeper.Delegate function work properly
-	validator, found = k.GetValidator(ctx, valAddr)
+	validator, found = k.GetLiquidValidator(ctx, valAddr)
 	if !found {
 		return nil, sdkstaking.ErrNoValidatorFound
 	}
@@ -667,7 +667,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
-	validator, _ = k.GetValidator(ctx, valAddr)
+	validator, _ = k.GetLiquidValidator(ctx, valAddr)
 	validator.TotalTokenizedShares = validator.TotalTokenizedShares.Add(shares)
 	k.SetValidator(ctx, validator)
 
@@ -710,14 +710,14 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		return nil, valErr
 	}
 
-	validator, found := k.GetValidator(ctx, valAddr)
+	validator, found := k.GetLiquidValidator(ctx, valAddr)
 	if !found {
 		return nil, sdkstaking.ErrNoValidatorFound
 	}
 
 	// calculate the ratio between shares and redeem amount
 	// moduleAccountTotalDelegation * redeemAmount / totalIssue
-	delegation, found := k.GetDelegation(ctx, record.GetModuleAddress(), valAddr)
+	delegation, found := k.GetLiquidDelegation(ctx, record.GetModuleAddress(), valAddr)
 	shareDenomSupply := k.bankKeeper.GetSupply(ctx, msg.Amount.Denom)
 	shares := delegation.Shares.Mul(sdk.NewDecFromInt(msg.Amount.Amount)).QuoInt(shareDenomSupply.Amount)
 
@@ -731,7 +731,7 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 	}
 
 	// Note: since delegation object has been changed from unbond call, it gets latest delegation
-	_, found = k.GetDelegation(ctx, record.GetModuleAddress(), valAddr)
+	_, found = k.GetLiquidDelegation(ctx, record.GetModuleAddress(), valAddr)
 	if !found {
 		if k.hooks != nil {
 			k.hooks.BeforeTokenizeShareRecordRemoved(ctx, record.Id)
@@ -761,7 +761,7 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 	}
 
 	// Note: it is needed to get latest validator object to get Keeper.Delegate function work properly
-	validator, found = k.GetValidator(ctx, valAddr)
+	validator, found = k.GetLiquidValidator(ctx, valAddr)
 	if !found {
 		return nil, sdkstaking.ErrNoValidatorFound
 	}
@@ -773,7 +773,7 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 		return nil, err
 	}
 
-	validator, _ = k.GetValidator(ctx, valAddr)
+	validator, _ = k.GetLiquidValidator(ctx, valAddr)
 	validator.TotalTokenizedShares = validator.TotalTokenizedShares.Sub(shares)
 	k.SetValidator(ctx, validator)
 
@@ -845,12 +845,12 @@ func (k msgServer) ExemptDelegation(goCtx context.Context, msg *types.MsgExemptD
 		return nil, valErr
 	}
 
-	validator, found := k.GetValidator(ctx, valAddr)
+	validator, found := k.GetLiquidValidator(ctx, valAddr)
 	if !found {
 		return nil, sdkstaking.ErrNoValidatorFound
 	}
 
-	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
+	delegation, found := k.GetLiquidDelegation(ctx, delAddr, valAddr)
 	if !found {
 		return nil, sdkstaking.ErrNoDelegation
 	}

@@ -106,7 +106,7 @@ func queryValidator(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQuer
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	validator, found := k.GetValidator(ctx, params.ValidatorAddr)
+	validator, found := k.GetLiquidValidator(ctx, params.ValidatorAddr)
 	if !found {
 		return nil, sdkstaking.ErrNoValidatorFound
 	}
@@ -189,7 +189,7 @@ func queryDelegatorDelegations(ctx sdk.Context, req abci.RequestQuery, k Keeper,
 		return nil, sdkerrors.Wrap(sdkerrors.ErrJSONUnmarshal, err.Error())
 	}
 
-	delegations := k.GetAllDelegatorDelegations(ctx, params.DelegatorAddr)
+	delegations := k.GetAllLiquidDelegatorDelegations(ctx, params.DelegatorAddr)
 	delegationResps, err := DelegationsToDelegationResponses(ctx, k, delegations)
 	if err != nil {
 		return nil, err
@@ -300,7 +300,7 @@ func queryDelegation(ctx sdk.Context, req abci.RequestQuery, k Keeper, legacyQue
 		return nil, err
 	}
 
-	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
+	delegation, found := k.GetLiquidDelegation(ctx, delAddr, valAddr)
 	if !found {
 		return nil, sdkstaking.ErrNoDelegation
 	}
@@ -447,7 +447,7 @@ func queryParameters(ctx sdk.Context, k Keeper, legacyQuerierCdc *codec.LegacyAm
 // util
 
 func DelegationToDelegationResponse(ctx sdk.Context, k Keeper, del types.Delegation) (types.DelegationResponse, error) {
-	val, found := k.GetValidator(ctx, del.GetValidatorAddr())
+	val, found := k.GetLiquidValidator(ctx, del.GetValidatorAddr())
 	if !found {
 		return types.DelegationResponse{}, sdkstaking.ErrNoValidatorFound
 	}
@@ -500,7 +500,7 @@ func RedelegationsToRedelegationResponses(
 
 		delegatorAddress := sdk.MustAccAddressFromBech32(redel.DelegatorAddress)
 
-		val, found := k.GetValidator(ctx, valDstAddr)
+		val, found := k.GetLiquidValidator(ctx, valDstAddr)
 		if !found {
 			return nil, sdkstaking.ErrNoValidatorFound
 		}

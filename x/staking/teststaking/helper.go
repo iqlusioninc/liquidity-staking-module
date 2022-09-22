@@ -157,7 +157,7 @@ func (sh *Helper) TranserTokenizeShareRecord(recordId uint64, owner, newOwner sd
 // CheckValidator asserts that a validor exists and has a given status (if status!="")
 // and if has a right jailed flag.
 func (sh *Helper) CheckValidator(addr sdk.ValAddress, status sdkstaking.BondStatus, jailed bool) stakingtypes.Validator {
-	v, ok := sh.k.GetValidator(sh.Ctx, addr)
+	v, ok := sh.k.GetLiquidValidator(sh.Ctx, addr)
 	require.True(sh.t, ok)
 	require.Equal(sh.t, jailed, v.Jailed, "wrong Jalied status")
 	if status >= 0 {
@@ -168,7 +168,7 @@ func (sh *Helper) CheckValidator(addr sdk.ValAddress, status sdkstaking.BondStat
 
 // CheckDelegator asserts that a delegator exists
 func (sh *Helper) CheckDelegator(delegator sdk.AccAddress, val sdk.ValAddress, found bool) {
-	_, ok := sh.k.GetDelegation(sh.Ctx, delegator, val)
+	_, ok := sh.k.GetLiquidDelegation(sh.Ctx, delegator, val)
 	require.Equal(sh.t, ok, found)
 }
 

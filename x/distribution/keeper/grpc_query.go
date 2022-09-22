@@ -117,7 +117,7 @@ func (k Keeper) ValidatorSlashes(c context.Context, req *types.QueryValidatorSla
 }
 
 // DelegationRewards the total rewards accrued by a delegation
-func (k Keeper) DelegationRewards(c context.Context, req *types.QueryDelegationRewardsRequest) (*types.QueryDelegationRewardsResponse, error) {
+func (k Keeper) DelegationRewards(c context.Context, req *sdkdistr.QueryDelegationRewardsRequest) (*sdkdistr.QueryDelegationRewardsResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "invalid request")
 	}
@@ -154,7 +154,7 @@ func (k Keeper) DelegationRewards(c context.Context, req *types.QueryDelegationR
 	endingPeriod := k.IncrementValidatorPeriod(ctx, val)
 	rewards := k.CalculateDelegationRewards(ctx, val, del, endingPeriod)
 
-	return &types.QueryDelegationRewardsResponse{Rewards: rewards}, nil
+	return &sdkdistr.QueryDelegationRewardsResponse{Rewards: rewards}, nil
 }
 
 // DelegationTotalRewards the total rewards accrued by a each validator

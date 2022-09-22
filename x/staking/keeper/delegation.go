@@ -11,10 +11,10 @@ import (
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
-// GetDelegation returns a specific delegation.
-func (k Keeper) GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation types.Delegation, found bool) {
+// GetLiquidDelegation returns a specific delegation.
+func (k Keeper) GetLiquidDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation types.Delegation, found bool) {
 	store := ctx.KVStore(k.storeKey)
-	key := types.GetDelegationKey(delAddr, valAddr)
+	key := types.GetLiquidDelegationKey(delAddr, valAddr)
 
 	value := store.Get(key)
 	if value == nil {
@@ -22,6 +22,21 @@ func (k Keeper) GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr s
 	}
 
 	delegation = types.MustUnmarshalDelegation(k.cdc, value)
+
+	return delegation, true
+}
+
+// GetLiquidDelegation returns a specific delegation.
+func (k Keeper) GetDelegation(ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress) (delegation sdkstaking.Delegation, found bool) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetLiquidDelegationKey(delAddr, valAddr)
+
+	value := store.Get(key)
+	if value == nil {
+		return delegation, false
+	}
+
+	delegation = sdkstaking.MustUnmarshalDelegation(k.cdc, value)
 
 	return delegation, true
 }
@@ -74,7 +89,7 @@ func (k Keeper) GetValidatorDelegations(ctx sdk.Context, valAddr sdk.ValAddress)
 func (k Keeper) GetDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress, maxRetrieve uint16) (delegations []types.Delegation) {
 	delegations = make([]types.Delegation, maxRetrieve)
 	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := types.GetDelegationsKey(delegator)
+	delegatorPrefixKey := types.GetLiquidDelegationsKey(delegator)
 
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey)
 	defer iterator.Close()
@@ -95,7 +110,7 @@ func (k Keeper) SetDelegation(ctx sdk.Context, delegation types.Delegation) {
 
 	store := ctx.KVStore(k.storeKey)
 	b := types.MustMarshalDelegation(k.cdc, delegation)
-	store.Set(types.GetDelegationKey(delegatorAddress, delegation.GetValidatorAddr()), b)
+	store.Set(types.GetLiquidDelegationKey(delegatorAddress, delegation.GetValidatorAddr()), b)
 }
 
 // RemoveDelegation removes a delegation
@@ -108,7 +123,7 @@ func (k Keeper) RemoveDelegation(ctx sdk.Context, delegation types.Delegation) e
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetDelegationKey(delegatorAddress, delegation.GetValidatorAddr()))
+	store.Delete(types.GetLiquidDelegationKey(delegatorAddress, delegation.GetValidatorAddr()))
 	return nil
 }
 
@@ -217,7 +232,7 @@ func (k Keeper) GetDelegatorBonded(ctx sdk.Context, delegator sdk.AccAddress) sd
 		if err != nil {
 			panic(err) // shouldn't happen
 		}
-		validator, found := k.GetValidator(ctx, validatorAddr)
+		validator, found := k.GetLiquidValidator(ctx, validatorAddr)
 		if found {
 			shares := delegation.Shares
 			tokens := validator.TokensFromSharesTruncated(shares)
@@ -231,7 +246,7 @@ func (k Keeper) GetDelegatorBonded(ctx sdk.Context, delegator sdk.AccAddress) sd
 // IterateDelegatorDelegations iterates through one delegator's delegations.
 func (k Keeper) IterateDelegatorDelegations(ctx sdk.Context, delegator sdk.AccAddress, cb func(delegation types.Delegation) (stop bool)) {
 	store := ctx.KVStore(k.storeKey)
-	delegatorPrefixKey := types.GetDelegationsKey(delegator)
+	delegatorPrefixKey := types.GetLiquidDelegationsKey(delegator)
 	iterator := sdk.KVStorePrefixIterator(store, delegatorPrefixKey)
 	defer iterator.Close()
 
@@ -623,7 +638,7 @@ func (k Keeper) Delegate(
 	}
 
 	// Get or create the delegation object
-	delegation, found := k.GetDelegation(ctx, delAddr, validator.GetOperator())
+	delegation, found := k.GetLiquidDelegation(ctx, delAddr, validator.GetOperator())
 	if !found {
 		delegation = types.NewDelegation(delAddr, validator.GetOperator(), sdk.ZeroDec(), false)
 	}
@@ -701,7 +716,7 @@ func (k Keeper) Unbond(
 	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares sdk.Dec,
 ) (amount sdk.Int, err error) {
 	// check if a delegation object exists in the store
-	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
+	delegation, found := k.GetLiquidDelegation(ctx, delAddr, valAddr)
 	if !found {
 		return amount, sdkstaking.ErrNoDelegatorForAddress
 	}
@@ -717,7 +732,7 @@ func (k Keeper) Unbond(
 	}
 
 	// get validator
-	validator, found := k.GetValidator(ctx, valAddr)
+	validator, found := k.GetLiquidValidator(ctx, valAddr)
 	if !found {
 		return amount, sdkstaking.ErrNoValidatorFound
 	}
@@ -759,7 +774,7 @@ func (k Keeper) Unbond(
 func (k Keeper) getBeginInfo(
 	ctx sdk.Context, valSrcAddr sdk.ValAddress,
 ) (completionTime time.Time, height int64, completeNow bool) {
-	validator, found := k.GetValidator(ctx, valSrcAddr)
+	validator, found := k.GetLiquidValidator(ctx, valSrcAddr)
 
 	// TODO: When would the validator not be found?
 	switch {
@@ -789,7 +804,7 @@ func (k Keeper) getBeginInfo(
 func (k Keeper) Undelegate(
 	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, sharesAmount sdk.Dec,
 ) (time.Time, error) {
-	validator, found := k.GetValidator(ctx, valAddr)
+	validator, found := k.GetLiquidValidator(ctx, valAddr)
 	if !found {
 		return time.Time{}, sdkstaking.ErrNoDelegatorForAddress
 	}
@@ -873,12 +888,12 @@ func (k Keeper) BeginRedelegation(
 		return time.Time{}, sdkstaking.ErrSelfRedelegation
 	}
 
-	dstValidator, found := k.GetValidator(ctx, valDstAddr)
+	dstValidator, found := k.GetLiquidValidator(ctx, valDstAddr)
 	if !found {
 		return time.Time{}, sdkstaking.ErrBadRedelegationDst
 	}
 
-	srcValidator, found := k.GetValidator(ctx, valSrcAddr)
+	srcValidator, found := k.GetLiquidValidator(ctx, valSrcAddr)
 	if !found {
 		return time.Time{}, sdkstaking.ErrBadRedelegationDst
 	}
@@ -966,12 +981,12 @@ func (k Keeper) CompleteRedelegation(
 func (k Keeper) ValidateUnbondAmount(
 	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int,
 ) (shares sdk.Dec, err error) {
-	validator, found := k.GetValidator(ctx, valAddr)
+	validator, found := k.GetLiquidValidator(ctx, valAddr)
 	if !found {
 		return shares, sdkstaking.ErrNoValidatorFound
 	}
 
-	del, found := k.GetDelegation(ctx, delAddr, valAddr)
+	del, found := k.GetLiquidDelegation(ctx, delAddr, valAddr)
 	if !found {
 		return shares, sdkstaking.ErrNoDelegation
 	}
