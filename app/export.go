@@ -159,7 +159,7 @@ func (app *SimApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []
 
 	for ; iter.Valid(); iter.Next() {
 		addr := sdk.ValAddress(stakingtypes.AddressFromValidatorsKey(iter.Key()))
-		validator, found := app.StakingKeeper.GetValidator(ctx, addr)
+		validator, found := app.StakingKeeper.GetLiquidValidator(ctx, addr)
 		if !found {
 			panic("expected validator, not found")
 		}

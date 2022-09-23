@@ -909,7 +909,7 @@ func (m *DelegationResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DelegationResponse proto.InternalMessageInfo
 
-func (m *DelegationResponse) GetDelegation() Delegation {
+func (m *DelegationResponse) GetLiquidDelegation() Delegation {
 	if m != nil {
 		return m.Delegation
 	}

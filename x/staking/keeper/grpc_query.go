@@ -78,7 +78,7 @@ func (k Querier) Validator(c context.Context, req *types.QueryValidatorRequest) 
 	}
 
 	ctx := sdk.UnwrapSDKContext(c)
-	validator, found := k.GetValidator(ctx, valAddr)
+	validator, found := k.GetLiquidValidator(ctx, valAddr)
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "validator %s not found", req.ValidatorAddr)
 	}
@@ -199,7 +199,7 @@ func (k Querier) Delegation(c context.Context, req *types.QueryDelegationRequest
 		return nil, err
 	}
 
-	delegation, found := k.GetDelegation(ctx, delAddr, valAddr)
+	delegation, found := k.GetLiquidDelegation(ctx, delAddr, valAddr)
 	if !found {
 		return nil, status.Errorf(
 			codes.NotFound,
@@ -269,7 +269,7 @@ func (k Querier) DelegatorDelegations(c context.Context, req *types.QueryDelegat
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	delStore := prefix.NewStore(store, types.GetDelegationsKey(delAddr))
+	delStore := prefix.NewStore(store, types.GetLiquidDelegationsKey(delAddr))
 	pageRes, err := query.Paginate(delStore, req.Pagination, func(key []byte, value []byte) error {
 		delegation, err := types.UnmarshalDelegation(k.cdc, value)
 		if err != nil {
@@ -368,7 +368,7 @@ func (k Querier) HistoricalInfo(c context.Context, req *types.QueryHistoricalInf
 		return nil, status.Error(codes.InvalidArgument, "height cannot be negative")
 	}
 	ctx := sdk.UnwrapSDKContext(c)
-	hi, found := k.GetHistoricalInfo(ctx, req.Height)
+	hi, found := k.GetLiquidStakingHistoricalInfo(ctx, req.Height)
 	if !found {
 		return nil, status.Errorf(codes.NotFound, "historical info for height %d not found", req.Height)
 	}
@@ -425,14 +425,14 @@ func (k Querier) DelegatorValidators(c context.Context, req *types.QueryDelegato
 		return nil, err
 	}
 
-	delStore := prefix.NewStore(store, types.GetDelegationsKey(delAddr))
+	delStore := prefix.NewStore(store, types.GetLiquidDelegationsKey(delAddr))
 	pageRes, err := query.Paginate(delStore, req.Pagination, func(key []byte, value []byte) error {
 		delegation, err := types.UnmarshalDelegation(k.cdc, value)
 		if err != nil {
 			return err
 		}
 
-		validator, found := k.GetValidator(ctx, delegation.GetValidatorAddr())
+		validator, found := k.GetLiquidValidator(ctx, delegation.GetValidatorAddr())
 		if !found {
 			return sdkstaking.ErrNoValidatorFound
 		}
@@ -634,12 +634,12 @@ func (k Querier) TotalTokenizeSharedAssets(c context.Context, req *types.QueryTo
 			return nil, err
 		}
 
-		validator, found := k.GetValidator(ctx, valAddr)
+		validator, found := k.GetLiquidValidator(ctx, valAddr)
 		if !found {
 			return nil, sdkstaking.ErrNoValidatorFound
 		}
 
-		delegation, found := k.GetDelegation(ctx, moduleAcc, valAddr)
+		delegation, found := k.GetLiquidDelegation(ctx, moduleAcc, valAddr)
 		if !found {
 			return nil, sdkstaking.ErrNoDelegation
 		}

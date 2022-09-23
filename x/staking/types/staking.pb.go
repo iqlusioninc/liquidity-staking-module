@@ -960,7 +960,7 @@ func (m *DelegationResponse) XXX_DiscardUnknown() {
 
 var xxx_messageInfo_DelegationResponse proto.InternalMessageInfo
 
-func (m *DelegationResponse) GetDelegation() Delegation {
+func (m *DelegationResponse) GetLiquidDelegation() Delegation {
 	if m != nil {
 		return m.Delegation
 	}
@@ -1178,7 +1178,7 @@ func (m *TokenizeShareRecord) GetModuleAccount() string {
 	return ""
 }
 
-func (m *TokenizeShareRecord) GetValidator() string {
+func (m *TokenizeShareRecord) GetLiquidValidator() string {
 	if m != nil {
 		return m.Validator
 	}
