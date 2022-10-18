@@ -25,6 +25,18 @@ type subspace interface {
 func MigrateStore(ctx sdk.Context, storeKey storetypes.StoreKey, cdc codec.BinaryCodec, paramstore exported.Subspace) error {
 	migrateParamsStore(ctx, paramstore.(subspace))
 
+	// TODO: update validator object
+	// - remove string min_self_delegation = 11
+	// + add string total_exempt_shares = 11
+	// + add string total_tokenized_shares = 12
+	// TODO: update delegation object
+	// + add bool exempt = 4;
+	// TODO: update params for
+	// + add string exemption_factor = 7 [
+	// TODO: HistoricalInfo for validator updates
+	// TODO:  repeated TokenizeShareRecord tokenize_share_records = 9
+	// TODO:  uint64 last_tokenize_share_record_id = 10;
+
 	return nil
 }
 
