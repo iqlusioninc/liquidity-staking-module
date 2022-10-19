@@ -4,9 +4,11 @@ go 1.16
 
 require (
 	cosmossdk.io/math v1.0.0-beta.2 // indirect
-	github.com/armon/go-metrics v0.3.11
-	github.com/cosmos/cosmos-sdk v0.46.0-rc3 // indirect
+	github.com/armon/go-metrics v0.4.1
+	github.com/cosmos/cosmos-proto v1.0.0-alpha7 // indirect
+	github.com/cosmos/cosmos-sdk v0.46.0-rc3
 	github.com/cosmos/go-bip39 v1.0.0
+	github.com/cosmos/gogoproto v1.4.2 // indirect
 	github.com/creachadair/taskgroup v0.3.2 // indirect
 	github.com/creachadair/tomledit v0.0.22 // indirect
 	github.com/gogo/protobuf v1.3.3
@@ -26,11 +28,11 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/spf13/viper v1.12.0
 	github.com/stretchr/testify v1.8.0
-	github.com/tendermint/tendermint v0.34.20-rc1 // indirect
+	github.com/tendermint/tendermint v0.34.20-rc1
 	github.com/tendermint/tm-db v0.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd
-	google.golang.org/grpc v1.47.0
-	google.golang.org/protobuf v1.28.0
+	google.golang.org/grpc v1.49.0
+	google.golang.org/protobuf v1.28.1
 	sigs.k8s.io/yaml v1.3.0
 )
 

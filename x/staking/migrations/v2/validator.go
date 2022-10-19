@@ -25,3 +25,9 @@ func (d Delegation) String() string {
 	out, _ := yaml.Marshal(d)
 	return string(out)
 }
+
+// String returns a human readable string representation of the parameters.
+func (p Params) String() string {
+	out, _ := yaml.Marshal(p)
+	return string(out)
+}
