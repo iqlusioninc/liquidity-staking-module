@@ -73,7 +73,7 @@ func migrateValidators(store sdk.KVStore, cdc codec.BinaryCodec) {
 
 		validator := getMigratedValidator(val)
 		bz := cdc.MustMarshal(&validator)
-		store.Set(storeIter.Key(), bz)
+		oldStore.Set(storeIter.Key(), bz)
 	}
 }
 
@@ -95,7 +95,7 @@ func migrateDelegations(store sdk.KVStore, cdc codec.BinaryCodec) {
 		}
 
 		bz := cdc.MustMarshal(&delegation)
-		store.Set(storeIter.Key(), bz)
+		oldStore.Set(storeIter.Key(), bz)
 	}
 }
 
@@ -119,6 +119,6 @@ func migrateHistoricalInfos(store sdk.KVStore, cdc codec.BinaryCodec) {
 		}
 
 		bz := cdc.MustMarshal(&historicalInfo)
-		store.Set(storeIter.Key(), bz)
+		oldStore.Set(storeIter.Key(), bz)
 	}
 }
