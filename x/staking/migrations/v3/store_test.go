@@ -62,7 +62,7 @@ func TestStoreMigration(t *testing.T) {
 	bz := encCfg.Codec.MustMarshal(&oldValidator)
 	store.Set(types.GetValidatorKey(sdk.ValAddress(val.Address)), bz)
 
-	// TODO: add delegation
+	// add delegation
 	oldDelegation := v2.Delegation{
 		DelegatorAddress: val.Address.String(),
 		ValidatorAddress: sdk.ValAddress(val.Address).String(),
