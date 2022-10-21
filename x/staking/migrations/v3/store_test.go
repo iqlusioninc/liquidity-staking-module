@@ -10,40 +10,27 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	v2 "github.com/iqlusioninc/liquidity-staking-module/x/staking/migrations/v2"
 	v3 "github.com/iqlusioninc/liquidity-staking-module/x/staking/migrations/v3"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
+	tmed25519 "github.com/tendermint/tendermint/crypto/ed25519"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 	tmtypes "github.com/tendermint/tendermint/types"
 )
 
-func TestStoreMigration(t *testing.T) {
-	encCfg := simapp.MakeTestEncodingConfig()
-	stakingKey := sdk.NewKVStoreKey("staking")
-	tStakingKey := sdk.NewTransientStoreKey("transient_test")
-	ctx := testutil.DefaultContext(stakingKey, tStakingKey)
-	paramstore := paramtypes.NewSubspace(encCfg.Codec, encCfg.Amino, stakingKey, tStakingKey, "staking")
-
-	// Check no params
-	require.False(t, paramstore.Has(ctx, types.KeyMinCommissionRate))
-
-	// add validator
-	store := ctx.KVStore(stakingKey)
-
-	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey()
-	require.NoError(t, err)
+func genOldValidator(t *testing.T) (*tmtypes.Validator, v2.Validator) {
+	privVal := tmed25519.GenPrivKeyFromSecret([]byte("pass cube keep divide nothing glad park blouse sail grocery either believe cash social bind tell stable crunch lounge great glad door transfer base"))
+	pubKey := privVal.PubKey()
 
 	val := tmtypes.NewValidator(pubKey, 1)
 	pk, err := cryptocodec.FromTmPubKeyInterface(val.PubKey)
 	require.NoError(t, err)
 	pkAny, err := codectypes.NewAnyWithValue(pk)
 	require.NoError(t, err)
-	oldValidator := v2.Validator{
+	return val, v2.Validator{
 		OperatorAddress:         sdk.ValAddress(val.Address).String(),
 		ConsensusPubkey:         pkAny,
 		Jailed:                  false,
@@ -58,6 +45,20 @@ func TestStoreMigration(t *testing.T) {
 		UnbondingOnHoldRefCount: 1,
 		UnbondingIds:            []uint64{1},
 	}
+}
+func TestStoreMigration(t *testing.T) {
+	encCfg := simapp.MakeTestEncodingConfig()
+	stakingKey := sdk.NewKVStoreKey("staking")
+	tStakingKey := sdk.NewTransientStoreKey("transient_test")
+	ctx := testutil.DefaultContext(stakingKey, tStakingKey)
+	paramstore := paramtypes.NewSubspace(encCfg.Codec, encCfg.Amino, stakingKey, tStakingKey, "staking")
+
+	// Check no params
+	require.False(t, paramstore.Has(ctx, types.KeyMinCommissionRate))
+
+	// add validator
+	store := ctx.KVStore(stakingKey)
+	val, oldValidator := genOldValidator(t)
 
 	bz := encCfg.Codec.MustMarshal(&oldValidator)
 	store.Set(types.GetValidatorKey(sdk.ValAddress(val.Address)), bz)
@@ -85,7 +86,7 @@ func TestStoreMigration(t *testing.T) {
 	store.Set(types.GetHistoricalInfoKey(1), bz)
 
 	// Run migrations.
-	err = v3.MigrateStore(ctx, stakingKey, encCfg.Codec, paramstore)
+	err := v3.MigrateStore(ctx, stakingKey, encCfg.Codec, paramstore)
 	require.NoError(t, err)
 
 	// Make sure the new params are set.

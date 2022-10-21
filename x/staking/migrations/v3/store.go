@@ -61,6 +61,16 @@ func getMigratedValidator(val v2.Validator) types.Validator {
 		TotalTokenizedShares: sdk.ZeroDec(),
 	}
 }
+
+func getMigratedDelegation(del v2.Delegation) types.Delegation {
+	return types.Delegation{
+		DelegatorAddress: del.DelegatorAddress,
+		ValidatorAddress: del.ValidatorAddress,
+		Shares:           del.Shares,
+		Exempt:           false,
+	}
+}
+
 func migrateValidators(store sdk.KVStore, cdc codec.BinaryCodec) {
 	oldStore := prefix.NewStore(store, types.ValidatorsKey)
 
@@ -87,12 +97,7 @@ func migrateDelegations(store sdk.KVStore, cdc codec.BinaryCodec) {
 		del := v2.Delegation{}
 		cdc.MustUnmarshal(storeIter.Value(), &del)
 
-		delegation := types.Delegation{
-			DelegatorAddress: del.DelegatorAddress,
-			ValidatorAddress: del.ValidatorAddress,
-			Shares:           del.Shares,
-			Exempt:           false,
-		}
+		delegation := getMigratedDelegation(del)
 
 		bz := cdc.MustMarshal(&delegation)
 		oldStore.Set(storeIter.Key(), bz)
