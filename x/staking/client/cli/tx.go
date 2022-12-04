@@ -43,6 +43,7 @@ func NewTxCmd() *cobra.Command {
 		NewDelegateCmd(),
 		NewRedelegateCmd(),
 		NewUnbondCmd(),
+		NewUnbondValidatorCmd(),
 		NewTokenizeSharesCmd(),
 		NewRedeemTokensCmd(),
 		NewTransferTokenizeShareRecordCmd(),
@@ -256,6 +257,37 @@ $ %s tx staking unbond %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj 100stake --from
 			}
 
 			msg := types.NewMsgUndelegate(delAddr, valAddr, amount)
+
+			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
+		},
+	}
+
+	flags.AddTxFlagsToCmd(cmd)
+
+	return cmd
+}
+
+func NewUnbondValidatorCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "unbond-validator",
+		Short: "Unbond a validator",
+		Args:  cobra.ExactArgs(0),
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Unbond a validator.
+
+Example:
+$ %s tx staking unbond-validator --from mykey
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientTxContext(cmd)
+			if err != nil {
+				return err
+			}
+
+			msg := types.NewMsgUnbondValidator(sdk.ValAddress(clientCtx.GetFromAddress()))
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

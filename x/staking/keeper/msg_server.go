@@ -543,6 +543,25 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 	return &types.MsgCancelUnbondingDelegationResponse{}, nil
 }
 
+// UnbondValidator defines a method for performing the status transition for
+// a validator from bonded to unbonded
+func (k msgServer) UnbondValidator(goCtx context.Context, msg *types.MsgUnbondValidator) (*types.MsgUnbondValidatorResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		return nil, err
+	}
+	// validator must already be registered
+	validator, found := k.GetValidator(ctx, valAddr)
+	if !found {
+		return nil, sdkstaking.ErrNoValidatorFound
+	}
+
+	// jail the validator.
+	k.jailValidator(ctx, validator)
+	return &types.MsgUnbondValidatorResponse{}, nil
+}
+
 func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeShares) (*types.MsgTokenizeSharesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 

@@ -12,6 +12,7 @@ import (
 // staking message types
 const (
 	TypeMsgUndelegate                  = "begin_unbonding"
+	TypeMsgUnbondValidator             = "unbond_validator"
 	TypeMsgEditValidator               = "edit_validator"
 	TypeMsgCreateValidator             = "create_validator"
 	TypeMsgDelegate                    = "delegate"
@@ -30,6 +31,7 @@ var (
 	_ sdk.Msg                            = &MsgEditValidator{}
 	_ sdk.Msg                            = &MsgDelegate{}
 	_ sdk.Msg                            = &MsgUndelegate{}
+	_ sdk.Msg                            = &MsgUnbondValidator{}
 	_ sdk.Msg                            = &MsgBeginRedelegate{}
 	_ sdk.Msg                            = &MsgTokenizeShares{}
 	_ sdk.Msg                            = &MsgRedeemTokensforShares{}
@@ -332,6 +334,44 @@ func (msg MsgUndelegate) ValidateBasic() error {
 			sdkerrors.ErrInvalidRequest,
 			"invalid shares amount",
 		)
+	}
+
+	return nil
+}
+
+// NewMsgUnbondValidator creates a new MsgUnbondValidator instance.
+//nolint:interfacer
+func NewMsgUnbondValidator(valAddr sdk.ValAddress) *MsgUnbondValidator {
+	return &MsgUnbondValidator{
+		ValidatorAddress: valAddr.String(),
+	}
+}
+
+// Route implements the sdk.Msg interface.
+func (msg MsgUnbondValidator) Route() string { return RouterKey }
+
+// Type implements the sdk.Msg interface.
+func (msg MsgUnbondValidator) Type() string { return TypeMsgUnbondValidator }
+
+// GetSigners implements the sdk.Msg interface.
+func (msg MsgUnbondValidator) GetSigners() []sdk.AccAddress {
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{valAddr.Bytes()}
+}
+
+// GetSignBytes implements the sdk.Msg interface.
+func (msg MsgUnbondValidator) GetSignBytes() []byte {
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgUnbondValidator) ValidateBasic() error {
+	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
 
 	return nil

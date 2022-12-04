@@ -491,3 +491,38 @@ func TestExemptDelegation(t *testing.T) {
 		})
 	}
 }
+
+func TestUnbondValidator(t *testing.T) {
+	_, app, ctx := createTestInput(t)
+	addrs := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
+	addrAcc1 := addrs[0]
+	addrVal1 := sdk.ValAddress(addrAcc1)
+
+	pubKeys := simapp.CreateTestPubKeys(1)
+	pk1 := pubKeys[0]
+
+	// Create Validators and Delegation
+	val1 := teststaking.NewValidator(t, addrVal1, pk1)
+	val1.Status = sdkstaking.Bonded
+	app.StakingKeeper.SetValidator(ctx, val1)
+	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
+	app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
+
+	// try unbonding not available validator
+	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
+	_, err := msgServer.UnbondValidator(sdk.WrapSDKContext(ctx), &types.MsgUnbondValidator{
+		ValidatorAddress: sdk.ValAddress(addrs[1]).String(),
+	})
+	require.Error(t, err)
+
+	// unbond validator
+	_, err = msgServer.UnbondValidator(sdk.WrapSDKContext(ctx), &types.MsgUnbondValidator{
+		ValidatorAddress: addrVal1.String(),
+	})
+	require.NoError(t, err)
+
+	// check if validator is jailed
+	validator, found := app.StakingKeeper.GetValidator(ctx, addrVal1)
+	require.True(t, found)
+	require.True(t, validator.Jailed)
+}
