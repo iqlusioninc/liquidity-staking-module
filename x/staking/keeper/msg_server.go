@@ -552,7 +552,7 @@ func (k msgServer) UnbondValidator(goCtx context.Context, msg *types.MsgUnbondVa
 		return nil, err
 	}
 	// validator must already be registered
-	validator, found := k.GetValidator(ctx, valAddr)
+	validator, found := k.GetLiquidValidator(ctx, valAddr)
 	if !found {
 		return nil, sdkstaking.ErrNoValidatorFound
 	}
