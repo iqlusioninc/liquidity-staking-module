@@ -8,6 +8,7 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
+	"cosmossdk.io/math"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmprotocrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
@@ -119,7 +120,7 @@ type ValidatorsByVotingPower []Validator
 
 func (valz ValidatorsByVotingPower) Len() int { return len(valz) }
 
-func (valz ValidatorsByVotingPower) Less(i, j int, r sdk.Int) bool {
+func (valz ValidatorsByVotingPower) Less(i, j int, r math.Int) bool {
 	if valz[i].ConsensusPower(r) == valz[j].ConsensusPower(r) {
 		addrI, errI := valz[i].GetConsAddr()
 		addrJ, errJ := valz[j].GetConsAddr()
@@ -260,7 +261,7 @@ func (d Description) EnsureLength() (Description, error) {
 
 // ABCIValidatorUpdate returns an abci.ValidatorUpdate from a staking validator type
 // with the full validator power
-func (v Validator) ABCIValidatorUpdate(r sdk.Int) abci.ValidatorUpdate {
+func (v Validator) ABCIValidatorUpdate(r math.Int) abci.ValidatorUpdate {
 	tmProtoPk, err := v.TmConsPublicKey()
 	if err != nil {
 		panic(err)
@@ -323,7 +324,7 @@ func (v Validator) TokensFromSharesRoundUp(shares sdk.Dec) sdk.Dec {
 
 // SharesFromTokens returns the shares of a delegation given a bond amount. It
 // returns an error if the validator has no tokens.
-func (v Validator) SharesFromTokens(amt sdk.Int) (sdk.Dec, error) {
+func (v Validator) SharesFromTokens(amt math.Int) (sdk.Dec, error) {
 	if v.Tokens.IsZero() {
 		return sdk.ZeroDec(), sdkstaking.ErrInsufficientShares
 	}
@@ -333,7 +334,7 @@ func (v Validator) SharesFromTokens(amt sdk.Int) (sdk.Dec, error) {
 
 // SharesFromTokensTruncated returns the truncated shares of a delegation given
 // a bond amount. It returns an error if the validator has no tokens.
-func (v Validator) SharesFromTokensTruncated(amt sdk.Int) (sdk.Dec, error) {
+func (v Validator) SharesFromTokensTruncated(amt math.Int) (sdk.Dec, error) {
 	if v.Tokens.IsZero() {
 		return sdk.ZeroDec(), sdkstaking.ErrInsufficientShares
 	}
@@ -342,7 +343,7 @@ func (v Validator) SharesFromTokensTruncated(amt sdk.Int) (sdk.Dec, error) {
 }
 
 // get the bonded tokens which the validator holds
-func (v Validator) BondedTokens() sdk.Int {
+func (v Validator) BondedTokens() math.Int {
 	if v.IsBonded() {
 		return v.Tokens
 	}
@@ -352,7 +353,7 @@ func (v Validator) BondedTokens() sdk.Int {
 
 // ConsensusPower gets the consensus-engine power. Aa reduction of 10^6 from
 // validator tokens is applied
-func (v Validator) ConsensusPower(r sdk.Int) int64 {
+func (v Validator) ConsensusPower(r math.Int) int64 {
 	if v.IsBonded() {
 		return v.PotentialConsensusPower(r)
 	}
@@ -361,7 +362,7 @@ func (v Validator) ConsensusPower(r sdk.Int) int64 {
 }
 
 // PotentialConsensusPower returns the potential consensus-engine power.
-func (v Validator) PotentialConsensusPower(r sdk.Int) int64 {
+func (v Validator) PotentialConsensusPower(r math.Int) int64 {
 	return sdk.TokensToConsensusPower(v.Tokens, r)
 }
 
@@ -373,7 +374,7 @@ func (v Validator) UpdateStatus(newStatus sdkstaking.BondStatus) Validator {
 }
 
 // AddTokensFromDel adds tokens to a validator
-func (v Validator) AddTokensFromDel(amount sdk.Int) (Validator, sdk.Dec) {
+func (v Validator) AddTokensFromDel(amount math.Int) (Validator, sdk.Dec) {
 	// calculate the shares to issue
 	var issuedShares sdk.Dec
 	if v.DelegatorShares.IsZero() {
@@ -395,7 +396,7 @@ func (v Validator) AddTokensFromDel(amount sdk.Int) (Validator, sdk.Dec) {
 }
 
 // RemoveTokens removes tokens from a validator
-func (v Validator) RemoveTokens(tokens sdk.Int) Validator {
+func (v Validator) RemoveTokens(tokens math.Int) Validator {
 	if tokens.IsNegative() {
 		panic(fmt.Sprintf("should not happen: trying to remove negative tokens %v", tokens))
 	}
@@ -413,10 +414,10 @@ func (v Validator) RemoveTokens(tokens sdk.Int) Validator {
 // NOTE: because token fractions are left in the valiadator,
 //
 //	the exchange rate of future shares of this validator can increase.
-func (v Validator) RemoveDelShares(delShares sdk.Dec) (Validator, sdk.Int) {
+func (v Validator) RemoveDelShares(delShares sdk.Dec) (Validator, math.Int) {
 	remainingShares := v.DelegatorShares.Sub(delShares)
 
-	var issuedTokens sdk.Int
+	var issuedTokens math.Int
 	if remainingShares.IsZero() {
 		// last delegation share gets any trimmings
 		issuedTokens = v.Tokens
@@ -506,15 +507,15 @@ func (v Validator) GetConsAddr() (sdk.ConsAddress, error) {
 	return sdk.ConsAddress(pk.Address()), nil
 }
 
-func (v Validator) GetTokens() sdk.Int       { return v.Tokens }
-func (v Validator) GetBondedTokens() sdk.Int { return v.BondedTokens() }
-func (v Validator) GetConsensusPower(r sdk.Int) int64 {
+func (v Validator) GetTokens() math.Int       { return v.Tokens }
+func (v Validator) GetBondedTokens() math.Int { return v.BondedTokens() }
+func (v Validator) GetConsensusPower(r math.Int) int64 {
 	return v.ConsensusPower(r)
 }
 func (v Validator) GetCommission() sdk.Dec      { return v.Commission.Rate }
 func (v Validator) GetDelegatorShares() sdk.Dec { return v.DelegatorShares }
 
-func (v Validator) GetMinSelfDelegation() sdk.Int { return sdk.ZeroInt() }
+func (v Validator) GetMinSelfDelegation() math.Int { return sdk.ZeroInt() }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (v Validator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {

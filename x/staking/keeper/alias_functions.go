@@ -115,7 +115,8 @@ func (k Keeper) Delegation(ctx sdk.Context, addrDel sdk.AccAddress, addrVal sdk.
 
 // iterate through all of the delegations from a delegator
 func (k Keeper) IterateDelegations(ctx sdk.Context, delAddr sdk.AccAddress,
-	fn func(index int64, del sdkstaking.DelegationI) (stop bool)) {
+	fn func(index int64, del sdkstaking.DelegationI) (stop bool),
+) {
 	store := ctx.KVStore(k.storeKey)
 	delegatorPrefixKey := types.GetLiquidDelegationsKey(delAddr)
 

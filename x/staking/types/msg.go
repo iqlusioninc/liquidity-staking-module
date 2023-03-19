@@ -125,11 +125,9 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty commission")
 	}
 
-	if err := msg.Commission.Validate(); err != nil {
-		return err
-	}
+	err = msg.Commission.Validate()
 
-	return nil
+	return err
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces

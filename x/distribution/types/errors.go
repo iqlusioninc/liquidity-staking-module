@@ -1,7 +1,7 @@
 package types
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 )
 
 // x/distribution module sentinel errors
@@ -18,5 +18,5 @@ var (
 	// 	ErrEmptyProposalRecipient  = sdkerrors.Register(ModuleName, 11, "invalid community pool spend proposal recipient")
 	// 	ErrNoValidatorExists       = sdkerrors.Register(ModuleName, 12, "validator does not exist")
 	// 	ErrNoDelegationExists      = sdkerrors.Register(ModuleName, 13, "delegation does not exist")
-	ErrNotTokenizeShareRecordOwner = sdkerrors.Register(ModuleName, 44, "not tokenize share record owner")
+	ErrNotTokenizeShareRecordOwner = errorsmod.Register(ModuleName, 44, "not tokenize share record owner")
 )
