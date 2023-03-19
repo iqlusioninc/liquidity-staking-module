@@ -1,8 +1,10 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+
 	"github.com/cosmos/cosmos-sdk/x/authz"
 )
 
@@ -48,10 +50,10 @@ func (a StakeAuthorization) MsgTypeURL() string {
 
 func (a StakeAuthorization) ValidateBasic() error {
 	if a.MaxTokens != nil && a.MaxTokens.IsNegative() {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "negative coin amount: %v", a.MaxTokens)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "negative coin amount: %v", a.MaxTokens)
 	}
 	if a.AuthorizationType == AuthorizationType_AUTHORIZATION_TYPE_UNSPECIFIED {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "unknown authorization type")
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidType, "unknown authorization type")
 	}
 
 	return nil
@@ -99,16 +101,20 @@ func (a StakeAuthorization) Accept(ctx sdk.Context, msg sdk.Msg) (authz.AcceptRe
 	}
 
 	if a.MaxTokens == nil {
-		return authz.AcceptResponse{Accept: true, Delete: false,
-			Updated: &StakeAuthorization{Validators: a.GetValidators(), AuthorizationType: a.GetAuthorizationType()}}, nil
+		return authz.AcceptResponse{
+			Accept: true, Delete: false,
+			Updated: &StakeAuthorization{Validators: a.GetValidators(), AuthorizationType: a.GetAuthorizationType()},
+		}, nil
 	}
 
 	limitLeft := a.MaxTokens.Sub(amount)
 	if limitLeft.IsZero() {
 		return authz.AcceptResponse{Accept: true, Delete: true}, nil
 	}
-	return authz.AcceptResponse{Accept: true, Delete: false,
-		Updated: &StakeAuthorization{Validators: a.GetValidators(), AuthorizationType: a.GetAuthorizationType(), MaxTokens: &limitLeft}}, nil
+	return authz.AcceptResponse{
+		Accept: true, Delete: false,
+		Updated: &StakeAuthorization{Validators: a.GetValidators(), AuthorizationType: a.GetAuthorizationType(), MaxTokens: &limitLeft},
+	}, nil
 }
 
 func validateAndBech32fy(allowed []sdk.ValAddress, denied []sdk.ValAddress) ([]string, []string, error) {

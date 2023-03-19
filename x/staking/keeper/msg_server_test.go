@@ -3,6 +3,7 @@ package keeper_test
 import (
 	"testing"
 
+	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -21,12 +22,12 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 
 	testCases := []struct {
 		name                          string
-		vestingAmount                 sdk.Int
-		delegationAmount              sdk.Int
-		tokenizeShareAmount           sdk.Int
-		redeemAmount                  sdk.Int
-		targetVestingDelAfterShare    sdk.Int
-		targetVestingDelAfterRedeem   sdk.Int
+		vestingAmount                 math.Int
+		delegationAmount              math.Int
+		tokenizeShareAmount           math.Int
+		redeemAmount                  math.Int
+		targetVestingDelAfterShare    math.Int
+		targetVestingDelAfterRedeem   math.Int
 		slashFactor                   sdk.Dec
 		exemptionFactor               sdk.Dec
 		exemptDelegate                bool
@@ -421,7 +422,7 @@ func TestExemptDelegation(t *testing.T) {
 
 	testCases := []struct {
 		name             string
-		delegationAmount sdk.Int
+		delegationAmount math.Int
 		alreadyExempt    bool
 		expectErr        bool
 	}{
