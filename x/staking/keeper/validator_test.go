@@ -199,7 +199,6 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	app.StakingKeeper.DeleteValidatorByPowerIndex(ctx, nextCliffVal)
 	shares := app.StakingKeeper.TokensFromConsensusPower(ctx, 21)
 	nextCliffVal, _ = nextCliffVal.RemoveDelShares(sdk.NewDecFromInt(shares))
-	nextCliffVal = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, nextCliffVal, true)
 
 	expectedValStatus := map[int]sdkstaking.BondStatus{
 		9: sdkstaking.Bonded, 8: sdkstaking.Bonded, 7: sdkstaking.Bonded, 5: sdkstaking.Bonded, 4: sdkstaking.Bonded,

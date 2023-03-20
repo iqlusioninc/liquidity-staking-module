@@ -22,6 +22,8 @@ const (
 )
 
 // Simulation operation weights constants
+//
+//nolint:gosec // allow gosec to ignore G101 as this is not a hardcoded credential but rather a variable name
 const (
 	OpWeightMsgCreateValidator             = "op_weight_msg_create_validator"
 	OpWeightMsgEditValidator               = "op_weight_msg_edit_validator"

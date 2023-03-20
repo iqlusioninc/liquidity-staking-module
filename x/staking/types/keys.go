@@ -27,6 +27,7 @@ const (
 	RouterKey = ModuleName
 )
 
+
 var (
 	// Keys for store prefixes
 	// Last* values are constant during a block.

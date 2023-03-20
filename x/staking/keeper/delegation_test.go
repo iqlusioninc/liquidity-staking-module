@@ -204,10 +204,8 @@ func TestUnbondDelegation(t *testing.T) {
 	// note this validator starts not-bonded
 	validator := teststaking.NewValidator(t, valAddrs[0], PKs[0])
 
-	validator, issuedShares := validator.AddTokensFromDel(startTokens)
+	_, issuedShares := validator.AddTokensFromDel(startTokens)
 	require.Equal(t, startTokens, issuedShares.RoundInt())
-
-	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
 
 	delegation := types.NewDelegation(delAddrs[0], valAddrs[0], issuedShares, false)
 	app.StakingKeeper.SetDelegation(ctx, delegation)
@@ -444,9 +442,8 @@ func TestRedelegationMaxEntries(t *testing.T) {
 	// create a validator with a self-delegation
 	validator := teststaking.NewValidator(t, addrVals[0], PKs[0])
 	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
-	validator, issuedShares := validator.AddTokensFromDel(valTokens)
+	_, issuedShares := validator.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares.RoundInt())
-	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
 	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
 	selfDelegation := types.NewDelegation(val0AccAddr, addrVals[0], issuedShares, false)
 	app.StakingKeeper.SetDelegation(ctx, selfDelegation)

@@ -144,11 +144,9 @@ func (p Params) Validate() error {
 		return err
 	}
 
-	if err := validateExemptionFactor(p.ExemptionFactor); err != nil {
-		return err
-	}
+	err := validateExemptionFactor(p.ExemptionFactor)
 
-	return nil
+	return err
 }
 
 func validateUnbondingTime(i interface{}) error {
@@ -209,11 +207,9 @@ func validateBondDenom(i interface{}) error {
 		return errors.New("bond denom cannot be blank")
 	}
 
-	if err := sdk.ValidateDenom(v); err != nil {
-		return err
-	}
+	err := sdk.ValidateDenom(v)
 
-	return nil
+	return err
 }
 
 func ValidatePowerReduction(i interface{}) error {

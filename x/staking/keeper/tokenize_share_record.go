@@ -39,7 +39,7 @@ func (k Keeper) GetTokenizeShareRecord(ctx sdk.Context, id uint64) (tokenizeShar
 func (k Keeper) GetTokenizeShareRecordsByOwner(ctx sdk.Context, owner sdk.AccAddress) (tokenizeShareRecords []types.TokenizeShareRecord) {
 	store := ctx.KVStore(k.storeKey)
 
-	var it sdk.Iterator = sdk.KVStorePrefixIterator(store, types.GetTokenizeShareRecordIdsByOwnerPrefix(owner))
+	it := sdk.KVStorePrefixIterator(store, types.GetTokenizeShareRecordIdsByOwnerPrefix(owner))
 	defer it.Close()
 
 	for ; it.Valid(); it.Next() {
@@ -71,7 +71,7 @@ func (k Keeper) GetTokenizeShareRecordByDenom(ctx sdk.Context, denom string) (ty
 func (k Keeper) GetAllTokenizeShareRecords(ctx sdk.Context) (tokenizeShareRecords []types.TokenizeShareRecord) {
 	store := ctx.KVStore(k.storeKey)
 
-	var it sdk.Iterator = sdk.KVStorePrefixIterator(store, types.TokenizeShareRecordPrefix)
+	it := sdk.KVStorePrefixIterator(store, types.TokenizeShareRecordPrefix)
 	defer it.Close()
 
 	for ; it.Valid(); it.Next() {

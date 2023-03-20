@@ -1,7 +1,7 @@
 package types
 
 import (
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 )
 
 // x/staking module sentinel errors
@@ -50,13 +50,13 @@ var (
 	// ErrNoHistoricalInfo                 = sdkerrors.Register(ModuleName, 38, "no historical info found")
 	// ErrEmptyValidatorPubKey             = sdkerrors.Register(ModuleName, 39, "empty validator public key")
 	// ErrCommissionLTMinRate              = sdkerrors.Register(ModuleName, 40, "commission cannot be less than min rate")
-	ErrNotEnoughBalance                           = sdkerrors.Register(ModuleName, 41, "not enough balance")
-	ErrTokenizeShareRecordNotExists               = sdkerrors.Register(ModuleName, 42, "tokenize share record not exists")
-	ErrTokenizeShareRecordAlreadyExists           = sdkerrors.Register(ModuleName, 43, "tokenize share record already exists")
-	ErrNotTokenizeShareRecordOwner                = sdkerrors.Register(ModuleName, 44, "not tokenize share record owner")
-	ErrExceedingFreeVestingDelegations            = sdkerrors.Register(ModuleName, 45, "trying to exceed vested free delegation for vesting account")
-	ErrOnlyBondDenomAllowdForTokenize             = sdkerrors.Register(ModuleName, 46, "only bond denom is allowed for tokenize")
-	ErrInsufficientExemptShares                   = sdkerrors.Register(ModuleName, 47, "insufficient exempt shares")
-	ErrRedelegationNotAllowedForExemptDelegation  = sdkerrors.Register(ModuleName, 48, "redelegation is not allowed for exempt delegation")
-	ErrExemptDelegationNotAllowedForTokenizeShare = sdkerrors.Register(ModuleName, 49, "exempt delegation is not allowed for tokenize share")
+	ErrNotEnoughBalance                           = errorsmod.Register(ModuleName, 41, "not enough balance")
+	ErrTokenizeShareRecordNotExists               = errorsmod.Register(ModuleName, 42, "tokenize share record not exists")
+	ErrTokenizeShareRecordAlreadyExists           = errorsmod.Register(ModuleName, 43, "tokenize share record already exists")
+	ErrNotTokenizeShareRecordOwner                = errorsmod.Register(ModuleName, 44, "not tokenize share record owner")
+	ErrExceedingFreeVestingDelegations            = errorsmod.Register(ModuleName, 45, "trying to exceed vested free delegation for vesting account")
+	ErrOnlyBondDenomAllowdForTokenize             = errorsmod.Register(ModuleName, 46, "only bond denom is allowed for tokenize")
+	ErrInsufficientExemptShares                   = errorsmod.Register(ModuleName, 47, "insufficient exempt shares")
+	ErrRedelegationNotAllowedForExemptDelegation  = errorsmod.Register(ModuleName, 48, "redelegation is not allowed for exempt delegation")
+	ErrExemptDelegationNotAllowedForTokenizeShare = errorsmod.Register(ModuleName, 49, "exempt delegation is not allowed for tokenize share")
 )
