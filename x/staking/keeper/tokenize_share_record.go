@@ -10,7 +10,7 @@ import (
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
-func (k Keeper) GetLastTokenizeShareRecordId(ctx sdk.Context) uint64 {
+func (k Keeper) GetLastTokenizeShareRecordID(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
 	bytes := store.Get(types.LastTokenizeShareRecordIDKey)
 	if bytes == nil {
@@ -19,7 +19,7 @@ func (k Keeper) GetLastTokenizeShareRecordId(ctx sdk.Context) uint64 {
 	return sdk.BigEndianToUint64(bytes)
 }
 
-func (k Keeper) SetLastTokenizeShareRecordId(ctx sdk.Context, id uint64) {
+func (k Keeper) SetLastTokenizeShareRecordID(ctx sdk.Context, id uint64) {
 	store := ctx.KVStore(k.storeKey)
 	store.Set(types.LastTokenizeShareRecordIDKey, sdk.Uint64ToBigEndian(id))
 }
