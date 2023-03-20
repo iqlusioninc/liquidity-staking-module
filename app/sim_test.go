@@ -246,7 +246,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				PrintStats(db)
 			}
 
-			appHash := app.LastCommitID().Hash
+			appHash := app.Commit().Data
 			appHashList[j] = appHash
 
 			if j != 0 {
