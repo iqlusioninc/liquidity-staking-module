@@ -14,7 +14,7 @@ func BenchmarkGetLiquidValidator(b *testing.B) {
 		totalPower += int64(i)
 	}
 
-	app, ctx, _, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
+	app, ctx, valAddrs, vals := initValidators(b, totalPower, len(powers), powers)
 
 	for _, validator := range vals {
 		app.StakingKeeper.SetValidator(ctx, validator)
