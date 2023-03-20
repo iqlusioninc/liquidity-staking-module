@@ -160,6 +160,8 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	require.True(t, keeper.ValidatorByPowerIndexExists(ctx, app.StakingKeeper, power))
 }
 
+// TestUpdateBondedValidatorsDecreaseCliff tests that the validator set is updated correctly when
+// the validator set size is decreased and the cliff validator is removed.
 func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	numVals := 10
 	maxVals := 5
@@ -167,6 +169,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	// create context, keeper, and pool for tests
 	app, ctx, _, valAddrs := bootstrapValidatorTest(t, 0, 100)
 
+	// load the bonded and unbonded pools
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 
@@ -179,9 +182,11 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), app.StakingKeeper.TokensFromConsensusPower(ctx, 1234)))))
 	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), app.StakingKeeper.TokensFromConsensusPower(ctx, 10000)))))
 
+	// set the module accounts
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
+	// create validators
 	validators := make([]types.Validator, numVals)
 	for i := 0; i < len(validators); i++ {
 		moniker := fmt.Sprintf("val#%d", int64(i))
@@ -193,6 +198,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 		validators[i] = val
 	}
 
+	// get the next cliff validator
 	nextCliffVal := validators[numVals-maxVals+1]
 
 	// remove enough tokens to kick out the validator below the current cliff
@@ -207,13 +213,14 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 		0: sdkstaking.Unbonding, 1: sdkstaking.Unbonding, 2: sdkstaking.Unbonding, 3: sdkstaking.Unbonding, 6: sdkstaking.Unbonding,
 	}
 
-	// require all the validators have their respective statuses
+	// range through texpectedValStatus and check the validator status
 	for valIdx, status := range expectedValStatus {
 		valAddr := validators[valIdx].OperatorAddress
 		addr, err := sdk.ValAddressFromBech32(valAddr)
 		assert.NoError(t, err)
 		val, _ := app.StakingKeeper.GetLiquidValidator(ctx, addr)
 
+		// require the validator has the expected status
 		assert.Equal(
 			t, status, val.GetStatus(),
 			fmt.Sprintf("expected validator at index %v to have status: %s", valIdx, status),
