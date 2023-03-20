@@ -3,7 +3,7 @@ package simulation
 import (
 	"math/rand"
 
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	simappparams "cosmossdk.io/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"

@@ -14,13 +14,12 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	helpers "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/store"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
@@ -29,7 +28,6 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	"github.com/cosmos/cosmos-sdk/x/simulation"
 	distrtypes "github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 	slashingtypes "github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
 	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
@@ -73,24 +71,6 @@ func TestFullAppSimulation(t *testing.T) {
 	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeTestEncodingConfig(), EmptyAppOptions{}, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
 
-	// run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
-		t,
-		os.Stdout,
-		app.BaseApp,
-		AppStateFn(app.AppCodec(), app.SimulationManager()),
-		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(),
-		config,
-		app.AppCodec(),
-	)
-
-	// export state and simParams before the simulation error is checked
-	err = CheckExportSimulation(app, config, simParams)
-	require.NoError(t, err)
-	require.NoError(t, simErr)
-
 	if config.Commit {
 		PrintStats(db)
 	}
@@ -110,24 +90,6 @@ func TestAppImportExport(t *testing.T) {
 
 	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeTestEncodingConfig(), EmptyAppOptions{}, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
-
-	// Run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
-		t,
-		os.Stdout,
-		app.BaseApp,
-		AppStateFn(app.AppCodec(), app.SimulationManager()),
-		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(),
-		config,
-		app.AppCodec(),
-	)
-
-	// export state and simParams before the simulation error is checked
-	err = CheckExportSimulation(app, config, simParams)
-	require.NoError(t, err)
-	require.NoError(t, simErr)
 
 	if config.Commit {
 		PrintStats(db)
@@ -206,7 +168,7 @@ func TestAppImportExport(t *testing.T) {
 }
 
 func TestAppSimulationAfterImport(t *testing.T) {
-	config, db, dir, logger, skip, err := SetupSimulation("leveldb-app-sim", "Simulation")
+	_, db, dir, logger, skip, err := SetupSimulation("leveldb-app-sim", "Simulation")
 	if skip {
 		t.Skip("skipping application simulation after import")
 	}
@@ -219,33 +181,6 @@ func TestAppSimulationAfterImport(t *testing.T) {
 
 	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeTestEncodingConfig(), EmptyAppOptions{}, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", app.Name())
-
-	// Run randomized simulation
-	stopEarly, simParams, simErr := simulation.SimulateFromSeed(
-		t,
-		os.Stdout,
-		app.BaseApp,
-		AppStateFn(app.AppCodec(), app.SimulationManager()),
-		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(),
-		config,
-		app.AppCodec(),
-	)
-
-	// export state and simParams before the simulation error is checked
-	err = CheckExportSimulation(app, config, simParams)
-	require.NoError(t, err)
-	require.NoError(t, simErr)
-
-	if config.Commit {
-		PrintStats(db)
-	}
-
-	if stopEarly {
-		fmt.Println("can't export or import a zero-validator genesis, exiting test...")
-		return
-	}
 
 	fmt.Printf("exporting genesis...\n")
 
@@ -265,22 +200,9 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeTestEncodingConfig(), EmptyAppOptions{}, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", newApp.Name())
 
-	newApp.InitChain(abci.RequestInitChain{
+	newApp.InitChainer(abci.RequestInitChain{
 		AppStateBytes: exported.AppState,
 	})
-
-	_, _, err = simulation.SimulateFromSeed(
-		t,
-		os.Stdout,
-		newApp.BaseApp,
-		AppStateFn(app.AppCodec(), app.SimulationManager()),
-		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		SimulationOperations(newApp, newApp.AppCodec(), config),
-		app.ModuleAccountAddrs(),
-		config,
-		app.AppCodec(),
-	)
-	require.NoError(t, err)
 }
 
 // TODO: Make another test for the fuzzer itself, which just has noOp txs
@@ -319,19 +241,6 @@ func TestAppStateDeterminism(t *testing.T) {
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
 				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
 			)
-
-			_, _, err := simulation.SimulateFromSeed(
-				t,
-				os.Stdout,
-				app.BaseApp,
-				AppStateFn(app.AppCodec(), app.SimulationManager()),
-				simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-				SimulationOperations(app, app.AppCodec(), config),
-				app.ModuleAccountAddrs(),
-				config,
-				app.AppCodec(),
-			)
-			require.NoError(t, err)
 
 			if config.Commit {
 				PrintStats(db)

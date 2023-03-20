@@ -9,7 +9,7 @@ require (
 	github.com/cometbft/cometbft v0.37.0
 	github.com/cometbft/cometbft-db v0.7.0
 	github.com/cosmos/cosmos-proto v1.0.0-alpha7
-	github.com/cosmos/cosmos-sdk v0.46.11
+	github.com/cosmos/cosmos-sdk v0.47.0
 	github.com/cosmos/go-bip39 v1.0.0
 	github.com/cosmos/gogoproto v1.4.6
 	github.com/gogo/protobuf v1.3.2

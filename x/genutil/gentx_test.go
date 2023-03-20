@@ -8,11 +8,12 @@ import (
 	"time"
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	helpers "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/stretchr/testify/suite"
 
+	simappparams "cosmossdk.io/simapp/params"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	"github.com/cosmos/cosmos-sdk/testutil"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"

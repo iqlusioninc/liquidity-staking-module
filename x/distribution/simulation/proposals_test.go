@@ -7,7 +7,7 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	simappparams "cosmossdk.io/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"

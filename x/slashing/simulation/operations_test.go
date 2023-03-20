@@ -12,9 +12,9 @@ import (
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 
+	simappparams "cosmossdk.io/simapp/params"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"

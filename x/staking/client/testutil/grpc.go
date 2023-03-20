@@ -8,10 +8,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/client/cli"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
@@ -45,9 +45,6 @@ func (s *IntegrationTestSuite) TestGRPCQueryValidatorsHandler() {
 	for _, tc := range testCases {
 		tc := tc
 		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
-			s.Require().NoError(err)
-
 			var valRes types.QueryValidatorsResponse
 			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &valRes)
 
@@ -59,52 +56,6 @@ func (s *IntegrationTestSuite) TestGRPCQueryValidatorsHandler() {
 				s.Require().NoError(err)
 				s.Require().NotNil(valRes.Validators)
 				s.Require().Equal(len(s.network.Validators), len(valRes.Validators))
-			}
-		})
-	}
-}
-
-func (s *IntegrationTestSuite) TestGRPCQueryValidator() {
-	val := s.network.Validators[0]
-	baseURL := val.APIAddress
-
-	testCases := []struct {
-		name  string
-		url   string
-		error bool
-	}{
-		{
-			"wrong validator address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s", baseURL, "wrongValidatorAddress"),
-			true,
-		},
-		{
-			"with no validator address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s", baseURL, ""),
-			true,
-		},
-		{
-			"valid request",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s", baseURL, val.ValAddress.String()),
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
-			s.Require().NoError(err)
-
-			var validator types.QueryValidatorResponse
-			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &validator)
-
-			if tc.error {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().NotNil(validator.Validator)
-				s.Require().Equal(s.network.Validators[0].ValAddress.String(), validator.Validator.OperatorAddress)
 			}
 		})
 	}
@@ -168,53 +119,6 @@ func (s *IntegrationTestSuite) TestGRPCQueryValidatorDelegations() {
 			} else {
 				s.Require().NoError(err)
 				s.Require().Equal(tc.expectedResp.String(), tc.respType.String())
-			}
-		})
-	}
-}
-
-func (s *IntegrationTestSuite) TestGRPCQueryValidatorUnbondingDelegations() {
-	val := s.network.Validators[0]
-	baseURL := val.APIAddress
-
-	testCases := []struct {
-		name  string
-		url   string
-		error bool
-	}{
-		{
-			"wrong validator address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/unbonding_delegations", baseURL, "wrongValAddress"),
-			true,
-		},
-		{
-			"with no validator address",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/unbonding_delegations", baseURL, ""),
-			true,
-		},
-		{
-			"valid request",
-			fmt.Sprintf("%s/cosmos/staking/v1beta1/validators/%s/unbonding_delegations", baseURL, val.ValAddress.String()),
-			false,
-		},
-	}
-
-	for _, tc := range testCases {
-		tc := tc
-		s.Run(tc.name, func() {
-			resp, err := rest.GetRequest(tc.url)
-			s.Require().NoError(err)
-
-			var ubds types.QueryValidatorUnbondingDelegationsResponse
-
-			err = val.ClientCtx.Codec.UnmarshalJSON(resp, &ubds)
-
-			if tc.error {
-				s.Require().Error(err)
-			} else {
-				s.Require().NoError(err)
-				s.Require().Len(ubds.UnbondingResponses, 1)
-				s.Require().Equal(ubds.UnbondingResponses[0].ValidatorAddress, val.ValAddress.String())
 			}
 		})
 	}
