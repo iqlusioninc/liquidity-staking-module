@@ -16,10 +16,10 @@ import (
 
 	"cosmossdk.io/math"
 	dbm "github.com/cometbft/cometbft-db"
+	tmlog "github.com/cometbft/cometbft/libs/log"
 	tmrand "github.com/cometbft/cometbft/libs/rand"
 	"github.com/cometbft/cometbft/node"
 	tmclient "github.com/cometbft/cometbft/rpc/client"
-	"github.com/rs/zerolog"
 	"github.com/spf13/cobra"
 	"google.golang.org/grpc"
 
@@ -293,10 +293,9 @@ func New(l Logger, baseDir string, cfg Config) (*Network, error) {
 			appCfg.GRPCWeb.Enable = true
 		}
 
-		logger := server.ZeroLogWrapper{Logger: zerolog.Nop()}
+		logger := tmlog.NewNopLogger()
 		if cfg.EnableTMLogging {
-			logWriter := zerolog.ConsoleWriter{Out: os.Stderr}
-			logger = server.ZeroLogWrapper{Logger: zerolog.New(logWriter).Level(zerolog.InfoLevel).With().Timestamp().Logger()}
+			logger = tmlog.NewTMLogger(os.Stdout) // TODO(mr): enable selection of log destination.
 		}
 
 		ctx.Logger = logger

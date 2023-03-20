@@ -172,7 +172,7 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 // ProposalContents returns all the distribution content functions used to
 // simulate governance proposals.
 func (am AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedProposalContent {
-	return simulation.ProposalContents(am.keeper)
+	return simulation.ProposalContents()
 }
 
 // RegisterStoreDecoder registers a decoder for distribution module's types
