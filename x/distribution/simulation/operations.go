@@ -18,14 +18,19 @@ import (
 const DefaultWeightMsgWithdrawAllTokenizeShareRecordReward int = 50
 
 // Simulation operation weights constants
-//
-//nolint:gosec
 const (
-	OpWeightMsgSetWithdrawAddress                = "op_weight_msg_set_withdraw_address"
-	OpWeightMsgWithdrawDelegationReward          = "op_weight_msg_withdraw_delegation_reward"
-	OpWeightMsgWithdrawValidatorCommission       = "op_weight_msg_withdraw_validator_commission"
-	OpWeightMsgFundCommunityPool                 = "op_weight_msg_fund_community_pool"
-	OpWeightMsgWithdrawTokenizeShareRecordReward = "op_weight_msg_withdraw_tokenize_share_record_reward"
+	OpWeightMsgSetWithdrawAddress          = "op_weight_msg_set_withdraw_address"          //nolint:gosec
+	OpWeightMsgWithdrawDelegationReward    = "op_weight_msg_withdraw_delegation_reward"    //nolint:gosec
+	OpWeightMsgWithdrawValidatorCommission = "op_weight_msg_withdraw_validator_commission" //nolint:gosec
+	OpWeightMsgFundCommunityPool           = "op_weight_msg_fund_community_pool"           //nolint:gosec
+	OpWeightMsgDeposit                     = "op_weight_msg_deposit"
+
+	DefaultWeightMsgSetWithdrawAddress          int = 50
+	DefaultWeightMsgWithdrawDelegationReward    int = 50
+	DefaultWeightMsgWithdrawValidatorCommission int = 50
+	DefaultWeightMsgFundCommunityPool           int = 50
+
+	DefaultWeightTextProposal = 5
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -33,35 +38,28 @@ func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak ty
 	var weightMsgSetWithdrawAddress int
 	appParams.GetOrGenerate(cdc, OpWeightMsgSetWithdrawAddress, &weightMsgSetWithdrawAddress, nil,
 		func(_ *rand.Rand) {
-			weightMsgSetWithdrawAddress = simappparams.DefaultWeightMsgSetWithdrawAddress
+			weightMsgSetWithdrawAddress = DefaultWeightMsgSetWithdrawAddress
 		},
 	)
 
 	var weightMsgWithdrawDelegationReward int
 	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawDelegationReward, &weightMsgWithdrawDelegationReward, nil,
 		func(_ *rand.Rand) {
-			weightMsgWithdrawDelegationReward = simappparams.DefaultWeightMsgWithdrawDelegationReward
+			weightMsgWithdrawDelegationReward = DefaultWeightMsgWithdrawDelegationReward
 		},
 	)
 
 	var weightMsgWithdrawValidatorCommission int
 	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawValidatorCommission, &weightMsgWithdrawValidatorCommission, nil,
 		func(_ *rand.Rand) {
-			weightMsgWithdrawValidatorCommission = simappparams.DefaultWeightMsgWithdrawValidatorCommission
+			weightMsgWithdrawValidatorCommission = DefaultWeightMsgWithdrawValidatorCommission
 		},
 	)
 
 	var weightMsgFundCommunityPool int
 	appParams.GetOrGenerate(cdc, OpWeightMsgFundCommunityPool, &weightMsgFundCommunityPool, nil,
 		func(_ *rand.Rand) {
-			weightMsgFundCommunityPool = simappparams.DefaultWeightMsgFundCommunityPool
-		},
-	)
-
-	var weightMsgWithdrawTokenizeShareRecordReward int
-	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawTokenizeShareRecordReward, &weightMsgWithdrawTokenizeShareRecordReward, nil,
-		func(_ *rand.Rand) {
-			weightMsgWithdrawTokenizeShareRecordReward = DefaultWeightMsgWithdrawAllTokenizeShareRecordReward
+			weightMsgFundCommunityPool = DefaultWeightMsgFundCommunityPool
 		},
 	)
 
@@ -83,10 +81,6 @@ func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak ty
 		simulation.NewWeightedOperation(
 			weightMsgFundCommunityPool,
 			SimulateMsgFundCommunityPool(ak, bk, k, stakeKeeper),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgWithdrawTokenizeShareRecordReward,
-			SimulateMsgWithdrawTokenizeShareRecordReward(ak, bk, k, stakeKeeper),
 		),
 	}
 }

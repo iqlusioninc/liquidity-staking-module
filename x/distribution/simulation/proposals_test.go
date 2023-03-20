@@ -7,7 +7,6 @@ import (
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
-	simappparams "cosmossdk.io/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
@@ -25,14 +24,14 @@ func TestProposalContents(t *testing.T) {
 	accounts := simtypes.RandomAccounts(r, 3)
 
 	// execute ProposalContents function
-	weightedProposalContent := simulation.ProposalContents(app.DistrKeeper)
+	weightedProposalContent := simulation.ProposalContents()
 	require.Len(t, weightedProposalContent, 1)
 
 	w0 := weightedProposalContent[0]
 
 	// tests w0 interface:
 	require.Equal(t, simulation.OpWeightSubmitCommunitySpendProposal, w0.AppParamsKey())
-	require.Equal(t, simappparams.DefaultWeightTextProposal, w0.DefaultWeight())
+	require.Equal(t, simulation.DefaultWeightTextProposal, w0.DefaultWeight())
 
 	amount := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)), sdk.NewCoin("atoken", sdk.NewInt(2)))
 
