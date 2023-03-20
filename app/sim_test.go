@@ -14,7 +14,6 @@ import (
 	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	helpers "github.com/cosmos/cosmos-sdk/testutil/sims"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -37,6 +36,9 @@ import (
 func init() {
 	GetSimulatorFlags()
 }
+
+// SimAppChainID hardcoded chainID for simulation
+const SimAppChainID = "simulation-app"
 
 type StoreKeysPrefixes struct {
 	A        storetypes.StoreKey
@@ -200,7 +202,7 @@ func TestAppSimulationAfterImport(t *testing.T) {
 	newApp := NewSimApp(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, DefaultNodeHome, FlagPeriodValue, MakeTestEncodingConfig(), EmptyAppOptions{}, fauxMerkleModeOpt)
 	require.Equal(t, "SimApp", newApp.Name())
 
-	newApp.InitChainer(abci.RequestInitChain{
+	newApp.InitChain(abci.RequestInitChain{
 		AppStateBytes: exported.AppState,
 	})
 }
@@ -217,7 +219,7 @@ func TestAppStateDeterminism(t *testing.T) {
 	config.ExportParamsPath = ""
 	config.OnOperation = false
 	config.AllInvariants = false
-	config.ChainID = helpers.SimAppChainID
+	config.ChainID = SimAppChainID
 
 	numSeeds := 3
 	numTimesToRunPerSeed := 5
