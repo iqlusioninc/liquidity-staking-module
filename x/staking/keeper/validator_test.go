@@ -70,6 +70,7 @@ func initValidators(t testing.TB, power int64, numAddrs int, powers []int64) (*s
 	return app, ctx, addrs, valAddrs, vs
 }
 
+// TestSetValidator tests the SetValidator method.
 func TestSetValidator(t *testing.T) {
 	app, ctx, _, _ := bootstrapValidatorTest(t, 10, 100)
 
@@ -120,16 +121,20 @@ func TestSetValidator(t *testing.T) {
 	require.Equal(t, 2, len(allVals))
 }
 
+// TestUpdateValidatorByPowerIndex tests the UpdateValidatorByPowerIndex method.
 func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	app, ctx, _, _ := bootstrapValidatorTest(t, 0, 100)
 	_, addrVals := generateAddresses(app, ctx, 1)
 
+	// get the bonded and unbonded pools
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 
+	// fund the pools
 	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), app.StakingKeeper.TokensFromConsensusPower(ctx, 1234)))))
 	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), app.StakingKeeper.TokensFromConsensusPower(ctx, 10000)))))
 
+	// set the module accounts
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
@@ -143,6 +148,7 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	require.True(t, found)
 	require.Equal(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 100), validator.Tokens)
 
+	// Get the power index key
 	power := types.GetValidatorsByPowerIndexKey(validator, app.StakingKeeper.PowerReduction(ctx))
 	require.True(t, keeper.ValidatorByPowerIndexExists(ctx, app.StakingKeeper, power))
 
@@ -153,9 +159,11 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true) // update the validator, possibly kicking it out
 	require.False(t, keeper.ValidatorByPowerIndexExists(ctx, app.StakingKeeper, power))
 
+	// get validator 0's address
 	validator, found = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
 	require.True(t, found)
 
+	// Get the power index key
 	power = types.GetValidatorsByPowerIndexKey(validator, app.StakingKeeper.PowerReduction(ctx))
 	require.True(t, keeper.ValidatorByPowerIndexExists(ctx, app.StakingKeeper, power))
 }
