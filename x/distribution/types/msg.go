@@ -170,10 +170,10 @@ func (msg MsgFundCommunityPool) ValidateBasic() error {
 	return nil
 }
 
-func NewMsgWithdrawTokenizeShareRecordReward(ownerAddr sdk.AccAddress, recordId uint64) *MsgWithdrawTokenizeShareRecordReward {
+func NewMsgWithdrawTokenizeShareRecordReward(ownerAddr sdk.AccAddress, recordID uint64) *MsgWithdrawTokenizeShareRecordReward {
 	return &MsgWithdrawTokenizeShareRecordReward{
 		OwnerAddress: ownerAddr.String(),
-		RecordId:     recordId,
+		RecordId:     recordID,
 	}
 }
 

@@ -75,7 +75,7 @@ func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) er
 }
 
 // Implements sdk.ValidatorHooks - just addition to fulfill the staking hook interface
-func (h Hooks) BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordId uint64) error {
+func (h Hooks) BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordID uint64) error {
 	return nil
 }
 

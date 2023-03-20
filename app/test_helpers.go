@@ -524,6 +524,6 @@ func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
 type EmptyAppOptions struct{}
 
 // Get implements AppOptions
-func (ao EmptyAppOptions) Get(o string) interface{} {
+func (ao EmptyAppOptions) Get(_ string) any {
 	return nil
 }

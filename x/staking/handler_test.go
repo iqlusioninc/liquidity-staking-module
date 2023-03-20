@@ -189,7 +189,7 @@ func TransferTokenizeShareRecord(t *testing.T) {
 
 	testCases := []struct {
 		name      string
-		recordId  uint64
+		recordID  uint64
 		oldOwner  int64
 		newOwner  int64
 		isSuccess bool
@@ -239,7 +239,7 @@ func TransferTokenizeShareRecord(t *testing.T) {
 			tstaking.TokenizeShares(del2, val1, sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000), del2, true)
 
 			// redeem share
-			tstaking.TranserTokenizeShareRecord(tc.recordId, delAddrs[tc.oldOwner], delAddrs[tc.newOwner], tc.isSuccess)
+			tstaking.TranserTokenizeShareRecord(tc.recordID, delAddrs[tc.oldOwner], delAddrs[tc.newOwner], tc.isSuccess)
 		})
 	}
 }
