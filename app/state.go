@@ -20,7 +20,6 @@ import (
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
@@ -91,7 +90,7 @@ func AppStateFn(cdc codec.JSONCodec, simManager *module.SimulationManager) simty
 		// compute not bonded balance
 		notBondedTokens := sdk.ZeroInt()
 		for _, val := range stakingState.Validators {
-			if val.Status != sdkstaking.Unbonded {
+			if val.Status != stakingtypes.Unbonded {
 				continue
 			}
 			notBondedTokens = notBondedTokens.Add(val.GetTokens())
