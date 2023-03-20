@@ -182,7 +182,8 @@ func TestEmptyState(t *testing.T) {
 	outC := make(chan string)
 	go func() {
 		var buf bytes.Buffer
-		io.Copy(&buf, r)
+		_, err := io.Copy(&buf, r)
+		require.NoError(t, err)
 		outC <- buf.String()
 	}()
 

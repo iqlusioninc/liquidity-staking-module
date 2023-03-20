@@ -540,7 +540,7 @@ func queryAllRedelegations(store sdk.KVStore, k Querier, req *types.QueryRedeleg
 }
 
 // Query for individual tokenize share record information by share by id
-func (k Querier) TokenizeShareRecordById(c context.Context, req *types.QueryTokenizeShareRecordByIdRequest) (*types.QueryTokenizeShareRecordByIdResponse, error) {
+func (k Querier) TokenizeShareRecordById(c context.Context, req *types.QueryTokenizeShareRecordByIdRequest) (*types.QueryTokenizeShareRecordByIdResponse, error) { //nolint:revive // this corresponds to the proto file
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -605,7 +605,7 @@ func (k Querier) AllTokenizeShareRecords(c context.Context, req *types.QueryAllT
 }
 
 // Query for last tokenize share record id
-func (k Querier) LastTokenizeShareRecordId(c context.Context, req *types.QueryLastTokenizeShareRecordIdRequest) (*types.QueryLastTokenizeShareRecordIdResponse, error) {
+func (k Querier) LastTokenizeShareRecordId(c context.Context, req *types.QueryLastTokenizeShareRecordIdRequest) (*types.QueryLastTokenizeShareRecordIdResponse, error) { //nolint:revive // this corresponds to the proto file
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}

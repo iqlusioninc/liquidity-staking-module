@@ -235,7 +235,8 @@ func (suite *SimTestSuite) SetupTest() {
 	suite.genesisVals = genesisVals
 }
 
-func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
+// getTestingAccounts returns a slice of simtypes.Accounts with n elements.
+func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account { //nolint:unparam // currently always 3
 	accounts := simtypes.RandomAccounts(r, n)
 
 	initAmt := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 200)
@@ -251,11 +252,13 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 	return accounts
 }
 
+// getTestingValidator0 returns a validator with commission rate 0.
 func (suite *SimTestSuite) getTestingValidator0(accounts []simtypes.Account) lstakingtypes.Validator {
 	commission0 := lstakingtypes.NewCommission(sdk.ZeroDec(), sdk.OneDec(), sdk.OneDec())
 	return suite.getTestingValidator(accounts, commission0, 0)
 }
 
+// getTestingValidator returns a validator with commission rate 0.1.
 func (suite *SimTestSuite) getTestingValidator(accounts []simtypes.Account, commission lstakingtypes.Commission, n int) lstakingtypes.Validator {
 	require := suite.Require()
 	account := accounts[n]
