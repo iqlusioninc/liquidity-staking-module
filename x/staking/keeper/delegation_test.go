@@ -24,11 +24,10 @@ func TestDelegation(t *testing.T) {
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
 	require.Len(t, delegations, 1)
 
-	err := app.StakingKeeper.RemoveDelegation(ctx, types.Delegation{
+	app.StakingKeeper.RemoveDelegation(ctx, types.Delegation{
 		ValidatorAddress: delegations[0].ValidatorAddress,
 		DelegatorAddress: delegations[0].DelegatorAddress,
 	})
-	require.NoError(t, err)
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(10000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
@@ -120,8 +119,7 @@ func TestDelegation(t *testing.T) {
 	}
 
 	// delete a record
-	err = app.StakingKeeper.RemoveDelegation(ctx, bond2to3)
-	require.Nil(t, err)
+	app.StakingKeeper.RemoveDelegation(ctx, bond2to3)
 	_, found = app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[1], valAddrs[2])
 	require.False(t, found)
 	resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
@@ -133,10 +131,8 @@ func TestDelegation(t *testing.T) {
 	require.Equal(t, 2, len(resBonds))
 
 	// delete all the records from delegator 2
-	err = app.StakingKeeper.RemoveDelegation(ctx, bond2to1)
-	require.Nil(t, err)
-	err = app.StakingKeeper.RemoveDelegation(ctx, bond2to2)
-	require.Nil(t, err)
+	app.StakingKeeper.RemoveDelegation(ctx, bond2to1)
+	app.StakingKeeper.RemoveDelegation(ctx, bond2to2)
 	_, found = app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[1], valAddrs[0])
 	require.False(t, found)
 	_, found = app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[1], valAddrs[1])
@@ -192,7 +188,6 @@ func TestUnbondingDelegation(t *testing.T) {
 	require.Equal(t, 0, len(resUnbonds))
 }
 
-// TestUnbondDeledgation tests unbonding delegations
 func TestUnbondDelegation(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
@@ -209,27 +204,24 @@ func TestUnbondDelegation(t *testing.T) {
 	// note this validator starts not-bonded
 	validator := teststaking.NewValidator(t, valAddrs[0], PKs[0])
 
-	_, issuedShares := validator.AddTokensFromDel(startTokens)
+	validator, issuedShares := validator.AddTokensFromDel(startTokens)
 	require.Equal(t, startTokens, issuedShares.RoundInt())
 
-	_ = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
+	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
 
 	delegation := types.NewDelegation(delAddrs[0], valAddrs[0], issuedShares, false)
 	app.StakingKeeper.SetDelegation(ctx, delegation)
 
-	// unbond the delegation
 	bondTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 6)
 	amount, err := app.StakingKeeper.Unbond(ctx, delAddrs[0], valAddrs[0], sdk.NewDecFromInt(bondTokens))
 	require.NoError(t, err)
 	require.Equal(t, bondTokens, amount) // shares to be added to an unbonding delegation
 
-	// check the unbonding delegation
 	delegation, found := app.StakingKeeper.GetLiquidDelegation(ctx, delAddrs[0], valAddrs[0])
 	require.True(t, found)
 	validator, found = app.StakingKeeper.GetLiquidValidator(ctx, valAddrs[0])
 	require.True(t, found)
 
-	// check that the unbonding delegation is correct
 	remainingTokens := startTokens.Sub(bondTokens)
 	require.Equal(t, remainingTokens, delegation.Shares.RoundInt())
 	require.Equal(t, remainingTokens, validator.BondedTokens())
