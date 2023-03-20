@@ -630,8 +630,8 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		}
 	}
 
-	recordId := k.GetLastTokenizeShareRecordId(ctx) + 1
-	k.SetLastTokenizeShareRecordId(ctx, recordId)
+	recordId := k.GetLastTokenizeShareRecordID(ctx) + 1
+	k.SetLastTokenizeShareRecordID(ctx, recordId)
 
 	record := types.TokenizeShareRecord{
 		Id:            recordId,
