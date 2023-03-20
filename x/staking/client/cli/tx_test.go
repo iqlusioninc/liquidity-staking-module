@@ -39,7 +39,6 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 		{
 			name: "all defaults",
 			fsModify: func(fs *pflag.FlagSet) {
-				return
 			},
 			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.2", "0.01"),
 		}, {
@@ -59,13 +58,15 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 		}, {
 			name: "Custom commission max rate",
 			fsModify: func(fs *pflag.FlagSet) {
-				fs.Set(FlagCommissionMaxRate, "0.89")
+				err := fs.Set(FlagCommissionMaxRate, "0.89")
+				require.NoError(t, err)
 			},
 			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.89", "0.01"),
 		}, {
 			name: "Custom commission max change rate",
 			fsModify: func(fs *pflag.FlagSet) {
-				fs.Set(FlagCommissionMaxChangeRate, "0.55")
+				err := fs.Set(FlagCommissionMaxChangeRate, "0.55")
+				require.NoError(t, err)
 			},
 			expectedCfg: mkTxValCfg(defaultAmount, "0.1", "0.2", "0.55"),
 		},

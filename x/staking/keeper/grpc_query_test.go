@@ -404,7 +404,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorDelegations() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
 			res, err := queryClient.ValidatorDelegations(gocontext.Background(), req)
-			if tc.expPass && !tc.expErr {
+			if tc.expPass && !tc.expErr { //nolint:gocritic
 				suite.NoError(err)
 				suite.Len(res.DelegationResponses, 1)
 				suite.NotNil(res.Pagination.NextKey)
@@ -538,7 +538,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
 			res, err := queryClient.DelegatorUnbondingDelegations(gocontext.Background(), req)
-			if tc.expPass && !tc.expErr {
+			if tc.expPass && !tc.expErr { //nolint:gocritic
 				suite.NoError(err)
 				suite.NotNil(res.Pagination.NextKey)
 				suite.Equal(uint64(2), res.Pagination.Total)
@@ -715,7 +715,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegations() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
 			res, err := queryClient.Redelegations(gocontext.Background(), req)
-			if tc.expPass && !tc.expErr {
+			if tc.expPass && !tc.expErr { //nolint:gocritic
 				suite.NoError(err)
 				suite.Len(res.RedelegationResponses, len(redel.Entries))
 				suite.Equal(redel.DelegatorAddress, res.RedelegationResponses[0].Redelegation.DelegatorAddress)

@@ -230,7 +230,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			_, found := app.StakingKeeper.GetLiquidDelegation(ctx, addrAcc2, addrVal1)
 			require.True(t, found, "delegation not found after delegate")
 
-			lastRecordId := app.StakingKeeper.GetLastTokenizeShareRecordID(ctx)
+			lastRecordID := app.StakingKeeper.GetLastTokenizeShareRecordID(ctx)
 			oldValidator, found := app.StakingKeeper.GetLiquidValidator(ctx, addrVal1)
 			require.True(t, found)
 
@@ -258,7 +258,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			require.NoError(t, err)
 
 			// check last record id increase
-			require.Equal(t, lastRecordId+1, app.StakingKeeper.GetLastTokenizeShareRecordID(ctx))
+			require.Equal(t, lastRecordID+1, app.StakingKeeper.GetLastTokenizeShareRecordID(ctx))
 
 			// ensure validator's total tokens is consistent
 			newValidator, found := app.StakingKeeper.GetLiquidValidator(ctx, addrVal1)

@@ -127,7 +127,6 @@ func TestSlashRedelegation(t *testing.T) {
 	// add bonded tokens to pool for (re)delegations
 	startCoins := sdk.NewCoins(sdk.NewInt64Coin(app.StakingKeeper.BondDenom(ctx), 15))
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
-	balances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
 	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), startCoins))
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
@@ -157,7 +156,7 @@ func TestSlashRedelegation(t *testing.T) {
 	slashAmount = app.StakingKeeper.SlashRedelegation(ctx, validator, rd, 0, fraction)
 	require.True(t, slashAmount.Equal(sdk.NewInt(0)))
 
-	balances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
+	balances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
 	// test valid slash, before expiration timestamp and to which stake contributed
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(0, 0)})
@@ -236,12 +235,12 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	oldBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
-	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	_, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 	app.StakingKeeper.Slash(ctx, consAddr, ctx.BlockHeight(), 10, fraction)
 
 	// read updated state
-	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 
 	// end block
@@ -276,7 +275,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	oldBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
-	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	_, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 	app.StakingKeeper.Slash(ctx, consAddr, 10, 10, fraction)
 
@@ -297,7 +296,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	require.Equal(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 3), diffTokens)
 
 	// read updated validator
-	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 
 	// power decreased by 3 - 6 stake originally bonded at the time of infraction

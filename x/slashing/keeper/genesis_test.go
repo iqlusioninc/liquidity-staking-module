@@ -52,6 +52,8 @@ func TestExportAndInitGenesis(t *testing.T) {
 	require.False(t, ok)
 
 	newInfo1, ok = app.SlashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]))
+	require.True(t, ok)
+
 	newInfo2, ok := app.SlashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[1]))
 	require.True(t, ok)
 	require.Equal(t, info1, newInfo1)
