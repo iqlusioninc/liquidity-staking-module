@@ -9,6 +9,6 @@ import (
 // migration includes:
 //
 // - Change addresses to be length-prefixed.
-func MigrateStore(_ sdk.Context, storeKey storetypes.StoreKey) error {
+func MigrateStore(_ sdk.Context, _ storetypes.StoreKey) error {
 	return nil
 }
