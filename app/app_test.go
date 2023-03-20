@@ -16,7 +16,8 @@ import (
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/tests/mocks"
+	mocks "github.com/cosmos/cosmos-sdk/testutil/mock"
+
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
