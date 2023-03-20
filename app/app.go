@@ -11,6 +11,7 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
 	tmos "github.com/cometbft/cometbft/libs/os"
+	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
 	"github.com/gorilla/mux"
 	"github.com/rakyll/statik/fs"
 	"github.com/spf13/cast"
@@ -651,4 +652,9 @@ func initParamsKeeper(appCodec codec.BinaryCodec, legacyAmino *codec.LegacyAmino
 	paramsKeeper.Subspace(crisistypes.ModuleName)
 
 	return paramsKeeper
+}
+
+// RegisterNodeService registers the node gRPC service on the app gRPC router.
+func (a *SimApp) RegisterNodeService(clientCtx client.Context) {
+	nodeservice.RegisterNodeService(clientCtx, a.GRPCQueryRouter())
 }
