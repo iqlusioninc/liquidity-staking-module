@@ -9,8 +9,8 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 
+	"github.com/cometbft/cometbft/crypto"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/crypto"
 )
 
 func TestSimGenesisAccountValidate(t *testing.T) {

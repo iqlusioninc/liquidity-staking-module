@@ -1,6 +1,6 @@
 // Package v040 is taken from:
 // https://github.com/cosmos/cosmos-sdk/blob/v0.40.1/x/staking/types/staking.pb.go
-//nolint
+// nolint
 package v040
 
 import (
@@ -15,6 +15,7 @@ import (
 	strings "strings"
 	time "time"
 
+	types "github.com/cometbft/cometbft/proto/tendermint/types"
 	types1 "github.com/cosmos/cosmos-sdk/codec/types"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types2 "github.com/cosmos/cosmos-sdk/types"
@@ -26,7 +27,6 @@ import (
 	_ "github.com/golang/protobuf/ptypes/duration"
 	_ "github.com/golang/protobuf/ptypes/timestamp"
 	_ "github.com/regen-network/cosmos-proto"
-	types "github.com/tendermint/tendermint/proto/tendermint/types"
 )
 
 // Reference imports to suppress errors if they are not otherwise used.
