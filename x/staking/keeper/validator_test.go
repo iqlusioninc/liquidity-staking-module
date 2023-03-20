@@ -198,8 +198,9 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	// validator and next in line cliff validator
 	app.StakingKeeper.DeleteValidatorByPowerIndex(ctx, nextCliffVal)
 	shares := app.StakingKeeper.TokensFromConsensusPower(ctx, 21)
-	nextCliffVal, _ = nextCliffVal.RemoveDelShares(sdk.NewDecFromInt(shares))
+	_, _ = nextCliffVal.RemoveDelShares(sdk.NewDecFromInt(shares))
 
+	// update the validator, possibly kicking it out
 	expectedValStatus := map[int]sdkstaking.BondStatus{
 		9: sdkstaking.Bonded, 8: sdkstaking.Bonded, 7: sdkstaking.Bonded, 5: sdkstaking.Bonded, 4: sdkstaking.Bonded,
 		0: sdkstaking.Unbonding, 1: sdkstaking.Unbonding, 2: sdkstaking.Unbonding, 3: sdkstaking.Unbonding, 6: sdkstaking.Unbonding,
@@ -279,7 +280,8 @@ func TestValidatorBasics(t *testing.T) {
 
 	// set and retrieve a record
 	validators[0] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[0], true)
-	app.StakingKeeper.SetValidatorByConsAddr(ctx, validators[0])
+	err := app.StakingKeeper.SetValidatorByConsAddr(ctx, validators[0])
+	require.NoError(t, err)
 	resVal, found := app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
 	require.True(t, found)
 	assert.True(ValEq(t, validators[0], resVal))

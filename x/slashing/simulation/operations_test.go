@@ -73,7 +73,8 @@ func TestSimulateMsgUnjail(t *testing.T) {
 	validator0 := getTestingValidator0(t, app, ctx, accounts)
 
 	// setup validator0 by consensus address
-	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator0)
+	err := app.StakingKeeper.SetValidatorByConsAddr(ctx, validator0)
+	require.NoError(t, err)
 	val0ConsAddress, err := validator0.GetConsAddr()
 	require.NoError(t, err)
 	info := types.NewValidatorSigningInfo(val0ConsAddress, int64(4), int64(3),

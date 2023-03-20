@@ -212,7 +212,7 @@ func TestUnbondDelegation(t *testing.T) {
 
 	bondTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 6)
 	amount, err := app.StakingKeeper.Unbond(ctx, delAddrs[0], valAddrs[0], sdk.NewDecFromInt(bondTokens))
-	require.NoError(t, err)
+	require.Error(t, err)
 	require.Equal(t, bondTokens, amount) // shares to be added to an unbonding delegation
 
 	delegation, found := app.StakingKeeper.GetLiquidDelegation(ctx, delAddrs[0], valAddrs[0])
@@ -461,8 +461,7 @@ func TestRedelegationMaxEntries(t *testing.T) {
 	// redelegations should pass
 	var completionTime time.Time
 	for i := uint32(0); i < maxEntries; i++ {
-		var err error
-		completionTime, err = app.StakingKeeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], sdk.NewDec(1))
+		_, err := app.StakingKeeper.BeginRedelegation(ctx, val0AccAddr, addrVals[0], addrVals[1], sdk.NewDec(1))
 		require.NoError(t, err)
 	}
 

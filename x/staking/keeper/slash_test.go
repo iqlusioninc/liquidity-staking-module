@@ -204,12 +204,12 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	oldBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
-	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	_, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 	app.StakingKeeper.Slash(ctx, consAddr, -2, 10, fraction)
 
 	// read updated state
-	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 
 	// end block

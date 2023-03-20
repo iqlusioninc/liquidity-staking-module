@@ -45,13 +45,15 @@ func TestPrepareConfigForTxCreateValidator(t *testing.T) {
 		}, {
 			name: "Custom amount",
 			fsModify: func(fs *pflag.FlagSet) {
-				fs.Set(FlagAmount, "2000stake")
+				err := fs.Set(FlagAmount, "2000stake")
+				require.NoError(t, err)
 			},
 			expectedCfg: mkTxValCfg("2000stake", "0.1", "0.2", "0.01"),
 		}, {
 			name: "Custom commission rate",
 			fsModify: func(fs *pflag.FlagSet) {
-				fs.Set(FlagCommissionRate, "0.54")
+				err := fs.Set(FlagCommissionRate, "0.54")
+				require.NoError(t, err)
 			},
 			expectedCfg: mkTxValCfg(defaultAmount, "0.54", "0.2", "0.01"),
 		}, {
