@@ -45,7 +45,7 @@ func TestInitGenesis(t *testing.T) {
 	bondedVal1 := types.Validator{
 		OperatorAddress: sdk.ValAddress(addrs[0]).String(),
 		ConsensusPubkey: pk0,
-		Status:          types.BondStatus(sdkstaking.Bonded),
+		Status:          types.Bonded,
 		Tokens:          valTokens,
 		DelegatorShares: sdk.NewDecFromInt(valTokens),
 		Description:     types.NewDescription("hoop", "", "", "", ""),
@@ -53,7 +53,7 @@ func TestInitGenesis(t *testing.T) {
 	bondedVal2 := types.Validator{
 		OperatorAddress: sdk.ValAddress(addrs[1]).String(),
 		ConsensusPubkey: pk1,
-		Status:          types.BondStatus(sdkstaking.Bonded),
+		Status:          types.Bonded,
 		Tokens:          valTokens,
 		DelegatorShares: sdk.NewDecFromInt(valTokens),
 		Description:     types.NewDescription("bloop", "", "", "", ""),
@@ -138,7 +138,7 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 
 	require.Panics(t, func() {
 		// setting validator status to bonded so the balance counts towards bonded pool
-		validator.Status = types.BondStatus(sdkstaking.Bonded)
+		validator.Status = types.Bonded
 		app.StakingKeeper.InitGenesis(ctx, &types.GenesisState{
 			Params:     params,
 			Validators: []types.Validator{validator},
@@ -149,7 +149,7 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 
 	require.Panics(t, func() {
 		// setting validator status to unbonded so the balance counts towards not bonded pool
-		validator.Status = types.BondStatus(sdkstaking.Unbonded)
+		validator.Status = types.Unbonded
 		app.StakingKeeper.InitGenesis(ctx, &types.GenesisState{
 			Params:     params,
 			Validators: []types.Validator{validator},
@@ -180,7 +180,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 			types.NewDescription(fmt.Sprintf("#%d", i), "", "", "", ""),
 		)
 		require.NoError(t, err)
-		validators[i].Status = types.BondStatus(sdkstaking.Bonded)
+		validators[i].Status = types.Bonded
 
 		tokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 1)
 		if i < 100 {

@@ -91,12 +91,11 @@ func TestRunMigrations(t *testing.T) {
 	// The loop below is the same as calling `RegisterServices` on
 	// ModuleManager, except that we skip x/bank.
 	for _, module := range app.mm.Modules {
-		print(module)
-		// if module.Name() == banktypes.ModuleName {
-		// 	continue
-		// }
+		if module.Name() == banktypes.ModuleName {
+			continue
+		}
 
-		// module.RegisterServices(app.configurator)
+		module.RegisterServices(app.configurator)
 	}
 
 	// Initialize the chain

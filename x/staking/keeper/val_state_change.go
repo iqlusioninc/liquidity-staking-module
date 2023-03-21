@@ -314,7 +314,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 
 	// sanity check
-	if validator.Status != types.BondStatus(sdkstaking.Bonded) {
+	if validator.Status != types.Bonded {
 		panic(fmt.Sprintf("should not already be unbonded or unbonding, validator: %v\n", validator))
 	}
 
