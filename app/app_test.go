@@ -24,7 +24,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
 	"github.com/cosmos/cosmos-sdk/x/bank"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
@@ -92,11 +91,12 @@ func TestRunMigrations(t *testing.T) {
 	// The loop below is the same as calling `RegisterServices` on
 	// ModuleManager, except that we skip x/bank.
 	for _, module := range app.mm.Modules {
-		if module.Name() == banktypes.ModuleName {
-			continue
-		}
+		print(module)
+		// if module.Name() == banktypes.ModuleName {
+		// 	continue
+		// }
 
-		module.RegisterServices(app.configurator)
+		// module.RegisterServices(app.configurator)
 	}
 
 	// Initialize the chain

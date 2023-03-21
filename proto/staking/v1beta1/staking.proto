@@ -359,3 +359,13 @@ message TokenizeShareRecord {
   string module_account = 3; // module account take the role of delegator
   string validator = 4; // validator delegated to for tokenize share record creation
 }
+
+// Infraction indicates the infraction a validator commited.
+enum Infraction {
+  // UNSPECIFIED defines an empty infraction.
+  INFRACTION_UNSPECIFIED = 0;
+  // DOUBLE_SIGN defines a validator that double-signs a block.
+  INFRACTION_DOUBLE_SIGN = 1;
+  // DOWNTIME defines a validator that missed signing too many blocks.
+  INFRACTION_DOWNTIME = 2;
+}

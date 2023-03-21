@@ -90,7 +90,7 @@ func TestTokenizeShares(t *testing.T) {
 			tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 			// set staking params
-			params := app.StakingKeeper.GetParams(ctx)
+			params := app.StakingKeeper.GetAllParams(ctx)
 			params.MaxValidators = 2
 			app.StakingKeeper.SetParams(ctx, params)
 
@@ -157,7 +157,7 @@ func TestRedeemTokensforShares(t *testing.T) {
 			tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 			// set staking params
-			params := app.StakingKeeper.GetParams(ctx)
+			params := app.StakingKeeper.GetAllParams(ctx)
 			params.MaxValidators = 2
 			app.StakingKeeper.SetParams(ctx, params)
 
@@ -221,7 +221,7 @@ func TransferTokenizeShareRecord(t *testing.T) {
 			tstaking := teststaking.NewHelper(t, ctx, app.StakingKeeper)
 
 			// set staking params
-			params := app.StakingKeeper.GetParams(ctx)
+			params := app.StakingKeeper.GetAllParams(ctx)
 			params.MaxValidators = 2
 			app.StakingKeeper.SetParams(ctx, params)
 

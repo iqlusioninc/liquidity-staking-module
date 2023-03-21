@@ -10,6 +10,8 @@ import (
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
+	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
+	sdkstakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Keeper of the slashing store
@@ -64,9 +66,15 @@ func (k Keeper) GetPubkey(ctx sdk.Context, a cryptotypes.Address) (cryptotypes.P
 }
 
 // Slash attempts to slash a validator. The slash is delegated to the staking
-// module to make the necessary validator changes.
+// module to make the necessary validator changes. It specifies no intraction reason.
 func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdk.Dec, power, distributionHeight int64) {
-	coinsBurned := k.sk.Slash(ctx, consAddr, distributionHeight, power, fraction)
+	k.SlashWithInfractionReason(ctx, consAddr, fraction, power, distributionHeight, sdkstakingtypes.Infraction_INFRACTION_UNSPECIFIED)
+}
+
+// SlashWithInfractionReason attempts to slash a validator. The slash is delegated to the staking
+// module to make the necessary validator changes. It specifies an intraction reason.
+func (k Keeper) SlashWithInfractionReason(ctx sdk.Context, consAddr sdk.ConsAddress, fraction sdk.Dec, power, distributionHeight int64, infraction sdkstakingtypes.Infraction) {
+	coinsBurned := k.sk.SlashWithInfractionReason(ctx, consAddr, distributionHeight, power, fraction, stakingtypes.Infraction(infraction))
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeSlash,

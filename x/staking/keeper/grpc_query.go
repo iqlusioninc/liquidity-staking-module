@@ -465,7 +465,7 @@ func (k Querier) Pool(c context.Context, _ *types.QueryPoolRequest) (*types.Quer
 // Params queries the staking parameters
 func (k Querier) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
-	params := k.GetParams(ctx)
+	params := k.GetAllParams(ctx)
 
 	return &types.QueryParamsResponse{Params: params}, nil
 }

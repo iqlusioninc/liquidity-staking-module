@@ -30,7 +30,7 @@ func TestInitGenesis(t *testing.T) {
 
 	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 1)
 
-	params := app.StakingKeeper.GetParams(ctx)
+	params := app.StakingKeeper.GetAllParams(ctx)
 	validators := app.StakingKeeper.GetAllValidators(ctx)
 	require.Len(t, validators, 1)
 	var delegations []types.Delegation
@@ -45,7 +45,7 @@ func TestInitGenesis(t *testing.T) {
 	bondedVal1 := types.Validator{
 		OperatorAddress: sdk.ValAddress(addrs[0]).String(),
 		ConsensusPubkey: pk0,
-		Status:          sdkstaking.Bonded,
+		Status:          types.BondStatus(sdkstaking.Bonded),
 		Tokens:          valTokens,
 		DelegatorShares: sdk.NewDecFromInt(valTokens),
 		Description:     types.NewDescription("hoop", "", "", "", ""),
@@ -53,7 +53,7 @@ func TestInitGenesis(t *testing.T) {
 	bondedVal2 := types.Validator{
 		OperatorAddress: sdk.ValAddress(addrs[1]).String(),
 		ConsensusPubkey: pk1,
-		Status:          sdkstaking.Bonded,
+		Status:          types.BondStatus(sdkstaking.Bonded),
 		Tokens:          valTokens,
 		DelegatorShares: sdk.NewDecFromInt(valTokens),
 		Description:     types.NewDescription("bloop", "", "", "", ""),
@@ -138,7 +138,7 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 
 	require.Panics(t, func() {
 		// setting validator status to bonded so the balance counts towards bonded pool
-		validator.Status = sdkstaking.Bonded
+		validator.Status = types.BondStatus(sdkstaking.Bonded)
 		app.StakingKeeper.InitGenesis(ctx, &types.GenesisState{
 			Params:     params,
 			Validators: []types.Validator{validator},
@@ -149,7 +149,7 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 
 	require.Panics(t, func() {
 		// setting validator status to unbonded so the balance counts towards not bonded pool
-		validator.Status = sdkstaking.Unbonded
+		validator.Status = types.BondStatus(sdkstaking.Unbonded)
 		app.StakingKeeper.InitGenesis(ctx, &types.GenesisState{
 			Params:     params,
 			Validators: []types.Validator{validator},
@@ -166,7 +166,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	app, ctx, addrs := bootstrapGenesisTest(t, 200)
 	genesisValidators := app.StakingKeeper.GetAllValidators(ctx)
 
-	params := app.StakingKeeper.GetParams(ctx)
+	params := app.StakingKeeper.GetAllParams(ctx)
 	delegations := []types.Delegation{}
 	validators := make([]types.Validator, size)
 
@@ -180,7 +180,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 			types.NewDescription(fmt.Sprintf("#%d", i), "", "", "", ""),
 		)
 		require.NoError(t, err)
-		validators[i].Status = sdkstaking.Bonded
+		validators[i].Status = types.BondStatus(sdkstaking.Bonded)
 
 		tokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 1)
 		if i < 100 {

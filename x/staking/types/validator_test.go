@@ -138,7 +138,7 @@ func TestRemoveDelShares(t *testing.T) {
 	valA := types.Validator{
 		OperatorAddress: valAddr1.String(),
 		ConsensusPubkey: pk1Any,
-		Status:          sdkstaking.Bonded,
+		Status:          types.BondStatus(sdkstaking.Bonded),
 		Tokens:          sdk.NewInt(100),
 		DelegatorShares: sdk.NewDec(100),
 	}
@@ -278,7 +278,7 @@ func TestValidatorsSortTendermint(t *testing.T) {
 		pk := ed25519.GenPrivKey().PubKey()
 		pk2 := ed25519.GenPrivKey().PubKey()
 		vals[i] = newValidator(t, sdk.ValAddress(pk2.Address()), pk)
-		vals[i].Status = sdkstaking.Bonded
+		vals[i].Status = types.BondStatus(sdkstaking.Bonded)
 		vals[i].Tokens = sdk.NewInt(rand.Int63())
 	}
 	// create some validators with the same power
@@ -310,7 +310,7 @@ func TestValidatorToTm(t *testing.T) {
 	for i := range vals {
 		pk := ed25519.GenPrivKey().PubKey()
 		val := newValidator(t, sdk.ValAddress(pk.Address()), pk)
-		val.Status = sdkstaking.Bonded
+		val.Status = types.BondStatus(sdkstaking.Bonded)
 		val.Tokens = sdk.NewInt(rand.Int63())
 		vals[i] = val
 		tmPk, err := cryptocodec.ToTmPubKeyInterface(pk)
@@ -337,7 +337,7 @@ func mkValidator(tokens int64, shares sdk.Dec) types.Validator {
 	return types.Validator{
 		OperatorAddress: valAddr1.String(),
 		ConsensusPubkey: pk1Any,
-		Status:          sdkstaking.Bonded,
+		Status:          types.BondStatus(sdkstaking.Bonded),
 		Tokens:          sdk.NewInt(tokens),
 		DelegatorShares: shares,
 	}

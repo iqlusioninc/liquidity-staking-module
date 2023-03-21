@@ -194,7 +194,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	})
 
 	return &types.GenesisState{
-		Params:               k.GetParams(ctx),
+		Params:               k.GetAllParams(ctx),
 		LastTotalPower:       k.GetLastTotalPower(ctx),
 		LastValidatorPowers:  lastValidatorPowers,
 		Validators:           k.GetAllValidators(ctx),

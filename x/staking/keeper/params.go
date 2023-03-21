@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkstakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
@@ -61,7 +62,7 @@ func (k Keeper) ExemptionFactor(ctx sdk.Context) (res sdk.Dec) {
 }
 
 // Get all parameters as types.Params
-func (k Keeper) GetParams(ctx sdk.Context) types.Params {
+func (k Keeper) GetAllParams(ctx sdk.Context) types.Params {
 	return types.NewParams(
 		k.UnbondingTime(ctx),
 		k.MaxValidators(ctx),
@@ -70,6 +71,17 @@ func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 		k.BondDenom(ctx),
 		k.MinCommissionRate(ctx),
 		k.ExemptionFactor(ctx),
+	)
+}
+
+func (k Keeper) GetParams(ctx sdk.Context) sdkstakingtypes.Params {
+	return sdkstakingtypes.NewParams(
+		k.UnbondingTime(ctx),
+		k.MaxValidators(ctx),
+		k.MaxEntries(ctx),
+		k.HistoricalEntries(ctx),
+		k.BondDenom(ctx),
+		k.MinCommissionRate(ctx),
 	)
 }
 

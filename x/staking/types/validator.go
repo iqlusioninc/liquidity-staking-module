@@ -54,7 +54,7 @@ func NewValidator(operator sdk.ValAddress, pubKey cryptotypes.PubKey, descriptio
 		OperatorAddress:      operator.String(),
 		ConsensusPubkey:      pkAny,
 		Jailed:               false,
-		Status:               sdkstaking.Unbonded,
+		Status:               BondStatus(sdkstaking.Unbonded),
 		Tokens:               sdk.ZeroInt(),
 		DelegatorShares:      sdk.ZeroDec(),
 		Description:          description,
@@ -369,7 +369,7 @@ func (v Validator) PotentialConsensusPower(r math.Int) int64 {
 // UpdateStatus updates the location of the shares within a validator
 // to reflect the new status
 func (v Validator) UpdateStatus(newStatus sdkstaking.BondStatus) Validator {
-	v.Status = newStatus
+	v.Status = BondStatus(newStatus)
 	return v
 }
 
@@ -460,7 +460,7 @@ func (v *Validator) Equal(v2 *Validator) bool {
 
 func (v Validator) IsJailed() bool                   { return v.Jailed }
 func (v Validator) GetMoniker() string               { return v.Description.Moniker }
-func (v Validator) GetStatus() sdkstaking.BondStatus { return v.Status }
+func (v Validator) GetStatus() sdkstaking.BondStatus { return sdkstaking.BondStatus(v.Status) }
 func (v Validator) GetOperator() sdk.ValAddress {
 	if v.OperatorAddress == "" {
 		return nil

@@ -122,7 +122,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.SlashingKeeper.SetParams(ctx, testslashing.TestParams())
 
-	params := app.StakingKeeper.GetParams(ctx)
+	params := app.StakingKeeper.GetAllParams(ctx)
 	params.MaxValidators = 1
 	app.StakingKeeper.SetParams(ctx, params)
 	power := int64(100)

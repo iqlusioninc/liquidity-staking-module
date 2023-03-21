@@ -188,7 +188,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
 
 			// set exemption factor
-			params := app.StakingKeeper.GetParams(ctx)
+			params := app.StakingKeeper.GetAllParams(ctx)
 			params.ExemptionFactor = tc.exemptionFactor
 			app.StakingKeeper.SetParams(ctx, params)
 
@@ -207,14 +207,14 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 
 			// Create Validators and Delegation
 			val1 := teststaking.NewValidator(t, addrVal1, pk1)
-			val1.Status = sdkstaking.Bonded
+			val1.Status = types.BondStatus(sdkstaking.Bonded)
 			app.StakingKeeper.SetValidator(ctx, val1)
 			app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
 			err := app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
 			require.NoError(t, err)
 
 			val2 := teststaking.NewValidator(t, addrVal2, pk2)
-			val2.Status = sdkstaking.Bonded
+			val2.Status = types.BondStatus(sdkstaking.Bonded)
 			app.StakingKeeper.SetValidator(ctx, val2)
 			app.StakingKeeper.SetValidatorByPowerIndex(ctx, val2)
 			err = app.StakingKeeper.SetValidatorByConsAddr(ctx, val2)
@@ -460,7 +460,7 @@ func TestExemptDelegation(t *testing.T) {
 
 			// Create Validators and Delegation
 			val1 := teststaking.NewValidator(t, addrVal1, pk1)
-			val1.Status = sdkstaking.Bonded
+			val1.Status = types.BondStatus(sdkstaking.Bonded)
 			app.StakingKeeper.SetValidator(ctx, val1)
 			app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
 			err := app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
@@ -507,7 +507,7 @@ func TestUnbondValidator(t *testing.T) {
 
 	// Create Validators and Delegation
 	val1 := teststaking.NewValidator(t, addrVal1, pk1)
-	val1.Status = sdkstaking.Bonded
+	val1.Status = types.BondStatus(sdkstaking.Bonded)
 	app.StakingKeeper.SetValidator(ctx, val1)
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
 	err := app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)

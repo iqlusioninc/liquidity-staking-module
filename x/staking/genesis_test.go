@@ -38,7 +38,7 @@ func TestValidateGenesis(t *testing.T) {
 		{"jailed and bonded validator", func(data *types.GenesisState) {
 			data.Validators = genValidators1
 			data.Validators[0].Jailed = true
-			data.Validators[0].Status = sdkstaking.Bonded
+			data.Validators[0].Status = types.BondStatus(sdkstaking.Bonded)
 		}, true},
 	}
 
