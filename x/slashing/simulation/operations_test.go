@@ -12,7 +12,6 @@ import (
 	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
 
-	simappparams "cosmossdk.io/simapp/params"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -23,6 +22,7 @@ import (
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	distrtypes "github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
+	simappparams "github.com/iqlusioninc/liquidity-staking-module/app/params"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/simulation"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
 	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"

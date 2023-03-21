@@ -16,8 +16,12 @@ import (
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
+// Querier defines a function type that a module querier must implement to handle
+// custom client queries.
+type SDKQuerier = func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error)
+
 // creates a querier for staking REST endpoints
-func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) sdk.Querier {
+func NewQuerier(k Keeper, legacyQuerierCdc *codec.LegacyAmino) SDKQuerier {
 	return func(ctx sdk.Context, path []string, req abci.RequestQuery) ([]byte, error) {
 		switch path[0] {
 		case types.QueryValidators:
