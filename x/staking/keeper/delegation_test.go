@@ -9,7 +9,6 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/keeper"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/teststaking"
@@ -461,7 +460,7 @@ func TestRedelegationMaxEntries(t *testing.T) {
 	require.Equal(t, valTokens, issuedShares.RoundInt())
 
 	validator2 = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator2, true)
-	require.Equal(t, sdkstaking.Bonded, validator2.Status)
+	require.Equal(t, types.Bonded, validator2.Status)
 
 	maxEntries := app.StakingKeeper.MaxEntries(ctx)
 

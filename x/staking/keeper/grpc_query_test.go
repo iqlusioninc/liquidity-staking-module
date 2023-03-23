@@ -570,7 +570,7 @@ func (suite *KeeperTestSuite) TestGRPCQueryPoolParameters() {
 	// Query Params
 	resp, err := queryClient.Params(gocontext.Background(), &types.QueryParamsRequest{})
 	suite.NoError(err)
-	suite.Equal(app.StakingKeeper.GetParams(ctx), resp.Params)
+	suite.Equal(app.StakingKeeper.GetAllParams(ctx), resp.Params)
 }
 
 func (suite *KeeperTestSuite) TestGRPCQueryHistoricalInfo() {

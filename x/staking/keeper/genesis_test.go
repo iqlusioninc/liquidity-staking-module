@@ -11,7 +11,6 @@ import (
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
@@ -97,11 +96,11 @@ func TestInitGenesis(t *testing.T) {
 	// now make sure the validators are bonded and intra-tx counters are correct
 	resVal, found := app.StakingKeeper.GetLiquidValidator(ctx, sdk.ValAddress(addrs[0]))
 	require.True(t, found)
-	require.Equal(t, sdkstaking.Bonded, resVal.Status)
+	require.Equal(t, types.Bonded, resVal.Status)
 
 	resVal, found = app.StakingKeeper.GetLiquidValidator(ctx, sdk.ValAddress(addrs[1]))
 	require.True(t, found)
-	require.Equal(t, sdkstaking.Bonded, resVal.Status)
+	require.Equal(t, types.Bonded, resVal.Status)
 
 	abcivals := make([]abci.ValidatorUpdate, len(vals))
 

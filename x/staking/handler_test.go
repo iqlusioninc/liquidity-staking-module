@@ -8,9 +8,9 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/teststaking"
+	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 func bootstrapHandlerGenesisTest(t *testing.T, power int64, numAddrs int, accAmount math.Int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
@@ -38,7 +38,7 @@ func TestTokenizeShares(t *testing.T) {
 		valIndex  int64
 		amount    math.Int
 		isSuccess bool
-		expStatus sdkstaking.BondStatus
+		expStatus stakingtypes.BondStatus
 		expJailed bool
 	}{
 		{
@@ -46,7 +46,7 @@ func TestTokenizeShares(t *testing.T) {
 			0, 0,
 			sdk.NewInt(10000),
 			true,
-			sdkstaking.Bonded,
+			stakingtypes.Bonded,
 			false,
 		},
 		{
@@ -54,7 +54,7 @@ func TestTokenizeShares(t *testing.T) {
 			0, 0,
 			sdk.TokensFromConsensusPower(initPower+1, sdk.DefaultPowerReduction),
 			false,
-			sdkstaking.Bonded,
+			stakingtypes.Bonded,
 			false,
 		},
 		{
@@ -62,7 +62,7 @@ func TestTokenizeShares(t *testing.T) {
 			0, 0,
 			sdk.TokensFromConsensusPower(50, sdk.DefaultPowerReduction),
 			true,
-			sdkstaking.Bonded,
+			stakingtypes.Bonded,
 			false,
 		},
 		{
@@ -70,7 +70,7 @@ func TestTokenizeShares(t *testing.T) {
 			1, 0,
 			sdk.NewInt(1000),
 			true,
-			sdkstaking.Bonded,
+			stakingtypes.Bonded,
 			false,
 		},
 		{
@@ -78,7 +78,7 @@ func TestTokenizeShares(t *testing.T) {
 			1, 0,
 			sdk.NewInt(20000),
 			false,
-			sdkstaking.Bonded,
+			stakingtypes.Bonded,
 			false,
 		},
 	}

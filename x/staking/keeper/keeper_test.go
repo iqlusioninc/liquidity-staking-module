@@ -58,13 +58,13 @@ func TestParams(t *testing.T) {
 	expParams := types.DefaultParams()
 
 	// check that the empty keeper loads the default
-	resParams := app.StakingKeeper.GetParams(ctx)
+	resParams := app.StakingKeeper.GetAllParams(ctx)
 	require.True(t, expParams.Equal(resParams))
 
 	// modify a params, save, and retrieve
 	expParams.MaxValidators = 777
 	app.StakingKeeper.SetParams(ctx, expParams)
-	resParams = app.StakingKeeper.GetParams(ctx)
+	resParams = app.StakingKeeper.GetAllParams(ctx)
 	require.True(t, expParams.Equal(resParams))
 }
 
