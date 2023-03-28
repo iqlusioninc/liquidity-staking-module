@@ -9,9 +9,9 @@ import (
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkstakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
 	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
-	sdkstakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
 // Keeper of the slashing store

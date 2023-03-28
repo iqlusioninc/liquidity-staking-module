@@ -1,6 +1,7 @@
 package simapp
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"testing"
@@ -9,18 +10,21 @@ import (
 	abci "github.com/cometbft/cometbft/abci/types"
 	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/golang/mock/gomock"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking"
 	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	mocks "github.com/cosmos/cosmos-sdk/testutil/mock"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkmodule "github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/vesting"
 	authzmodule "github.com/cosmos/cosmos-sdk/x/authz/module"
+	"github.com/cosmos/cosmos-sdk/x/bank"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/capability"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
@@ -81,7 +85,7 @@ func TestRunMigrations(t *testing.T) {
 	bApp.SetCommitMultiStoreTracer(nil)
 	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	app.BaseApp = bApp
-	app.configurator = sdkmodule.NewConfigurator(app.appCodec, bApp.MsgServiceRouter(), app.GRPCQueryRouter())
+	configurator := sdkmodule.NewConfigurator(app.appCodec, bApp.MsgServiceRouter(), app.GRPCQueryRouter())
 
 	// We register all modules on the Configurator, except x/bank. x/bank will
 	// serve as the test subject on which we run the migration tests.
@@ -96,10 +100,10 @@ func TestRunMigrations(t *testing.T) {
 			}
 		}
 		if module, ok := module.(sdkmodule.HasServices); ok {
-			module.RegisterServices(app.configurator)
+			module.RegisterServices(configurator)
 		}
 	}
-	app.mm.RegisterServices(app.configurator)
+	app.mm.RegisterServices(configurator)
 
 	// Initialize the chain
 	app.InitChain(abci.RequestInitChain{})
@@ -204,49 +208,49 @@ func TestRunMigrations(t *testing.T) {
 	}
 }
 
-// func TestInitGenesisOnMigration(t *testing.T) {
-// 	db := dbm.NewMemDB()
-// 	encCfg := MakeTestEncodingConfig()
-// 	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
-// 	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
-// 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
+func TestInitGenesisOnMigration(t *testing.T) {
+	db := dbm.NewMemDB()
+	encCfg := MakeTestEncodingConfig()
+	logger := log.NewTMLogger(log.NewSyncWriter(os.Stdout))
+	app := NewSimApp(logger, db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, encCfg, EmptyAppOptions{})
+	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 
-// 	// Create a mock module. This module will serve as the new module we're
-// 	// adding during a migration.
-// 	mockCtrl := gomock.NewController(t)
-// 	t.Cleanup(mockCtrl.Finish)
-// 	mockModule := mocks.NewMockAppModule(mockCtrl)
-// 	mockDefaultGenesis := json.RawMessage(`{"key": "value"}`)
-// 	mockModule.EXPECT().DefaultGenesis(gomock.Eq(app.appCodec)).Times(1).Return(mockDefaultGenesis)
-// 	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(app.appCodec), gomock.Eq(mockDefaultGenesis)).Times(1).Return(nil)
-// 	mockModule.EXPECT().ConsensusVersion().Times(1).Return(uint64(0))
+	// Create a mock module. This module will serve as the new module we're
+	// adding during a migration.
+	mockCtrl := gomock.NewController(t)
+	t.Cleanup(mockCtrl.Finish)
+	mockModule := mocks.NewMockAppModuleWithAllExtensions(mockCtrl)
+	mockDefaultGenesis := json.RawMessage(`{"key": "value"}`)
+	mockModule.EXPECT().DefaultGenesis(gomock.Eq(app.appCodec)).Times(1).Return(mockDefaultGenesis)
+	mockModule.EXPECT().InitGenesis(gomock.Eq(ctx), gomock.Eq(app.appCodec), gomock.Eq(mockDefaultGenesis)).Times(1).Return(nil)
+	mockModule.EXPECT().ConsensusVersion().Times(1).Return(uint64(0))
 
-// 	app.mm.Modules["mock"] = mockModule
+	app.mm.Modules["mock"] = mockModule
 
-// 	// Run migrations only for "mock" module. We exclude it from
-// 	// the VersionMap to simulate upgrading with a new module.
-// 	_, err := app.mm.RunMigrations(ctx, app.configurator,
-// 		sdkmodule.VersionMap{
-// 			"bank":         bank.AppModule{}.ConsensusVersion(),
-// 			"auth":         auth.AppModule{}.ConsensusVersion(),
-// 			"authz":        authzmodule.AppModule{}.ConsensusVersion(),
-// 			"staking":      staking.AppModule{}.ConsensusVersion(),
-// 			"mint":         mint.AppModule{}.ConsensusVersion(),
-// 			"distribution": distribution.AppModule{}.ConsensusVersion(),
-// 			"slashing":     slashing.AppModule{}.ConsensusVersion(),
-// 			"gov":          gov.AppModule{}.ConsensusVersion(),
-// 			"params":       params.AppModule{}.ConsensusVersion(),
-// 			"upgrade":      upgrade.AppModule{}.ConsensusVersion(),
-// 			"vesting":      vesting.AppModule{}.ConsensusVersion(),
-// 			"feegrant":     feegrantmodule.AppModule{}.ConsensusVersion(),
-// 			"evidence":     evidence.AppModule{}.ConsensusVersion(),
-// 			"crisis":       crisis.AppModule{}.ConsensusVersion(),
-// 			"genutil":      genutil.AppModule{}.ConsensusVersion(),
-// 			"capability":   capability.AppModule{}.ConsensusVersion(),
-// 		},
-// 	)
-// 	require.NoError(t, err)
-// }
+	// Run migrations only for "mock" module. We exclude it from
+	// the VersionMap to simulate upgrading with a new module.
+	_, err := app.mm.RunMigrations(ctx, app.configurator,
+		sdkmodule.VersionMap{
+			"bank":         bank.AppModule{}.ConsensusVersion(),
+			"auth":         auth.AppModule{}.ConsensusVersion(),
+			"authz":        authzmodule.AppModule{}.ConsensusVersion(),
+			"staking":      staking.AppModule{}.ConsensusVersion(),
+			"mint":         mint.AppModule{}.ConsensusVersion(),
+			"distribution": distribution.AppModule{}.ConsensusVersion(),
+			"slashing":     slashing.AppModule{}.ConsensusVersion(),
+			"gov":          gov.AppModule{}.ConsensusVersion(),
+			"params":       params.AppModule{}.ConsensusVersion(),
+			"upgrade":      upgrade.AppModule{}.ConsensusVersion(),
+			"vesting":      vesting.AppModule{}.ConsensusVersion(),
+			"feegrant":     feegrantmodule.AppModule{}.ConsensusVersion(),
+			"evidence":     evidence.AppModule{}.ConsensusVersion(),
+			"crisis":       crisis.AppModule{}.ConsensusVersion(),
+			"genutil":      genutil.AppModule{}.ConsensusVersion(),
+			"capability":   capability.AppModule{}.ConsensusVersion(),
+		},
+	)
+	require.NoError(t, err)
+}
 
 func TestUpgradeStateOnGenesis(t *testing.T) {
 	encCfg := MakeTestEncodingConfig()
