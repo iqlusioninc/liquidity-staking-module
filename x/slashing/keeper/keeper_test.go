@@ -12,8 +12,8 @@ import (
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/testslashing"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking"
-	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/teststaking"
+	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 // Test a new validator entering the validator set

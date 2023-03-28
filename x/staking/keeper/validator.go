@@ -26,7 +26,7 @@ func (k Keeper) GetLiquidValidator(ctx sdk.Context, addr sdk.ValAddress) (valida
 }
 
 // get a single validator as sdktypes for other module use
-func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator sdkstaking.Validator, found bool) {
+func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator types.Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
 
 	value := store.Get(types.GetValidatorKey(addr))
@@ -34,7 +34,7 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator sd
 		return validator, false
 	}
 
-	validator = sdkstaking.MustUnmarshalValidator(k.cdc, value)
+	validator = types.MustUnmarshalValidator(k.cdc, value)
 	return validator, true
 }
 
