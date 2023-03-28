@@ -7,7 +7,6 @@ import (
 	"cosmossdk.io/math"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
@@ -23,7 +22,7 @@ func init() {
 
 // createTestInput Returns a simapp with custom StakingKeeper
 // to avoid messing with the hooks.
-func createTestInput(t *testing.T) (*codec.LegacyAmino, *simapp.SimApp, sdk.Context) {
+func createTestInput(t *testing.T) (*simapp.SimApp, sdk.Context) {
 	app := simapp.Setup(t, false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
@@ -34,7 +33,7 @@ func createTestInput(t *testing.T) (*codec.LegacyAmino, *simapp.SimApp, sdk.Cont
 		app.BankKeeper,
 		app.GetSubspace(types.ModuleName),
 	)
-	return app.LegacyAmino(), app, ctx
+	return app, ctx
 }
 
 // intended to be used with require/assert:  require.True(ValEq(...))

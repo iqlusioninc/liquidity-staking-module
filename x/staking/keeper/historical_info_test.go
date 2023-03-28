@@ -25,7 +25,7 @@ func IsValSetSorted(data []types.Validator, powerReduction math.Int) bool {
 }
 
 func TestHistoricalInfo(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
@@ -52,7 +52,7 @@ func TestHistoricalInfo(t *testing.T) {
 }
 
 func TestTrackHistoricalInfo(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
@@ -134,7 +134,7 @@ func TestTrackHistoricalInfo(t *testing.T) {
 }
 
 func TestGetAllHistoricalInfo(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 	// clear historical info
 	infos := app.StakingKeeper.GetAllHistoricalInfo(ctx)
 	require.Len(t, infos, 1)

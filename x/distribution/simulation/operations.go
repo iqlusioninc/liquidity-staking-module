@@ -23,7 +23,7 @@ const (
 	OpWeightMsgWithdrawDelegationReward    = "op_weight_msg_withdraw_delegation_reward"    //nolint:gosec
 	OpWeightMsgWithdrawValidatorCommission = "op_weight_msg_withdraw_validator_commission" //nolint:gosec
 	OpWeightMsgFundCommunityPool           = "op_weight_msg_fund_community_pool"           //nolint:gosec
-	OpWeightMsgDeposit                     = "op_weight_msg_deposit"
+	OpWeightMsgDeposit                     = "op_weight_msg_deposit"                       //nolint:gosec
 
 	DefaultWeightMsgSetWithdrawAddress          int = 50
 	DefaultWeightMsgWithdrawDelegationReward    int = 50

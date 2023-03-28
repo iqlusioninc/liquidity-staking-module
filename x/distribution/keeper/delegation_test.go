@@ -816,7 +816,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	lastEvent := events[len(events)-1]
 	hasValue := false
 	for _, attr := range lastEvent.Attributes {
-		if string(attr.Key) == "amount" && string(attr.Value) == "0" {
+		if attr.Key == "amount" && attr.Value == "0" {
 			hasValue = true
 		}
 	}

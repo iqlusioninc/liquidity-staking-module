@@ -17,7 +17,7 @@ import (
 
 // tests GetLiquidDelegation, GetDelegatorDelegations, SetDelegation, RemoveDelegation, GetDelegatorDelegations
 func TestDelegation(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 
 	// remove genesis validator delegations
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
@@ -146,7 +146,7 @@ func TestDelegation(t *testing.T) {
 
 // tests Get/Set/Remove UnbondingDelegation
 func TestUnbondingDelegation(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 
 	delAddrs := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(10000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(delAddrs)
@@ -192,7 +192,7 @@ func TestUnbondingDelegation(t *testing.T) {
 }
 
 func TestUnbondDelegation(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 
 	delAddrs := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(10000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(delAddrs)
@@ -231,7 +231,7 @@ func TestUnbondDelegation(t *testing.T) {
 }
 
 func TestUnbondingDelegationsMaxEntries(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(10000))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
@@ -312,7 +312,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 // Make sure that that the retrieving the delegations doesn't affect the state
 func TestGetRedelegationsFromSrcValidator(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
@@ -339,7 +339,7 @@ func TestGetRedelegationsFromSrcValidator(t *testing.T) {
 
 // tests Get/Set/Remove/Has UnbondingDelegation
 func TestRedelegation(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
@@ -402,7 +402,7 @@ func TestRedelegation(t *testing.T) {
 }
 
 func TestRedelegateToSameValidator(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
@@ -431,7 +431,7 @@ func TestRedelegateToSameValidator(t *testing.T) {
 }
 
 func TestRedelegationMaxEntries(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
@@ -487,7 +487,7 @@ func TestRedelegationMaxEntries(t *testing.T) {
 }
 
 func TestExemptDelegationUndelegate(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
@@ -564,7 +564,7 @@ func TestExemptDelegationUndelegate(t *testing.T) {
 }
 
 func TestExemptDelegationRedelegate(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)

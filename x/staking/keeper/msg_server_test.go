@@ -17,7 +17,7 @@ import (
 )
 
 func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 
 	testCases := []struct {
 		name                          string
@@ -181,7 +181,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, app, ctx = createTestInput(t)
+			app, ctx = createTestInput(t)
 			addrs := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
 			addrAcc1, addrAcc2 := addrs[0], addrs[1]
 			addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
@@ -375,7 +375,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 }
 
 func TestTransferTokenizeShareRecord(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 3, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
 	addrAcc1, addrAcc2, valAcc := addrs[0], addrs[1], addrs[2]
@@ -419,7 +419,7 @@ func TestTransferTokenizeShareRecord(t *testing.T) {
 }
 
 func TestExemptDelegation(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 
 	testCases := []struct {
 		name             string
@@ -449,7 +449,7 @@ func TestExemptDelegation(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, app, ctx = createTestInput(t)
+			app, ctx = createTestInput(t)
 			addrs := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
 			addrAcc1 := addrs[0]
 			addrVal1 := sdk.ValAddress(addrAcc1)
@@ -496,7 +496,7 @@ func TestExemptDelegation(t *testing.T) {
 }
 
 func TestUnbondValidator(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 	addrs := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
 	addrAcc1 := addrs[0]
 	addrVal1 := sdk.ValAddress(addrAcc1)

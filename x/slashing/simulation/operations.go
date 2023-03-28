@@ -6,7 +6,6 @@ import (
 
 	simappparams "cosmossdk.io/simapp/params"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
 	helpers "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -25,7 +24,7 @@ const (
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper,
+	ak types.AccountKeeper,
 	bk types.BankKeeper, k keeper.Keeper, sk types.StakingKeeper,
 ) simulation.WeightedOperations {
 	var weightMsgUnjail int
