@@ -12,7 +12,7 @@ const (
 	EventTypeTokenizeShares              = "tokenize_shares"
 	EventTypeRedeemShares                = "redeem_shares"
 	EventTypeTransferTokenizeShareRecord = "transfer_tokenize_share_record"
-	EventTypeExemptDelegation            = "exempt_delegation"
+	EventTypeValidatorBondDelegation     = "validator_bond_delegation"
 
 	AttributeKeyValidator      = "validator"
 	AttributeKeyCommissionRate = "commission_rate"

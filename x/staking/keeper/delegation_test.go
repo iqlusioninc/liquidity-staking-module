@@ -503,7 +503,7 @@ func TestExemptDelegationUndelegate(t *testing.T) {
 
 	// set exemption factor
 	params := app.StakingKeeper.GetParams(ctx)
-	params.ExemptionFactor = sdk.NewDec(1)
+	params.ValidatorBondFactor = sdk.NewDec(1)
 	app.StakingKeeper.SetParams(ctx, params)
 
 	// convert to exempt delegation
@@ -582,7 +582,7 @@ func TestExemptDelegationRedelegate(t *testing.T) {
 
 	// set exemption factor
 	params := app.StakingKeeper.GetParams(ctx)
-	params.ExemptionFactor = sdk.NewDec(1)
+	params.ValidatorBondFactor = sdk.NewDec(1)
 	app.StakingKeeper.SetParams(ctx, params)
 
 	// convert to exempt delegation

@@ -54,9 +54,9 @@ func (k Keeper) MinCommissionRate(ctx sdk.Context) (res sdk.Dec) {
 	return
 }
 
-// ExemptionFactor - exemption factor for all validators
-func (k Keeper) ExemptionFactor(ctx sdk.Context) (res sdk.Dec) {
-	k.paramstore.Get(ctx, types.KeyExemptionFactor, &res)
+//  - exemption factor for all validators
+func (k Keeper) ValidatorBondFactor(ctx sdk.Context) (res sdk.Dec) {
+	k.paramstore.Get(ctx, types.KeyValidatorBondFactor, &res)
 	return
 }
 
@@ -69,7 +69,7 @@ func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 		k.HistoricalEntries(ctx),
 		k.BondDenom(ctx),
 		k.MinCommissionRate(ctx),
-		k.ExemptionFactor(ctx),
+		k.ValidatorBondFactor(ctx),
 	)
 }
 

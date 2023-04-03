@@ -210,7 +210,7 @@ message Delegation {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  // has this delegation been marked as exempt.
+  // has this delegation been marked as a validator self bond.
   bool validator_bond = 4;
 }
 
@@ -313,9 +313,10 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  // exemption_factor is required for tokenize share and undelegation check for network safety
-  string exemption_factor = 7 [
-    (gogoproto.moretags) = "yaml:\"exemption_factor\"",
+  // validator_bond_factor is required as a safety check for tokenizing shares and 
+  // delegations from liquid staking providers
+  string validator_bond_factor = 7 [
+    (gogoproto.moretags) = "yaml:\"validator_bond_factor\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];

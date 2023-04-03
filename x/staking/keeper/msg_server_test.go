@@ -29,7 +29,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 		targetVestingDelAfterShare    math.Int
 		targetVestingDelAfterRedeem   math.Int
 		slashFactor                   sdk.Dec
-		exemptionFactor               sdk.Dec
+		validatorBondFactor           sdk.Dec
 		exemptDelegate                bool
 		exemptDelegatorIndex          int
 		expTokenizeErr                bool
@@ -44,7 +44,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			tokenizeShareAmount:           app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			redeemAmount:                  app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			slashFactor:                   sdk.ZeroDec(),
-			exemptionFactor:               sdk.NewDec(-1),
+			validatorBondFactor:           sdk.NewDec(-1),
 			exemptDelegate:                false,
 			expTokenizeErr:                false,
 			expRedeemErr:                  false,
@@ -58,7 +58,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			tokenizeShareAmount:           app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			redeemAmount:                  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			slashFactor:                   sdk.NewDecWithPrec(10, 2),
-			exemptionFactor:               sdk.NewDec(-1),
+			validatorBondFactor:           sdk.NewDec(-1),
 			exemptDelegate:                false,
 			expTokenizeErr:                false,
 			expRedeemErr:                  false,
@@ -72,7 +72,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			tokenizeShareAmount:           app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			redeemAmount:                  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			slashFactor:                   sdk.ZeroDec(),
-			exemptionFactor:               sdk.NewDec(-1),
+			validatorBondFactor:           sdk.NewDec(-1),
 			exemptDelegate:                false,
 			expTokenizeErr:                false,
 			expRedeemErr:                  false,
@@ -86,7 +86,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			tokenizeShareAmount: app.StakingKeeper.TokensFromConsensusPower(ctx, 30),
 			redeemAmount:        app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			slashFactor:         sdk.ZeroDec(),
-			exemptionFactor:     sdk.NewDec(-1),
+			validatorBondFactor: sdk.NewDec(-1),
 			exemptDelegate:      false,
 			expTokenizeErr:      true,
 			expRedeemErr:        false,
@@ -98,7 +98,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			tokenizeShareAmount: app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			redeemAmount:        app.StakingKeeper.TokensFromConsensusPower(ctx, 40),
 			slashFactor:         sdk.ZeroDec(),
-			exemptionFactor:     sdk.NewDec(-1),
+			validatorBondFactor: sdk.NewDec(-1),
 			exemptDelegate:      false,
 			expTokenizeErr:      false,
 			expRedeemErr:        true,
@@ -110,7 +110,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			tokenizeShareAmount:         app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			redeemAmount:                app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			slashFactor:                 sdk.ZeroDec(),
-			exemptionFactor:             sdk.NewDec(-1),
+			validatorBondFactor:         sdk.NewDec(-1),
 			exemptDelegate:              false,
 			expTokenizeErr:              true,
 			expRedeemErr:                false,
@@ -125,7 +125,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			targetVestingDelAfterShare:  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			slashFactor:                 sdk.ZeroDec(),
-			exemptionFactor:             sdk.NewDec(-1),
+			validatorBondFactor:         sdk.NewDec(-1),
 			exemptDelegate:              false,
 			expTokenizeErr:              false,
 			expRedeemErr:                false,
@@ -140,7 +140,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			targetVestingDelAfterShare:  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			slashFactor:                 sdk.ZeroDec(),
-			exemptionFactor:             sdk.NewDec(10),
+			validatorBondFactor:         sdk.NewDec(10),
 			exemptDelegate:              true,
 			exemptDelegatorIndex:        1,
 			expTokenizeErr:              true,
@@ -156,7 +156,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			targetVestingDelAfterShare:  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			slashFactor:                 sdk.ZeroDec(),
-			exemptionFactor:             sdk.NewDec(10),
+			validatorBondFactor:         sdk.NewDec(10),
 			exemptDelegate:              false,
 			expTokenizeErr:              true,
 			expRedeemErr:                false,
@@ -171,7 +171,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			targetVestingDelAfterShare:  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			slashFactor:                 sdk.ZeroDec(),
-			exemptionFactor:             sdk.NewDec(10),
+			validatorBondFactor:         sdk.NewDec(10),
 			exemptDelegate:              true,
 			exemptDelegatorIndex:        0,
 			expTokenizeErr:              false,
@@ -189,7 +189,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 
 			// set exemption factor
 			params := app.StakingKeeper.GetParams(ctx)
-			params.ExemptionFactor = tc.exemptionFactor
+			params.ValidatorBondFactor = tc.validatorBondFactor
 			app.StakingKeeper.SetParams(ctx, params)
 
 			if !tc.vestingAmount.IsZero() {
