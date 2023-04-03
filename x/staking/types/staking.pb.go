@@ -9,6 +9,7 @@ import (
 	fmt "fmt"
 	_ "github.com/cosmos/cosmos-proto"
 	types2 "github.com/cosmos/cosmos-sdk/codec/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	types3 "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
@@ -318,7 +319,7 @@ type Validator struct {
 	// jailed defined whether the validator has been jailed from bonded status or not.
 	Jailed bool `protobuf:"varint,3,opt,name=jailed,proto3" json:"jailed,omitempty"`
 	// status is the validator status (bonded/unbonding/unbonded).
-	Status BondStatus `protobuf:"varint,4,opt,name=status,proto3,enum=liquidstaking.staking.v1beta1.BondStatus" json:"status,omitempty"`
+	Status sdkstaking.BondStatus `protobuf:"varint,4,opt,name=status,proto3,enum=liquidstaking.staking.v1beta1.BondStatus" json:"status,omitempty"`
 	// tokens define the delegated tokens (incl. self-delegation).
 	Tokens github_com_cosmos_cosmos_sdk_types.Int `protobuf:"bytes,5,opt,name=tokens,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Int" json:"tokens"`
 	// delegator_shares defines total shares issued to a validator's delegators.
@@ -4387,7 +4388,7 @@ func (m *Validator) Unmarshal(dAtA []byte) error {
 				}
 				b := dAtA[iNdEx]
 				iNdEx++
-				m.Status |= BondStatus(b&0x7F) << shift
+				m.Status |= sdkstaking.BondStatus(b&0x7F) << shift
 				if b < 0x80 {
 					break
 				}
