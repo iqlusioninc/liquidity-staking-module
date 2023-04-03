@@ -211,7 +211,7 @@ message Delegation {
     (gogoproto.nullable)   = false
   ];
   // has this delegation been marked as exempt.
-  bool exempt = 4;
+  bool validator_bond = 4;
 }
 
 // UnbondingDelegation stores all of a single delegator's unbonding bonds

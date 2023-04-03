@@ -482,7 +482,7 @@ func TestExemptDelegation(t *testing.T) {
 				// check exempt true
 				delegation, found := app.StakingKeeper.GetLiquidDelegation(ctx, addrAcc1, addrVal1)
 				require.True(t, found)
-				require.True(t, delegation.Exempt)
+				require.True(t, delegation.ValidatorBond)
 
 				// check total exempt shares value increase
 				validator, found := app.StakingKeeper.GetLiquidValidator(ctx, addrVal1)
