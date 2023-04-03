@@ -54,9 +54,15 @@ func (k Keeper) MinCommissionRate(ctx sdk.Context) (res sdk.Dec) {
 	return
 }
 
-//  - validator bond factor for all validators
+//  Validator bond factor for all validators
 func (k Keeper) ValidatorBondFactor(ctx sdk.Context) (res sdk.Dec) {
 	k.paramstore.Get(ctx, types.KeyValidatorBondFactor, &res)
+	return
+}
+
+//  Global liquid staking cap across all liquid staking providers
+func (k Keeper) GlobalLiquidStakingCap(ctx sdk.Context) (res sdk.Dec) {
+	k.paramstore.Get(ctx, types.KeyGlobalLiquidStakingCap, &res)
 	return
 }
 
@@ -70,6 +76,7 @@ func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 		k.BondDenom(ctx),
 		k.MinCommissionRate(ctx),
 		k.ValidatorBondFactor(ctx),
+		k.GlobalLiquidStakingCap(ctx),
 	)
 }
 
