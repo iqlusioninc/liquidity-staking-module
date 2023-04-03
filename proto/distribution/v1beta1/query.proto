@@ -6,6 +6,7 @@ import "gogoproto/gogo.proto";
 import "google/api/annotations.proto";
 import "cosmos/base/v1beta1/coin.proto";
 import "distribution/v1beta1/distribution.proto";
+import "cosmos/distribution/v1beta1/query.proto";
 import "cosmos_proto/cosmos.proto";
 
 option go_package = "github.com/iqlusioninc/liquidity-staking-module/x/distribution/types";
@@ -33,6 +34,11 @@ service Query {
   // ValidatorSlashes queries slash events of a validator.
   rpc ValidatorSlashes(QueryValidatorSlashesRequest) returns (QueryValidatorSlashesResponse) {
     option (google.api.http).get = "/cosmos/distribution/v1beta1/validators/{validator_address}/slashes";
+  }
+
+  // DelegationRewards queries the total rewards accrued by a delegation.
+  rpc DelegationRewards(cosmos.distribution.v1beta1.QueryDelegationRewardsRequest) returns (cosmos.distribution.v1beta1.QueryDelegationRewardsResponse) {
+    option (google.api.http).get = "/cosmos/distribution/v1beta1/delegators/{delegator_address}/rewards/{validator_address}";
   }
 
   // DelegationTotalRewards queries the total rewards accrued by a each
