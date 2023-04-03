@@ -557,7 +557,7 @@ func TestExemptDelegationUndelegate(t *testing.T) {
 	require.NoError(t, err)
 
 	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
-	require.Equal(t, validator.TotalExemptShares, sdk.ZeroDec())
+	require.Equal(t, validator.TotalValidatorBondShares, sdk.ZeroDec())
 }
 
 func TestExemptDelegationRedelegate(t *testing.T) {
@@ -638,5 +638,5 @@ func TestExemptDelegationRedelegate(t *testing.T) {
 	require.NoError(t, err)
 
 	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
-	require.Equal(t, validator.TotalExemptShares, sdk.ZeroDec())
+	require.Equal(t, validator.TotalValidatorBondShares, sdk.ZeroDec())
 }

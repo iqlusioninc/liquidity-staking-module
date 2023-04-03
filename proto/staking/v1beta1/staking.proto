@@ -120,14 +120,15 @@ message Validator {
   google.protobuf.Timestamp unbonding_time = 9 [(gogoproto.nullable) = false, (gogoproto.stdtime) = true];
   // commission defines the commission parameters.
   Commission commission = 10 [(gogoproto.nullable) = false];
-  // Number of shares marked_exempt_to_this_validator
-  string total_exempt_shares = 11[
-    (gogoproto.moretags)   = "yaml:\"total_exempt_shares\"",
+  // Number of shares self bonded from the validator
+  string total_validator_bond_shares = 11 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  string total_tokenized_shares = 12[
-    (gogoproto.moretags)   = "yaml:\"total_tokenized_shares\"",
+  // Total number of shares either tokenized or owned by a liquid staking provider 
+  string total_liquid_shares = 12 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
