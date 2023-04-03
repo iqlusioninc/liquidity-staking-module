@@ -12,6 +12,10 @@ import "tendermint/types/types.proto";
 
 option go_package = "github.com/iqlusioninc/liquidity-staking-module/x/staking/types";
 
+// NOTE: After generating the protos, the `BondStatus` field in the `Validator` struct
+// should be modified in `staking.pb.go` so that it leverages the type from the sdk
+// instead of LSM
+
 // HistoricalInfo contains header and validator information for a given block.
 // It is stored as part of staking module's state, which persists the `n` most
 // recent HistoricalInfo
