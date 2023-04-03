@@ -293,13 +293,13 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 			return nil, sdkstaking.ErrNoValidatorFound
 		}
 
-		maxTokenizeShareAfter := validator.TotalExemptShares.Sub(shares).Mul(exemptionFactor)
-		if maxTokenizeShareAfter.LT(validator.TotalTokenizedShares) {
+		maxTokenizeShareAfter := validator.TotalValidatorBondShares.Sub(shares).Mul(exemptionFactor)
+		if maxTokenizeShareAfter.LT(validator.TotalLiquidShares) {
 			return nil, types.ErrInsufficientExemptShares
 		}
 
 		// reduce exempt delegation on redelegation
-		validator.TotalExemptShares = validator.TotalExemptShares.Sub(shares)
+		validator.TotalValidatorBondShares = validator.TotalValidatorBondShares.Sub(shares)
 		k.SetValidator(ctx, validator)
 	}
 
@@ -389,13 +389,13 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	// tokenize share vs exempt delegation check if exempt delegation
 	exemptionFactor := k.ExemptionFactor(ctx)
 	if delegation.Exempt && !exemptionFactor.IsNegative() {
-		maxTokenizeShareAfter := validator.TotalExemptShares.Sub(shares).Mul(exemptionFactor)
-		if maxTokenizeShareAfter.LT(validator.TotalTokenizedShares) {
+		maxTokenizeShareAfter := validator.TotalValidatorBondShares.Sub(shares).Mul(exemptionFactor)
+		if maxTokenizeShareAfter.LT(validator.TotalLiquidShares) {
 			return nil, types.ErrInsufficientExemptShares
 		}
 
 		// reduce total exempt delegation on unbond
-		validator.TotalExemptShares = validator.TotalExemptShares.Sub(shares)
+		validator.TotalValidatorBondShares = validator.TotalValidatorBondShares.Sub(shares)
 		k.SetValidator(ctx, validator)
 	}
 
@@ -627,8 +627,8 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	// exempt shares check before tokenize operation
 	exemptionFactor := k.ExemptionFactor(ctx)
 	if !exemptionFactor.IsNegative() {
-		maxValTotalShare := validator.TotalExemptShares.Mul(exemptionFactor)
-		if validator.TotalTokenizedShares.Add(shares).GT(maxValTotalShare) {
+		maxValTotalShare := validator.TotalValidatorBondShares.Mul(exemptionFactor)
+		if validator.TotalLiquidShares.Add(shares).GT(maxValTotalShare) {
 			return nil, types.ErrInsufficientExemptShares
 		}
 	}
@@ -695,7 +695,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	}
 
 	validator, _ = k.GetLiquidValidator(ctx, valAddr)
-	validator.TotalTokenizedShares = validator.TotalTokenizedShares.Add(shares)
+	validator.TotalLiquidShares = validator.TotalLiquidShares.Add(shares)
 	k.SetValidator(ctx, validator)
 
 	ctx.EventManager().EmitEvent(
@@ -807,7 +807,7 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 	}
 
 	validator, _ = k.GetLiquidValidator(ctx, valAddr)
-	validator.TotalTokenizedShares = validator.TotalTokenizedShares.Sub(shares)
+	validator.TotalLiquidShares = validator.TotalLiquidShares.Sub(shares)
 	k.SetValidator(ctx, validator)
 
 	ctx.EventManager().EmitEvent(
@@ -891,7 +891,7 @@ func (k msgServer) ExemptDelegation(goCtx context.Context, msg *types.MsgExemptD
 	if !delegation.Exempt {
 		delegation.Exempt = true
 		k.SetDelegation(ctx, delegation)
-		validator.TotalExemptShares = validator.TotalExemptShares.Add(delegation.Shares)
+		validator.TotalValidatorBondShares = validator.TotalValidatorBondShares.Add(delegation.Shares)
 		k.SetValidator(ctx, validator)
 
 		ctx.EventManager().EmitEvent(
