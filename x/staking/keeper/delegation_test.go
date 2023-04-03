@@ -486,7 +486,7 @@ func TestRedelegationMaxEntries(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestExemptDelegationUndelegate(t *testing.T) {
+func TestValidatorBondUndelegate(t *testing.T) {
 	app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
@@ -504,18 +504,18 @@ func TestExemptDelegationUndelegate(t *testing.T) {
 	validator := teststaking.NewValidator(t, addrVals[0], PKs[0])
 	app.StakingKeeper.SetValidator(ctx, validator)
 
-	// set exemption factor
+	// set validator bond factor
 	params := app.StakingKeeper.GetAllParams(ctx)
 	params.ValidatorBondFactor = sdk.NewDec(1)
 	app.StakingKeeper.SetParams(ctx, params)
 
-	// convert to exempt delegation
+	// convert to validator self-bond
 	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
 
 	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
 	err := delegateCoinsFromAccount(ctx, app, addrDels[0], startTokens, validator)
 	require.NoError(t, err)
-	_, err = msgServer.ExemptDelegation(sdk.WrapSDKContext(ctx), &types.MsgExemptDelegation{
+	_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
 		DelegatorAddress: addrDels[0].String(),
 		ValidatorAddress: addrVals[0].String(),
 	})
@@ -563,7 +563,7 @@ func TestExemptDelegationUndelegate(t *testing.T) {
 	require.Equal(t, validator.TotalValidatorBondShares, sdk.ZeroDec())
 }
 
-func TestExemptDelegationRedelegate(t *testing.T) {
+func TestValidatorBondRedelegate(t *testing.T) {
 	app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
@@ -583,18 +583,18 @@ func TestExemptDelegationRedelegate(t *testing.T) {
 	validator2 := teststaking.NewValidator(t, addrVals[1], PKs[1])
 	app.StakingKeeper.SetValidator(ctx, validator2)
 
-	// set exemption factor
+	// set validator bond factor
 	params := app.StakingKeeper.GetAllParams(ctx)
 	params.ValidatorBondFactor = sdk.NewDec(1)
 	app.StakingKeeper.SetParams(ctx, params)
 
-	// convert to exempt delegation
+	// convert to validator self-bond
 	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
 
 	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
 	err := delegateCoinsFromAccount(ctx, app, addrDels[0], startTokens, validator)
 	require.NoError(t, err)
-	_, err = msgServer.ExemptDelegation(sdk.WrapSDKContext(ctx), &types.MsgExemptDelegation{
+	_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
 		DelegatorAddress: addrDels[0].String(),
 		ValidatorAddress: addrVals[0].String(),
 	})

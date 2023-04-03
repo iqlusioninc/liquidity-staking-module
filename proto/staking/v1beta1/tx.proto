@@ -54,9 +54,8 @@ service Msg {
   rpc TransferTokenizeShareRecord(MsgTransferTokenizeShareRecord)
       returns (MsgTransferTokenizeShareRecordResponse);
 
-  // ExemptDelegation defines a method for performing exemption of
-  // delegated coins from a delegator to a validator.
-  rpc ExemptDelegation(MsgExemptDelegation) returns (MsgExemptDelegationResponse);
+  // ValidatorBond defines a method for performing a validator self-bond
+  rpc ValidatorBond(MsgValidatorBond) returns (MsgValidatorBondResponse);
 }
 
 // MsgCreateValidator defines a SDK message for creating a new validator.
@@ -174,13 +173,10 @@ message MsgTokenizeShares {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1
-      [ (gogoproto.moretags) = "yaml:\"delegator_address\"" ];
-  string validator_address = 2
-      [ (gogoproto.moretags) = "yaml:\"validator_address\"" ];
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   cosmos.base.v1beta1.Coin amount = 3 [ (gogoproto.nullable) = false ];
-  string tokenized_share_owner = 4
-      [ (gogoproto.moretags) = "yaml:\"tokenized_share_owner\"" ];
+  string tokenized_share_owner = 4 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
 
 message MsgTokenizeSharesResponse {
@@ -191,8 +187,7 @@ message MsgRedeemTokensforShares {
   option (gogoproto.equal) = false;
   option (gogoproto.goproto_getters) = false;
 
-  string delegator_address = 1
-      [ (gogoproto.moretags) = "yaml:\"delegator_address\"" ];
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
   cosmos.base.v1beta1.Coin amount = 2 [ (gogoproto.nullable) = false ];
 }
 
@@ -211,13 +206,13 @@ message MsgTransferTokenizeShareRecord {
 
 message MsgTransferTokenizeShareRecordResponse {}
 
-// MsgExemptDelegation defines a SDK message for performing exemption of delegated coins
+// MsgValidatorBond defines a SDK message for performing validator self-bond of delegated coins
 // from a delegator to a validator.
-message MsgExemptDelegation {
+message MsgValidatorBond {
   option (gogoproto.equal)           = false;
   option (gogoproto.goproto_getters) = false;
 
-  string                   delegator_address = 1 [(gogoproto.moretags) = "yaml:\"delegator_address\""];
-  string                   validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
+  string delegator_address = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+  string validator_address = 2 [(cosmos_proto.scalar) = "cosmos.AddressString"];
 }
-message MsgExemptDelegationResponse {}
+message MsgValidatorBondResponse {}
