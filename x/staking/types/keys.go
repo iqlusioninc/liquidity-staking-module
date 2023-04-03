@@ -54,6 +54,7 @@ var (
 	TokenizeShareRecordIdByOwnerPrefix = []byte{0x62} // key for tokenizeshare record id by owner prefix
 	TokenizeShareRecordIdByDenomPrefix = []byte{0x63} // key for tokenizeshare record id by denom prefix
 	LastTokenizeShareRecordIdKey       = []byte{0x64} // key for last tokenize share record id
+	TotalLiquidStakedSharesKey         = []byte{0x65} // key for total liquid staked shares
 )
 
 // GetValidatorKey creates the key for the validator with address
