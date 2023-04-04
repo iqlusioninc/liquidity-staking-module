@@ -1,74 +1,72 @@
 package keeper
 
 import (
-	"strings"
-
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
-// SetTotalLiquidStaked stores the total outstanding shares owned by a liquid staking provider
-func (k Keeper) SetTotalLiquidStaked(ctx sdk.Context, shares sdk.Dec) {
+// SetTotalLiquidStakedTokens stores the total outstanding tokens owned by a liquid staking provider
+func (k Keeper) SetTotalLiquidStakedTokens(ctx sdk.Context, tokens sdk.Int) {
 	store := ctx.KVStore(k.storeKey)
 
-	sharesBz, err := shares.Marshal()
+	tokensBz, err := tokens.Marshal()
 	if err != nil {
 		panic(err)
 	}
 
-	store.Set(types.TotalLiquidStakedSharesKey, sharesBz)
+	store.Set(types.TotalLiquidStakedTokensKey, tokensBz)
 }
 
-// GetTotalLiquidStaked returns the total outstanding shares owned by a liquid staking provider
+// GetTotalLiquidStakedTokens returns the total outstanding tokens owned by a liquid staking provider
 // Returns zero if the total liquid stake amount has not been initialized
-func (k Keeper) GetTotalLiquidStaked(ctx sdk.Context) sdk.Dec {
+func (k Keeper) GetTotalLiquidStakedTokens(ctx sdk.Context) sdk.Int {
 	store := ctx.KVStore(k.storeKey)
-	sharesBz := store.Get(types.TotalLiquidStakedSharesKey)
+	tokensBz := store.Get(types.TotalLiquidStakedTokensKey)
 
-	if sharesBz == nil {
-		return sdk.ZeroDec()
+	if tokensBz == nil {
+		// QUESTION: Should we panic here instead?
+		// This is basically protecting against the case where we failed
+		// to bootstrap the total liquid staked in the upgrade handler
+		return sdk.ZeroInt()
 	}
 
-	var shares sdk.Dec
-	if err := shares.Unmarshal(sharesBz); err != nil {
+	var tokens sdk.Int
+	if err := tokens.Unmarshal(tokensBz); err != nil {
 		panic(err)
 	}
 
-	return shares
+	return tokens
 }
 
-// IncreaseTotalLiquidStaked increments the total liquid staked shares
-func (k Keeper) IncreaseTotalLiquidStaked(ctx sdk.Context, amount sdk.Dec) {
-	k.SetTotalLiquidStaked(ctx, k.GetTotalLiquidStaked(ctx).Add(amount))
+// IncreaseTotalLiquidStakedTokens increments the total liquid staked tokens
+func (k Keeper) IncreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sdk.Int) {
+	k.SetTotalLiquidStakedTokens(ctx, k.GetTotalLiquidStakedTokens(ctx).Add(amount))
 }
 
-// DecreaseTotalLiquidStaked decrements the total liquid staked shares
-func (k Keeper) DecreaseTotalLiquidStaked(ctx sdk.Context, amount sdk.Dec) {
-	k.SetTotalLiquidStaked(ctx, k.GetTotalLiquidStaked(ctx).Sub(amount))
+// DecreaseTotalLiquidStakedTokens decrements the total liquid staked tokens
+func (k Keeper) DecreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sdk.Int) {
+	k.SetTotalLiquidStakedTokens(ctx, k.GetTotalLiquidStakedTokens(ctx).Sub(amount))
+}
+
+// IncreaseValidatorTotalLiquidShares increments the total liquid shares on a validator
+func (k Keeper) IncreaseValidatorTotalLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) {
+	validator.TotalLiquidShares = validator.TotalLiquidShares.Add(shares)
+	k.SetValidator(ctx, validator)
+}
+
+// DecreaseValidatorTotalLiquidShares decrements the total liquid shares on a validator
+func (k Keeper) DecreaseValidatorTotalLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) {
+	validator.TotalLiquidShares = validator.TotalLiquidShares.Sub(shares)
+	k.SetValidator(ctx, validator)
 }
 
 // Check if an account is a owned by a liquid staking provider
-// This is determined by checking if the account is a module account
-// that's not owned by the LSM module
-// TODO: Verify the best way to check if an address belongs to a module account
+// This is determined by checking if the account is a 32-length module account
 func (k Keeper) AccountIsLiquidStakingProvider(ctx sdk.Context, address sdk.AccAddress) bool {
-	// Check if the account is a module account
-	// Module accounts are stored with 32-length addresses
-	isModuleAccount := len(address) == 32
-	if !isModuleAccount {
-		return false
-	}
-
-	// If the address is a module account, check whether it is used by the staking module
 	account := k.authKeeper.GetAccount(ctx, address)
-	moduleAccount, isModuleAccount := account.(*authtypes.ModuleAccount)
-	if !isModuleAccount {
-		return false
-	}
-	isTokenizedSharesCustodian := strings.HasPrefix(moduleAccount.Name, types.TokenizeShareModuleAccountPrefix)
-
-	return !isTokenizedSharesCustodian
+	_, isModuleAccount := account.(*authtypes.ModuleAccount)
+	return isModuleAccount && len(address) == 32
 }
 
 // ExceedsGlobalLiquidStakingCap checks if a liquid delegation would cause the
@@ -76,9 +74,25 @@ func (k Keeper) AccountIsLiquidStakingProvider(ctx sdk.Context, address sdk.AccA
 // A liquid delegation is defined as either tokenized shares, or a delegation from an ICA Account
 // The total stake is determined by the sum of the Bonded and NotBonded pools
 // Returns true if the cap is exceeded
-func (k Keeper) CheckExceedsGlobalLiquidStakingCap(ctx sdk.Context, shares sdk.Dec) bool {
-	// TODO
-	return false
+func (k Keeper) CheckExceedsGlobalLiquidStakingCap(ctx sdk.Context, tokens sdk.Int) bool {
+	liquidStakingCap := k.GlobalLiquidStakingCap(ctx)
+	liquidStakedAmount := k.GetTotalLiquidStakedTokens(ctx)
+
+	// Determine the total stake as the sum of the bonded and not-bonded pools
+	bondedPoolAddress := k.authKeeper.GetModuleAddress(types.BondedPoolName)
+	notBondedPoolAddress := k.authKeeper.GetModuleAddress(types.NotBondedPoolName)
+
+	bondedPoolBalance := k.bankKeeper.GetBalance(ctx, bondedPoolAddress, k.BondDenom(ctx)).Amount
+	notBondedPoolBalance := k.bankKeeper.GetBalance(ctx, notBondedPoolAddress, k.BondDenom(ctx)).Amount
+
+	totalStakedAmount := bondedPoolBalance.Add(notBondedPoolBalance)
+
+	// Calculate the percentage of stake that is liquid
+	updatedTotalStaked := sdk.NewDecFromInt(totalStakedAmount.Add(tokens))
+	updatedLiquidStaked := sdk.NewDecFromInt(liquidStakedAmount.Add(tokens))
+	liquidStakePercent := updatedLiquidStaked.Quo(updatedTotalStaked)
+
+	return liquidStakePercent.GT(liquidStakingCap)
 }
 
 // ExceedsValidatorBondCap checks if a liquid delegation to a validator would cause
