@@ -636,7 +636,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	record := types.TokenizeShareRecord{
 		Id:            recordId,
 		Owner:         msg.TokenizedShareOwner,
-		ModuleAccount: fmt.Sprintf("tokenizeshare_%d", recordId),
+		ModuleAccount: fmt.Sprintf("%s%d", types.TokenizeShareModuleAccountPrefix, recordId),
 		Validator:     msg.ValidatorAddress,
 	}
 
