@@ -59,4 +59,5 @@ var (
 	ErrInsufficientValidatorBondShares         = sdkerrors.Register(ModuleName, 47, "insufficient validator bond shares")
 	ErrRedelegationNotAllowedForValidatorBond  = sdkerrors.Register(ModuleName, 48, "redelegation is not allowed for validator bond delegation")
 	ErrValidatorBondNotAllowedForTokenizeShare = sdkerrors.Register(ModuleName, 49, "validator bond delegation is not allowed to tokenize share")
+	ErrGlobalLiquidStakingCapExceeded          = sdkerrors.Register(ModuleName, 50, "delegation from liquid staking provider exceeds the global cap")
 )

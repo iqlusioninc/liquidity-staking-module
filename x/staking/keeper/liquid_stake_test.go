@@ -18,7 +18,7 @@ func TestTotalLiquidStakedTokens(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
 	// Before it's been initialized, it should return zero
-	require.Equal(t, sdk.ZeroDec(), app.StakingKeeper.GetTotalLiquidStakedTokens(ctx), "zero")
+	require.Equal(t, sdk.ZeroInt(), app.StakingKeeper.GetTotalLiquidStakedTokens(ctx), "zero")
 
 	// Update the total liquid staked
 	total := sdk.NewInt(100)
