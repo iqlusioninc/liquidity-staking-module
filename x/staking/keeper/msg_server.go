@@ -721,10 +721,6 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
-	validator, _ = k.GetLiquidValidator(ctx, valAddr)
-	validator.TotalLiquidShares = validator.TotalLiquidShares.Add(shares)
-	k.SetValidator(ctx, validator)
-
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeTokenizeShares,
@@ -834,10 +830,6 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 	if err != nil {
 		return nil, err
 	}
-
-	validator, _ = k.GetLiquidValidator(ctx, valAddr)
-	validator.TotalLiquidShares = validator.TotalLiquidShares.Sub(shares)
-	k.SetValidator(ctx, validator)
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
