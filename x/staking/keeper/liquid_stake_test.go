@@ -68,34 +68,25 @@ func TestAccountIsLiquidStakingProvider(t *testing.T) {
 	require.True(t, app.StakingKeeper.AccountIsLiquidStakingProvider(ctx, icaAccountAddress), "ICA module account")
 }
 
-// Helper function to clear the Bonded and NotBonded pool balances before a unit test
-func clearPoolBalances(t *testing.T, app *simapp.SimApp, ctx sdk.Context) {
+// Helper function to clear the Bonded pool balances before a unit test
+func clearPoolBalance(t *testing.T, app *simapp.SimApp, ctx sdk.Context) {
 	bondDenom := app.StakingKeeper.BondDenom(ctx)
 	initialBondedBalance := app.BankKeeper.GetBalance(ctx, app.AccountKeeper.GetModuleAddress(types.BondedPoolName), bondDenom)
-	initialNotBondedBalance := app.BankKeeper.GetBalance(ctx, app.AccountKeeper.GetModuleAddress(types.NotBondedPoolName), bondDenom)
 
 	err := app.BankKeeper.SendCoinsFromModuleToModule(ctx, types.BondedPoolName, minttypes.ModuleName, sdk.NewCoins(initialBondedBalance))
 	require.NoError(t, err, "no error expected when clearing bonded pool balance")
-
-	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, types.NotBondedPoolName, minttypes.ModuleName, sdk.NewCoins(initialNotBondedBalance))
-	require.NoError(t, err, "no error expected when clearing notbonded pool balance")
 }
 
-// Helper function to fund the Bonded and NotBonded pool balances before a unit test
-func fundPoolBalances(t *testing.T, app *simapp.SimApp, ctx sdk.Context, bondedBalance sdk.Int, notBondedBalance sdk.Int) {
+// Helper function to fund the Bonded pool balances before a unit test
+func fundPoolBalance(t *testing.T, app *simapp.SimApp, ctx sdk.Context, amount sdk.Int) {
 	bondDenom := app.StakingKeeper.BondDenom(ctx)
-	bondedPoolCoin := sdk.NewCoin(bondDenom, bondedBalance)
-	notbondedPoolCoin := sdk.NewCoin(bondDenom, notBondedBalance)
-	totalPoolCoin := sdk.NewCoin(bondDenom, bondedBalance.Add(notBondedBalance))
+	bondedPoolCoin := sdk.NewCoin(bondDenom, amount)
 
-	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(totalPoolCoin))
+	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(bondedPoolCoin))
 	require.NoError(t, err, "no error expected when minting")
 
 	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.BondedPoolName, sdk.NewCoins(bondedPoolCoin))
 	require.NoError(t, err, "no error expected when sending tokens to bonded pool")
-
-	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.NotBondedPoolName, sdk.NewCoins(notbondedPoolCoin))
-	require.NoError(t, err, "no error expected when sending tokens to notbonded pool")
 }
 
 // Tests CheckExceedsGlobalLiquidStakingCap
@@ -103,105 +94,96 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
 	testCases := []struct {
-		name                string
-		bondedBalance       sdk.Int
-		notBondedBalance    sdk.Int
-		globalLiquidCap     sdk.Dec
-		currentLiquidTokens sdk.Int
-		newDelegation       sdk.Int
-		expectedExceeds     bool
+		name             string
+		globalLiquidCap  sdk.Dec
+		totalLiquidStake sdk.Int
+		totalStake       sdk.Int
+		newLiquidStake   sdk.Int
+		expectedExceeds  bool
 	}{
 		{
 			// Cap: 10% - Delegation Below Threshold
-			// Total Liquid: 5   | Bonded Balance: 60, Notbonded Balance: 35 => Total Stake: 95
-			// New Delegation: 1 | New Liquid: 5+1=6,  New Total: 95+1=96    => 6/96 = 6% < 10% cap
-			name:                "10 percent cap _ delegation below cap",
-			globalLiquidCap:     sdk.MustNewDecFromStr("0.1"),
-			currentLiquidTokens: sdk.NewInt(5),
-			bondedBalance:       sdk.NewInt(60),
-			notBondedBalance:    sdk.NewInt(35),
-			newDelegation:       sdk.NewInt(1),
-			expectedExceeds:     false,
+			// Total Liquid Stake: 5, Total Stake: 95, New Liquid Stake: 1
+			// => Total Liquid Stake: 5+1=6, Total Stake: 95+1=96 => 6/96 = 6% < 10% cap
+			name:             "10 percent cap _ delegation below cap",
+			globalLiquidCap:  sdk.MustNewDecFromStr("0.1"),
+			totalLiquidStake: sdk.NewInt(5),
+			totalStake:       sdk.NewInt(95),
+			newLiquidStake:   sdk.NewInt(1),
+			expectedExceeds:  false,
 		},
 		{
 			// Cap: 10% - Delegation At Threshold
-			// Total Liquid: 5   | Bonded Balance: 35, Notbonded Balance: 60 => Total Stake: 95
-			// New Delegation: 5 | New Liquid: 5+5=10, New Total: 95+5=100   => 10/100 = 10% == 10% cap
-			name:                "10 percent cap _ delegation equals cap",
-			globalLiquidCap:     sdk.MustNewDecFromStr("0.1"),
-			currentLiquidTokens: sdk.NewInt(5),
-			bondedBalance:       sdk.NewInt(35),
-			notBondedBalance:    sdk.NewInt(60),
-			newDelegation:       sdk.NewInt(5),
-			expectedExceeds:     false,
+			// Total Liquid Stake: 5, Total Stake: 95, New Liquid Stake: 5
+			// => Total Liquid Stake: 5+5=10, Total Stake: 95+5=100 => 10/100 = 10% == 10% cap
+			name:             "10 percent cap _ delegation equals cap",
+			globalLiquidCap:  sdk.MustNewDecFromStr("0.1"),
+			totalLiquidStake: sdk.NewInt(5),
+			totalStake:       sdk.NewInt(95),
+			newLiquidStake:   sdk.NewInt(5),
+			expectedExceeds:  false,
 		},
 		{
 			// Cap: 10% - Delegation Exceeds Threshold
-			// Total Liquid: 5   | Bonded Balance: 95, Notbonded Balance: 0 => Total Stake: 95
-			// New Delegation: 6 | New Liquid: 5+6=11, New Total: 95+6=101  => 11/101 = 11% > 10% cap
-			name:                "10 percent cap _ delegation exceeds cap",
-			globalLiquidCap:     sdk.MustNewDecFromStr("0.1"),
-			currentLiquidTokens: sdk.NewInt(5),
-			bondedBalance:       sdk.NewInt(95),
-			notBondedBalance:    sdk.NewInt(0),
-			newDelegation:       sdk.NewInt(6),
-			expectedExceeds:     true,
+			// Total Liquid Stake: 5, Total Stake: 95, New Liquid Stake: 6
+			// => Total Liquid Stake: 5+6=11, Total Stake: 95+6=101 => 11/101 = 11% > 10% cap
+			name:             "10 percent cap _ delegation exceeds cap",
+			globalLiquidCap:  sdk.MustNewDecFromStr("0.1"),
+			totalLiquidStake: sdk.NewInt(5),
+			totalStake:       sdk.NewInt(95),
+			newLiquidStake:   sdk.NewInt(6),
+			expectedExceeds:  true,
 		},
 		{
 			// Cap: 20% - Delegation Below Threshold
-			// Total Liquid: 20   | Bonded Balance: 0,    Notbonded Balance: 200 => Total Stake: 200
-			// New Delegation: 10 | New Liquid: 20+10=30, New Total: 200+10=210  => 30/210 = 14% < 20% cap
-			name:                "20 percent cap _ delegation below cap",
-			globalLiquidCap:     sdk.MustNewDecFromStr("0.20"),
-			currentLiquidTokens: sdk.NewInt(20),
-			bondedBalance:       sdk.NewInt(0),
-			notBondedBalance:    sdk.NewInt(200),
-			newDelegation:       sdk.NewInt(10),
-			expectedExceeds:     false,
+			// Total Liquid Stake: 20, Total Stake: 220, New Liquid Stake: 29
+			// => Total Liquid Stake: 20+29=49, Total Stake: 220+29=249 => 49/249 = 19% < 20% cap
+			name:             "20 percent cap _ delegation below cap",
+			globalLiquidCap:  sdk.MustNewDecFromStr("0.20"),
+			totalLiquidStake: sdk.NewInt(20),
+			totalStake:       sdk.NewInt(220),
+			newLiquidStake:   sdk.NewInt(29),
+			expectedExceeds:  false,
 		},
 		{
 			// Cap: 20% - Delegation At Threshold
-			// Total Liquid: 20   | Bonded Balance: 220,  Notbonded Balance: 0   => Total Stake: 220
-			// New Delegation: 30 | New Liquid: 20+30=50, New Total: 220+30=250  => 50/250 = 20% == 20% cap
-			name:                "20 percent cap _ delegation equals cap",
-			globalLiquidCap:     sdk.MustNewDecFromStr("0.20"),
-			currentLiquidTokens: sdk.NewInt(20),
-			bondedBalance:       sdk.NewInt(220),
-			notBondedBalance:    sdk.NewInt(0),
-			newDelegation:       sdk.NewInt(30),
-			expectedExceeds:     false,
+			// Total Liquid Stake: 20, Total Stake: 220, New Liquid Stake: 30
+			// => Total Liquid Stake: 20+30=50, Total Stake: 220+30=250 => 50/250 = 20% == 20% cap
+			name:             "20 percent cap _ delegation equals cap",
+			globalLiquidCap:  sdk.MustNewDecFromStr("0.20"),
+			totalLiquidStake: sdk.NewInt(20),
+			totalStake:       sdk.NewInt(220),
+			newLiquidStake:   sdk.NewInt(30),
+			expectedExceeds:  false,
 		},
 		{
 			// Cap: 20% - Delegation Exceeds Threshold
-			// Total Liquid: 20   | Bonded Balance: 220,  Notbonded Balance: 0   => Total Stake: 220
-			// New Delegation: 31 | New Liquid: 20+31=51, New Total: 220+31=251  => 51/251 = 21% > 20% cap
-			name:                "20 percent cap _ delegation exceeds cap",
-			globalLiquidCap:     sdk.MustNewDecFromStr("0.20"),
-			currentLiquidTokens: sdk.NewInt(20),
-			bondedBalance:       sdk.NewInt(220),
-			notBondedBalance:    sdk.NewInt(0),
-			newDelegation:       sdk.NewInt(31),
-			expectedExceeds:     true,
+			// Total Liquid Stake: 20, Total Stake: 220, New Liquid Stake: 31
+			// => Total Liquid Stake: 20+31=51, Total Total: 220+31=251 => 51/251 = 21% > 20% cap
+			name:             "20 percent cap _ delegation exceeds cap",
+			globalLiquidCap:  sdk.MustNewDecFromStr("0.20"),
+			totalLiquidStake: sdk.NewInt(20),
+			totalStake:       sdk.NewInt(220),
+			newLiquidStake:   sdk.NewInt(31),
+			expectedExceeds:  true,
 		},
 		{
 			// Cap of 0% - everything should exceed
-			name:                "0 percent cap",
-			globalLiquidCap:     sdk.ZeroDec(),
-			currentLiquidTokens: sdk.NewInt(0),
-			bondedBalance:       sdk.NewInt(1_000_000),
-			notBondedBalance:    sdk.NewInt(1_000_000),
-			newDelegation:       sdk.NewInt(1),
-			expectedExceeds:     true,
+			name:             "0 percent cap",
+			globalLiquidCap:  sdk.ZeroDec(),
+			totalLiquidStake: sdk.NewInt(0),
+			totalStake:       sdk.NewInt(1_000_000),
+			newLiquidStake:   sdk.NewInt(1),
+			expectedExceeds:  true,
 		},
 		{
 			// Cap of 100% - nothing should exceed
-			name:                "100 percent cap",
-			globalLiquidCap:     sdk.OneDec(),
-			currentLiquidTokens: sdk.NewInt(1),
-			bondedBalance:       sdk.NewInt(1),
-			notBondedBalance:    sdk.NewInt(1),
-			newDelegation:       sdk.NewInt(1_000_000),
-			expectedExceeds:     false,
+			name:             "100 percent cap",
+			globalLiquidCap:  sdk.OneDec(),
+			totalLiquidStake: sdk.NewInt(1),
+			totalStake:       sdk.NewInt(1),
+			newLiquidStake:   sdk.NewInt(1_000_000),
+			expectedExceeds:  false,
 		},
 	}
 
@@ -213,14 +195,14 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 			app.StakingKeeper.SetParams(ctx, params)
 
 			// Update the total liquid tokens
-			app.StakingKeeper.SetTotalLiquidStakedTokens(ctx, tc.currentLiquidTokens)
+			app.StakingKeeper.SetTotalLiquidStakedTokens(ctx, tc.totalLiquidStake)
 
 			// Fund each pool for the given test case
-			clearPoolBalances(t, app, ctx)
-			fundPoolBalances(t, app, ctx, tc.bondedBalance, tc.notBondedBalance)
+			clearPoolBalance(t, app, ctx)
+			fundPoolBalance(t, app, ctx, tc.totalStake)
 
 			// Check if the new tokens would exceed the global cap
-			actualExceeds := app.StakingKeeper.CheckExceedsGlobalLiquidStakingCap(ctx, tc.newDelegation)
+			actualExceeds := app.StakingKeeper.CheckExceedsGlobalLiquidStakingCap(ctx, tc.newLiquidStake)
 			require.Equal(t, tc.expectedExceeds, actualExceeds, tc.name)
 		})
 	}
@@ -232,13 +214,14 @@ func TestSafelyIncreaseTotalLiquidStakedTokens(t *testing.T) {
 
 	intitialTotalLiquidStaked := sdk.NewInt(100)
 	increaseAmount := sdk.NewInt(10)
-	poolBalance := sdk.NewInt(100) // for each of bonded and notBonded
+	poolBalance := sdk.NewInt(200)
 
-	// Set the total liquid staked, Bonded, and NotBonded pool balances
+	// Set the total staked and total liquid staked amounts
 	// which are required components when checking the global cap
+	// Total stake is calculated from the pool balance
+	clearPoolBalance(t, app, ctx)
+	fundPoolBalance(t, app, ctx, poolBalance)
 	app.StakingKeeper.SetTotalLiquidStakedTokens(ctx, intitialTotalLiquidStaked)
-	clearPoolBalances(t, app, ctx)
-	fundPoolBalances(t, app, ctx, poolBalance, poolBalance)
 
 	// Set the cap to 100% (meaning it's disabled)
 	params := app.StakingKeeper.GetParams(ctx)

@@ -50,20 +50,15 @@ func (k Keeper) AccountIsLiquidStakingProvider(ctx sdk.Context, address sdk.AccA
 // ExceedsGlobalLiquidStakingCap checks if a liquid delegation would cause the
 // global liquid staking cap to be exceeded
 // A liquid delegation is defined as either tokenized shares, or a delegation from an ICA Account
-// The total stake is determined by the sum of the Bonded and NotBonded pools
+// The total stake is determined by the balance of the bonded pool
 // Returns true if the cap is exceeded
 func (k Keeper) CheckExceedsGlobalLiquidStakingCap(ctx sdk.Context, tokens sdk.Int) bool {
 	liquidStakingCap := k.GlobalLiquidStakingCap(ctx)
 	liquidStakedAmount := k.GetTotalLiquidStakedTokens(ctx)
 
-	// Determine the total stake as the sum of the bonded and not-bonded pools
+	// Determine the total stake from the balance of the bonded pools
 	bondedPoolAddress := k.authKeeper.GetModuleAddress(types.BondedPoolName)
-	notBondedPoolAddress := k.authKeeper.GetModuleAddress(types.NotBondedPoolName)
-
-	bondedPoolBalance := k.bankKeeper.GetBalance(ctx, bondedPoolAddress, k.BondDenom(ctx)).Amount
-	notBondedPoolBalance := k.bankKeeper.GetBalance(ctx, notBondedPoolAddress, k.BondDenom(ctx)).Amount
-
-	totalStakedAmount := bondedPoolBalance.Add(notBondedPoolBalance)
+	totalStakedAmount := k.bankKeeper.GetBalance(ctx, bondedPoolAddress, k.BondDenom(ctx)).Amount
 
 	// Calculate the percentage of stake that is liquid
 	updatedTotalStaked := sdk.NewDecFromInt(totalStakedAmount.Add(tokens))
