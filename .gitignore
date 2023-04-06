@@ -17,6 +17,7 @@ docs/_build
 docs/tutorial
 dist
 tools-stamp
+buf-stamp
 
 # Data - ideally these don't exist
 baseapp/data/*
