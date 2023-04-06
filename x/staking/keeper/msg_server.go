@@ -111,7 +111,10 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	}
 
 	k.SetValidator(ctx, validator)
-	k.SetValidatorByConsAddr(ctx, validator)
+	err = k.SetValidatorByConsAddr(ctx, validator)
+	if err != nil {
+		return nil, err
+	}
 	k.SetNewValidatorByPowerIndex(ctx, validator)
 
 	// call the after-creation hook
@@ -668,7 +671,10 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	}
 
 	// create reward ownership record
-	k.AddTokenizeShareRecord(ctx, record)
+	err = k.AddTokenizeShareRecord(ctx, record)
+	if err != nil {
+		return nil, err
+	}
 
 	// send coins to module account
 	err = k.bankKeeper.SendCoins(ctx, delegatorAddress, record.GetModuleAddress(), sdk.Coins{msg.Amount})
@@ -738,7 +744,7 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 
 	// calculate the ratio between shares and redeem amount
 	// moduleAccountTotalDelegation * redeemAmount / totalIssue
-	delegation, found := k.GetLiquidDelegation(ctx, record.GetModuleAddress(), valAddr)
+	delegation, _ := k.GetLiquidDelegation(ctx, record.GetModuleAddress(), valAddr)
 	shareDenomSupply := k.bankKeeper.GetSupply(ctx, msg.Amount.Denom)
 	shares := delegation.Shares.Mul(sdk.NewDecFromInt(msg.Amount.Amount)).QuoInt(shareDenomSupply.Amount)
 
@@ -755,7 +761,10 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 	_, found = k.GetLiquidDelegation(ctx, record.GetModuleAddress(), valAddr)
 	if !found {
 		if k.hooks != nil {
-			k.hooks.BeforeTokenizeShareRecordRemoved(ctx, record.Id)
+			err = k.hooks.BeforeTokenizeShareRecordRemoved(ctx, record.Id)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		err = k.DeleteTokenizeShareRecord(ctx, record.Id)

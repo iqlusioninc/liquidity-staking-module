@@ -57,6 +57,11 @@ issues:
   max-same-issues: 10000
 
 linters-settings:
+  revive:
+    rules:
+      - name: var-naming
+        severity: warning
+        disabled: true
   dogsled:
     max-blank-identifiers: 3
   maligned:

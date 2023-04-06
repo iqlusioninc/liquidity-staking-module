@@ -22,6 +22,8 @@ const (
 )
 
 // Simulation operation weights constants
+//
+//nolint:gosec // these are not hard coded credentials
 const (
 	OpWeightMsgCreateValidator             = "op_weight_msg_create_validator"
 	OpWeightMsgEditValidator               = "op_weight_msg_edit_validator"

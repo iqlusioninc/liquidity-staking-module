@@ -6,7 +6,6 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
@@ -464,8 +463,7 @@ func calculateIP(ip string, i int) (string, error) {
 	return ipv4.String(), nil
 }
 
-func writeFile(name string, dir string, contents []byte) error {
-	writePath := filepath.Join(dir)
+func writeFile(name string, writePath string, contents []byte) error {
 	file := filepath.Join(writePath, name)
 
 	err := tmos.EnsureDir(writePath, 0o755)
@@ -473,7 +471,7 @@ func writeFile(name string, dir string, contents []byte) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(file, contents, 0o644) // nolint: gosec
+	err = os.WriteFile(file, contents, 0o644) //nolint: gosec // 0644 perms are OK
 	if err != nil {
 		return err
 	}
@@ -512,7 +510,10 @@ func startTestnet(cmd *cobra.Command, args startArgs) error {
 		return err
 	}
 
-	testnet.WaitForHeight(1)
+	_, err = testnet.WaitForHeight(1)
+	if err != nil {
+		return err
+	}
 	cmd.Println("press the Enter Key to terminate")
 	fmt.Scanln() // wait for Enter Key
 	testnet.Cleanup()

@@ -487,11 +487,11 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 	for _, c := range cases {
 		// Query Delegator bonded validators
 		queryParams := types.NewQueryDelegatorParams(addrs[0])
-		bz, errRes := cdc.MarshalJSON(queryParams)
+		_, errRes := cdc.MarshalJSON(queryParams)
 		require.NoError(t, errRes)
 
 		// Query valAddress delegations
-		bz, errRes = cdc.MarshalJSON(types.NewQueryValidatorParams(valAddress, c.page, c.limit))
+		bz, errRes := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddress, c.page, c.limit))
 		require.NoError(t, errRes)
 
 		query := abci.RequestQuery{
@@ -521,10 +521,10 @@ func TestQueryValidatorDelegations_Pagination(t *testing.T) {
 	for _, c := range cases {
 		// Query Unbonding delegations with pagination.
 		queryParams := types.NewQueryDelegatorParams(addrs[0])
-		bz, errRes := cdc.MarshalJSON(queryParams)
+		_, errRes := cdc.MarshalJSON(queryParams)
 		require.NoError(t, errRes)
 
-		bz, errRes = cdc.MarshalJSON(types.NewQueryValidatorParams(valAddress, c.page, c.limit))
+		bz, errRes := cdc.MarshalJSON(types.NewQueryValidatorParams(valAddress, c.page, c.limit))
 		require.NoError(t, errRes)
 		query := abci.RequestQuery{
 			Data: bz,

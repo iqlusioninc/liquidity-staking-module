@@ -24,10 +24,11 @@ func TestDelegation(t *testing.T) {
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
 	require.Len(t, delegations, 1)
 
-	app.StakingKeeper.RemoveDelegation(ctx, types.Delegation{
+	err := app.StakingKeeper.RemoveDelegation(ctx, types.Delegation{
 		ValidatorAddress: delegations[0].ValidatorAddress,
 		DelegatorAddress: delegations[0].DelegatorAddress,
 	})
+	require.NoError(t, err)
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(10000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
@@ -119,7 +120,8 @@ func TestDelegation(t *testing.T) {
 	}
 
 	// delete a record
-	app.StakingKeeper.RemoveDelegation(ctx, bond2to3)
+	err = app.StakingKeeper.RemoveDelegation(ctx, bond2to3)
+	require.Nil(t, err)
 	_, found = app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[1], valAddrs[2])
 	require.False(t, found)
 	resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
@@ -131,8 +133,10 @@ func TestDelegation(t *testing.T) {
 	require.Equal(t, 2, len(resBonds))
 
 	// delete all the records from delegator 2
-	app.StakingKeeper.RemoveDelegation(ctx, bond2to1)
-	app.StakingKeeper.RemoveDelegation(ctx, bond2to2)
+	err = app.StakingKeeper.RemoveDelegation(ctx, bond2to1)
+	require.Nil(t, err)
+	err = app.StakingKeeper.RemoveDelegation(ctx, bond2to2)
+	require.Nil(t, err)
 	_, found = app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[1], valAddrs[0])
 	require.False(t, found)
 	_, found = app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[1], valAddrs[1])
@@ -207,7 +211,7 @@ func TestUnbondDelegation(t *testing.T) {
 	validator, issuedShares := validator.AddTokensFromDel(startTokens)
 	require.Equal(t, startTokens, issuedShares.RoundInt())
 
-	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
+	_ = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
 
 	delegation := types.NewDelegation(delAddrs[0], valAddrs[0], issuedShares, false)
 	app.StakingKeeper.SetDelegation(ctx, delegation)
@@ -446,7 +450,7 @@ func TestRedelegationMaxEntries(t *testing.T) {
 	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	validator, issuedShares := validator.AddTokensFromDel(valTokens)
 	require.Equal(t, valTokens, issuedShares.RoundInt())
-	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
+	_ = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
 	val0AccAddr := sdk.AccAddress(addrVals[0].Bytes())
 	selfDelegation := types.NewDelegation(val0AccAddr, addrVals[0], issuedShares, false)
 	app.StakingKeeper.SetDelegation(ctx, selfDelegation)

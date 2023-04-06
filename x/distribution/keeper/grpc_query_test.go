@@ -700,18 +700,21 @@ func (suite *KeeperTestSuite) TestGRPCTokenizeShareRecordReward() {
 	app.DistrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, initial)}
-	app.MintKeeper.MintCoins(ctx, coins)
-	app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)
+	err := app.MintKeeper.MintCoins(ctx, coins)
+	suite.Require().NoError(err)
+	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)
+	suite.Require().NoError(err)
 
 	// tokenize share amount
 	delTokens := sdk.NewInt(1000000)
 	msgServer := stakingkeeper.NewMsgServerImpl(app.StakingKeeper)
-	_, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &stakingtypes.MsgTokenizeShares{
+	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &stakingtypes.MsgTokenizeShares{
 		DelegatorAddress:    sdk.AccAddress(valAddrs[0]).String(),
 		ValidatorAddress:    valAddrs[0].String(),
 		TokenizedShareOwner: sdk.AccAddress(valAddrs[0]).String(),
 		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, delTokens),
 	})
+	suite.Require().NoError(err)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)
