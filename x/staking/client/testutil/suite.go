@@ -1606,7 +1606,7 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 			break
 		}
 
-		s.network.WaitForNextBlock()
+		err = s.network.WaitForNextBlock()
 	}
 }
 

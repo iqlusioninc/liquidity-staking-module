@@ -655,7 +655,7 @@ $ %s tx staking transfer-tokenize-share-record 1 %s1gghjut3ccd8ay0zduzj64hwre2fx
 				return err
 			}
 
-			recordId, err := strconv.Atoi(args[0])
+			recordID, err := strconv.Atoi(args[0])
 			if err != nil {
 				return err
 			}
@@ -667,7 +667,7 @@ $ %s tx staking transfer-tokenize-share-record 1 %s1gghjut3ccd8ay0zduzj64hwre2fx
 
 			msg := &types.MsgTransferTokenizeShareRecord{
 				Sender:                clientCtx.GetFromAddress().String(),
-				TokenizeShareRecordId: uint64(recordId),
+				TokenizeShareRecordId: uint64(recordID),
 				NewOwner:              ownerAddr.String(),
 			}
 
