@@ -18,6 +18,8 @@ import (
 const DefaultWeightMsgWithdrawAllTokenizeShareRecordReward int = 50
 
 // Simulation operation weights constants
+//
+//nolint:gosec // these are not hard coded credentials
 const (
 	OpWeightMsgSetWithdrawAddress                = "op_weight_msg_set_withdraw_address"
 	OpWeightMsgWithdrawDelegationReward          = "op_weight_msg_withdraw_delegation_reward"

@@ -126,7 +126,7 @@ func TestSlashRedelegation(t *testing.T) {
 	// add bonded tokens to pool for (re)delegations
 	startCoins := sdk.NewCoins(sdk.NewInt64Coin(app.StakingKeeper.BondDenom(ctx), 15))
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
-	balances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
+	_ = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
 	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), startCoins))
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
@@ -156,7 +156,7 @@ func TestSlashRedelegation(t *testing.T) {
 	slashAmount = app.StakingKeeper.SlashRedelegation(ctx, validator, rd, 0, fraction)
 	require.True(t, slashAmount.Equal(sdk.NewInt(0)))
 
-	balances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
+	balances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
 	// test valid slash, before expiration timestamp and to which stake contributed
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(0, 0)})
