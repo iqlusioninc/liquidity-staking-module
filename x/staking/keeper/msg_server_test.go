@@ -20,6 +20,21 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// helper function to create an ICA account that will be used as the validator
+// returns the address
+func createICAAccount(app *simapp.SimApp, ctx sdk.Context) sdk.AccAddress {
+	icaModuleAccountName := "ica-account"
+	icaAccountAddress := address.Module(icaModuleAccountName, []byte("ica-module-account"))
+
+	icaAccount := authtypes.NewModuleAccount(
+		authtypes.NewBaseAccountWithAddress(icaAccountAddress),
+		icaModuleAccountName,
+	)
+	app.AccountKeeper.SetAccount(ctx, icaAccount)
+
+	return icaAccountAddress
+}
+
 func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
@@ -272,13 +287,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
 
 			// Create ICA module account
-			icaModuleAccountName := "ica-account"
-			icaAccountAddress := address.Module(icaModuleAccountName, []byte("ica-module-account"))
-			icaAccount := authtypes.NewModuleAccount(
-				authtypes.NewBaseAccountWithAddress(icaAccountAddress),
-				icaModuleAccountName,
-			)
-			app.AccountKeeper.SetAccount(ctx, icaAccount)
+			icaAccountAddress := createICAAccount(app, ctx)
 
 			// Fund module account
 			delegationCoin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), tc.delegationAmount)
@@ -569,72 +578,130 @@ func TestValidatorBond(t *testing.T) {
 
 	testCases := []struct {
 		name                 string
-		delegationAmount     math.Int
+		createValidator      bool
+		createDelegation     bool
 		alreadyValidatorBond bool
-		expectErr            bool
+		delegatorIsLSTP      bool
+		expectedErr          error
 	}{
 		{
-			name:                 "delegation not exist case",
-			delegationAmount:     app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			name:                 "successful validator bond",
+			createValidator:      true,
+			createDelegation:     true,
 			alreadyValidatorBond: false,
-			expectErr:            false,
+			delegatorIsLSTP:      false,
 		},
 		{
-			name:                 "already validator bond delegation case",
-			delegationAmount:     app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			name:                 "successful with existing validator bond",
+			createValidator:      true,
+			createDelegation:     true,
 			alreadyValidatorBond: true,
-			expectErr:            false,
+			delegatorIsLSTP:      false,
 		},
 		{
-			name:                 "successful validator bond share case",
-			delegationAmount:     app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			name:                 "validator does not not exist",
+			createValidator:      false,
+			createDelegation:     false,
 			alreadyValidatorBond: false,
-			expectErr:            false,
+			delegatorIsLSTP:      false,
+			expectedErr:          sdkstaking.ErrNoValidatorFound,
+		},
+		{
+			name:                 "delegation not exist case",
+			createValidator:      true,
+			createDelegation:     false,
+			alreadyValidatorBond: false,
+			delegatorIsLSTP:      false,
+			expectedErr:          sdkstaking.ErrNoDelegation,
+		},
+		{
+			name:                 "delegator is a liquid staking provider",
+			createValidator:      true,
+			createDelegation:     true,
+			alreadyValidatorBond: false,
+			delegatorIsLSTP:      true,
+			expectedErr:          types.ErrValidatorBondNotAllowedFromModuleAccount,
 		},
 	}
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			_, app, ctx = createTestInput(t)
-			addrs := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
-			addrAcc1 := addrs[0]
-			addrVal1 := sdk.ValAddress(addrAcc1)
 
-			pubKeys := simapp.CreateTestPubKeys(1)
-			pk1 := pubKeys[0]
+			pubKeys := simapp.CreateTestPubKeys(2)
+			validatorPubKey := pubKeys[0]
+			delegatorPubKey := pubKeys[1]
 
-			// Create Validators and Delegation
-			val1 := teststaking.NewValidator(t, addrVal1, pk1)
-			val1.Status = sdkstaking.Bonded
-			app.StakingKeeper.SetValidator(ctx, val1)
-			app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
-			app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
+			delegatorAddress := sdk.AccAddress(delegatorPubKey.Address())
+			validatorAddress := sdk.ValAddress(validatorPubKey.Address())
+			icaAccountAddress := createICAAccount(app, ctx)
 
-			delTokens := tc.delegationAmount
-			if delTokens.IsPositive() {
-				err := delegateCoinsFromAccount(ctx, app, addrAcc1, delTokens, val1)
-				require.NoError(t, err)
+			// Set the delegator address to either be a user account or an ICA account depending on the test case
+			if tc.delegatorIsLSTP {
+				delegatorAddress = icaAccountAddress
 			}
 
+			// Fund the delegator
+			delegationAmount := app.StakingKeeper.TokensFromConsensusPower(ctx, 20)
+			coins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delegationAmount))
+
+			err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
+			require.NoError(t, err, "no error expected when minting")
+
+			err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, delegatorAddress, coins)
+			require.NoError(t, err, "no error expected when funding account")
+
+			// Create Validator and delegation
+			if tc.createValidator {
+				validator := teststaking.NewValidator(t, validatorAddress, validatorPubKey)
+				validator.Status = sdkstaking.Bonded
+				app.StakingKeeper.SetValidator(ctx, validator)
+				app.StakingKeeper.SetValidatorByPowerIndex(ctx, validator)
+				app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
+
+				// Optionally create the delegation, depending on the test case
+				if tc.createDelegation {
+					_, err = app.StakingKeeper.Delegate(ctx, delegatorAddress, delegationAmount, sdkstaking.Unbonded, validator, true)
+					require.NoError(t, err, "no error expected when delegating")
+
+					// Optionally, convert the delegation into a validator bond
+					if tc.alreadyValidatorBond {
+						delegation, found := app.StakingKeeper.GetLiquidDelegation(ctx, delegatorAddress, validatorAddress)
+						require.True(t, found, "delegation should have been found")
+
+						delegation.ValidatorBond = true
+						app.StakingKeeper.SetDelegation(ctx, delegation)
+					}
+				}
+			}
+
+			// Call ValidatorBond
 			msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
-			_, err := msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
-				DelegatorAddress: addrAcc1.String(),
-				ValidatorAddress: addrVal1.String(),
+			_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
+				DelegatorAddress: delegatorAddress.String(),
+				ValidatorAddress: validatorAddress.String(),
 			})
-			if tc.expectErr {
-				require.Error(t, err)
+
+			if tc.expectedErr != nil {
+				require.ErrorContains(t, err, tc.expectedErr.Error())
 			} else {
-				require.NoError(t, err)
+				require.NoError(t, err, "no error expected from validator bond transaction")
 
 				// check validator bond true
-				delegation, found := app.StakingKeeper.GetLiquidDelegation(ctx, addrAcc1, addrVal1)
-				require.True(t, found)
-				require.True(t, delegation.ValidatorBond)
+				delegation, found := app.StakingKeeper.GetLiquidDelegation(ctx, delegatorAddress, validatorAddress)
+				require.True(t, found, "delegation should have been found after validator bond")
+				require.True(t, delegation.ValidatorBond, "delegation should be marked as a validator bond")
 
-				// check total validator bond shares value increase
-				validator, found := app.StakingKeeper.GetLiquidValidator(ctx, addrVal1)
-				require.True(t, found)
-				require.True(t, validator.TotalValidatorBondShares.Equal(delegation.Shares))
+				// check total validator bond shares
+				validator, found := app.StakingKeeper.GetLiquidValidator(ctx, validatorAddress)
+				require.True(t, found, "validator should have been found after validator bond")
+
+				if tc.alreadyValidatorBond {
+					require.True(t, validator.TotalValidatorBondShares.IsZero(), "validator total shares should still be zero")
+				} else {
+					require.Equal(t, delegation.Shares.String(), validator.TotalValidatorBondShares.String(),
+						"validator total shares should have increased")
+				}
 			}
 		})
 	}

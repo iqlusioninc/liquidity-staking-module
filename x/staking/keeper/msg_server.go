@@ -909,6 +909,11 @@ func (k msgServer) ValidatorBond(goCtx context.Context, msg *types.MsgValidatorB
 		return nil, sdkstaking.ErrNoDelegation
 	}
 
+	// liquid staking providers should not be able to validator bond
+	if k.AccountIsLiquidStakingProvider(ctx, delAddr) {
+		return nil, types.ErrValidatorBondNotAllowedFromModuleAccount
+	}
+
 	if !delegation.ValidatorBond {
 		delegation.ValidatorBond = true
 		k.SetDelegation(ctx, delegation)
