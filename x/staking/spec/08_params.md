@@ -15,4 +15,4 @@ The staking module contains the following parameters:
 | BondDenom              | string           | "stake"                |
 | MinCommissionRate      | string           | "0.000000000000000000" |
 | ValidatorBondFactor    | string           | "250.0000000000000000" |
-| GlobalLiquidStakingCap | string           | "0.300000000000000000" |
+| GlobalLiquidStakingCap | string           | "0.250000000000000000" |

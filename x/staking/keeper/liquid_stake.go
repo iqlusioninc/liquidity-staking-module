@@ -74,8 +74,8 @@ func (k Keeper) CheckExceedsGlobalLiquidStakingCap(ctx sdk.Context, tokens sdk.I
 // Returns true if the cap is exceeded
 func (k Keeper) CheckExceedsValidatorBondCap(ctx sdk.Context, validator types.Validator, shares sdk.Dec) bool {
 	validatorBondFactor := k.ValidatorBondFactor(ctx)
-	maxValTotalShare := validator.TotalValidatorBondShares.Mul(validatorBondFactor)
-	return validator.TotalLiquidShares.Add(shares).GT(maxValTotalShare)
+	maxValLiquidShares := validator.TotalValidatorBondShares.Mul(validatorBondFactor)
+	return validator.TotalLiquidShares.Add(shares).GT(maxValLiquidShares)
 }
 
 // SafelyIncreaseTotalLiquidStakedTokens increments the total liquid staked tokens
