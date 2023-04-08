@@ -177,6 +177,6 @@ The `MsgTransferTokenizeShareRecord` message is used to transfer the ownership o
 The tokenize share record is created when a user tokenize his/her delegation and deleted and full amount of share tokens are redeemed.
 
 
-## MsgExemptDelegation
+## MsgValidatorBond
 
-The `MsgExemptDelegation` message is used to exempt a delegation to a validator. If the `exemption` factor is greater than 0, this will enable more delegation to the validator 
+The `MsgValidatorBond` message is used to earmark a delegation as a validator self-bond. If the `validator-bond` factor is greater than 0, this will enable more delegation to the validator 
