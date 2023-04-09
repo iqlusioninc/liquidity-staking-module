@@ -144,11 +144,9 @@ func (p Params) Validate() error {
 		return err
 	}
 
-	if err := validateValidatorBondFactor(p.ValidatorBondFactor); err != nil {
-		return err
-	}
+	err := validateValidatorBondFactor(p.ValidatorBondFactor)
 
-	return nil
+	return err
 }
 
 func validateUnbondingTime(i interface{}) error {
