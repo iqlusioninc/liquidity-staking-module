@@ -103,7 +103,10 @@ func TestRunMigrations(t *testing.T) {
 			module.RegisterServices(configurator)
 		}
 	}
-	app.mm.RegisterServices(configurator)
+
+	// Alrady register services in the above loop so wont need to calling `RegisterServices`
+	// From ModulManager
+	// app.mm.RegisterServices(configurator)
 
 	// Initialize the chain
 	app.InitChain(abci.RequestInitChain{})
