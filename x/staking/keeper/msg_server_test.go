@@ -473,7 +473,7 @@ func TestValidatorBond(t *testing.T) {
 			}
 
 			msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
-			_, err := msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
+			_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
 				DelegatorAddress: addrAcc1.String(),
 				ValidatorAddress: addrVal1.String(),
 			})
