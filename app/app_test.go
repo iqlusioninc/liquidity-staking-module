@@ -2,7 +2,6 @@ package simapp
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 	"testing"
 
@@ -85,25 +84,26 @@ func TestRunMigrations(t *testing.T) {
 	bApp.SetCommitMultiStoreTracer(nil)
 	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	app.BaseApp = bApp
-	configurator := sdkmodule.NewConfigurator(app.appCodec, bApp.MsgServiceRouter(), app.GRPCQueryRouter())
+	app.configurator = sdkmodule.NewConfigurator(app.appCodec, bApp.MsgServiceRouter(), app.GRPCQueryRouter())
 
 	// We register all modules on the Configurator, except x/bank. x/bank will
 	// serve as the test subject on which we run the migration tests.
 	//
 	// The loop below is the same as calling `RegisterServices` on
 	// ModuleManager, except that we skip x/bank.
-	for _, module := range app.mm.Modules {
-		if module, ok := module.(sdkmodule.HasName); ok {
-			if module.Name() == banktypes.ModuleName {
-				fmt.Printf(module.Name(), module)
-				continue
-			}
+	for name, mod := range app.mm.Modules {
+		if name == banktypes.ModuleName {
+			continue
 		}
-		if module, ok := module.(sdkmodule.HasServices); ok {
-			module.RegisterServices(configurator)
+
+		if mod, ok := mod.(sdkmodule.HasServices); ok {
+			mod.RegisterServices(app.configurator)
 		}
 	}
-	app.mm.RegisterServices(configurator)
+
+	// Alrady register services in the above loop so wont need to calling `RegisterServices`
+	// From ModulManager
+	// app.mm.RegisterServices(configurator)
 
 	// Initialize the chain
 	app.InitChain(abci.RequestInitChain{})
@@ -113,6 +113,7 @@ func TestRunMigrations(t *testing.T) {
 		name         string
 		moduleName   string
 		fromVersion  uint64
+		toVersion    uint64
 		expRegErr    bool // errors while registering migration
 		expRegErrMsg string
 		expRunErr    bool // errors while running migration
@@ -121,27 +122,27 @@ func TestRunMigrations(t *testing.T) {
 	}{
 		{
 			"cannot register migration for version 0",
-			"bank", 0,
+			"bank", 0, 1,
 			true, "module migration versions should start at 1: invalid version", false, "", 0,
 		},
 		{
 			"throws error on RunMigrations if no migration registered for bank",
-			"", 1,
+			"", 1, 2,
 			false, "", true, "no migrations found for module bank: not found", 0,
 		},
 		{
 			"can register 1->2 migration handler for x/bank, cannot run migration",
-			"bank", 1,
+			"bank", 1, 2,
 			false, "", true, "no migration found for module bank from version 2 to version 3: not found", 0,
 		},
 		{
 			"can register 2->3 migration handler for x/bank, can run migration",
-			"bank", 2,
-			false, "", false, "", 1,
+			"bank", 2, bank.AppModule{}.ConsensusVersion(),
+			false, "", false, "", int(bank.AppModule{}.ConsensusVersion() - 2),
 		},
 		{
 			"cannot register migration handler for same module & fromVersion",
-			"bank", 1,
+			"bank", 1, 2,
 			true, "another migration for module bank and version 1 already exists: internal logic error", false, "", 0,
 		},
 	}
@@ -157,17 +158,19 @@ func TestRunMigrations(t *testing.T) {
 			called := 0
 
 			if tc.moduleName != "" {
-				// Register migration for module from version `fromVersion` to `fromVersion+1`.
-				err = app.configurator.RegisterMigration(tc.moduleName, tc.fromVersion, func(sdk.Context) error {
-					called++
+				for i := tc.fromVersion; i < tc.toVersion; i++ {
+					// Register migration for module from version `fromVersion` to `fromVersion+1`.
+					err = app.configurator.RegisterMigration(tc.moduleName, i, func(sdk.Context) error {
+						called++
 
-					return nil
-				})
+						return nil
+					})
 
-				if tc.expRegErr {
-					require.EqualError(t, err, tc.expRegErrMsg)
+					if tc.expRegErr {
+						require.EqualError(t, err, tc.expRegErrMsg)
 
-					return
+						return
+					}
 				}
 			}
 			require.NoError(t, err)
