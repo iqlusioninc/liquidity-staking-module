@@ -25,7 +25,7 @@ const (
 	TypeMsgTokenizeShares              = "tokenize_shares"
 	TypeMsgRedeemTokensforShares       = "redeem_tokens_for_shares"
 	TypeMsgTransferTokenizeShareRecord = "transfer_tokenize_share_record"
-	TypeMsgExemptDelegation            = "exempt_delegation"
+	TypeMsgValidatorBond               = "validator_bond"
 )
 
 var (
@@ -41,6 +41,7 @@ var (
 	_ sdk.Msg                            = &MsgRedeemTokensforShares{}
 	_ sdk.Msg                            = &MsgTransferTokenizeShareRecord{}
 	_ sdk.Msg                            = &MsgCancelUnbondingDelegation{}
+	_ sdk.Msg                            = &MsgValidatorBond{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -534,24 +535,24 @@ func (msg MsgCancelUnbondingDelegation) ValidateBasic() error {
 	return nil
 }
 
-// NewMsgExemptDelegation creates a new MsgExemptDelegation instance.
+// NewMsgValidatorBond creates a new MsgValidatorBond instance.
 //
 //nolint:interfacer
-func NewMsgExemptDelegation(delAddr sdk.AccAddress, valAddr sdk.ValAddress) *MsgExemptDelegation {
-	return &MsgExemptDelegation{
+func NewMsgValidatorBond(delAddr sdk.AccAddress, valAddr sdk.ValAddress) *MsgValidatorBond {
+	return &MsgValidatorBond{
 		DelegatorAddress: delAddr.String(),
 		ValidatorAddress: valAddr.String(),
 	}
 }
 
 // Route implements the sdk.Msg interface.
-func (msg MsgExemptDelegation) Route() string { return RouterKey }
+func (msg MsgValidatorBond) Route() string { return RouterKey }
 
 // Type implements the sdk.Msg interface.
-func (msg MsgExemptDelegation) Type() string { return TypeMsgExemptDelegation }
+func (msg MsgValidatorBond) Type() string { return TypeMsgValidatorBond }
 
 // GetSigners implements the sdk.Msg interface.
-func (msg MsgExemptDelegation) GetSigners() []sdk.AccAddress {
+func (msg MsgValidatorBond) GetSigners() []sdk.AccAddress {
 	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
 		panic(err)
@@ -560,13 +561,13 @@ func (msg MsgExemptDelegation) GetSigners() []sdk.AccAddress {
 }
 
 // GetSignBytes implements the sdk.Msg interface.
-func (msg MsgExemptDelegation) GetSignBytes() []byte {
+func (msg MsgValidatorBond) GetSignBytes() []byte {
 	bz := legacy.Cdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
 // ValidateBasic implements the sdk.Msg interface.
-func (msg MsgExemptDelegation) ValidateBasic() error {
+func (msg MsgValidatorBond) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
 	}

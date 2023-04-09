@@ -47,7 +47,7 @@ func NewTxCmd() *cobra.Command {
 		NewTokenizeSharesCmd(),
 		NewRedeemTokensCmd(),
 		NewTransferTokenizeShareRecordCmd(),
-		NewExemptDelegationCmd(),
+		NewValidatorBondCmd(),
 	)
 
 	return stakingTxCmd
@@ -63,8 +63,11 @@ func NewCreateValidatorCmd() *cobra.Command {
 				return err
 			}
 
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).
-				WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
 			txf, msg, err := newBuildCreateValidatorMsg(clientCtx, txf, cmd.Flags())
 			if err != nil {
 				return err
@@ -680,17 +683,17 @@ $ %s tx staking transfer-tokenize-share-record 1 %s1gghjut3ccd8ay0zduzj64hwre2fx
 	return cmd
 }
 
-// NewExemptDelegationCmd defines a command to make delegation to a validator as exempt delegation
-func NewExemptDelegationCmd() *cobra.Command {
+// NewValidatorBondCmd defines a command to mark a delegation as a validator self bond
+func NewValidatorBondCmd() *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "exempt-delegation [validator]",
-		Short: "Make delegation to a validator as exempt delegation",
+		Use:   "validator-bond [validator]",
+		Short: "Mark a delegation as a validator self-bond",
 		Args:  cobra.ExactArgs(1),
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Make delegation to a validator as exempt delegation.
+			fmt.Sprintf(`Mark a delegation as a validator self-bond.
 
 Example:
-$ %s tx staking exempt-delegation cosmosvaloper13h5xdxhsdaugwdrkusf8lkgu406h8t62jkqv3h --from mykey
+$ %s tx staking validator-bond cosmosvaloper13h5xdxhsdaugwdrkusf8lkgu406h8t62jkqv3h --from mykey
 `,
 				version.AppName,
 			),
@@ -701,7 +704,7 @@ $ %s tx staking exempt-delegation cosmosvaloper13h5xdxhsdaugwdrkusf8lkgu406h8t62
 				return err
 			}
 
-			msg := &types.MsgExemptDelegation{
+			msg := &types.MsgValidatorBond{
 				DelegatorAddress: clientCtx.GetFromAddress().String(),
 				ValidatorAddress: args[0],
 			}

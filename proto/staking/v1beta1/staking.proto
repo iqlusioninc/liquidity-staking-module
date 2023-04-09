@@ -12,6 +12,10 @@ import "tendermint/types/types.proto";
 
 option go_package = "github.com/iqlusioninc/liquidity-staking-module/x/staking/types";
 
+// NOTE: After generating the protos, the `BondStatus` field in the `Validator` struct
+// should be modified in `staking.pb.go` so that it leverages the type from the sdk
+// instead of LSM
+
 // HistoricalInfo contains header and validator information for a given block.
 // It is stored as part of staking module's state, which persists the `n` most
 // recent HistoricalInfo
@@ -111,14 +115,15 @@ message Validator {
       [(gogoproto.nullable) = false, (gogoproto.stdtime) = true, (gogoproto.moretags) = "yaml:\"unbonding_time\""];
   // commission defines the commission parameters.
   Commission commission = 10 [(gogoproto.nullable) = false];
-  // Number of shares marked_exempt_to_this_validator
-  string total_exempt_shares = 11[
-    (gogoproto.moretags)   = "yaml:\"total_exempt_shares\"",
+  // Number of shares self bonded from the validator
+  string total_validator_bond_shares = 11 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  string total_tokenized_shares = 12[
-    (gogoproto.moretags)   = "yaml:\"total_tokenized_shares\"",
+  // Total number of shares either tokenized or owned by a liquid staking provider 
+  string total_liquid_shares = 12 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
@@ -195,9 +200,13 @@ message Delegation {
   // validator_address is the bech32-encoded address of the validator.
   string validator_address = 2 [(gogoproto.moretags) = "yaml:\"validator_address\""];
   // shares define the delegation shares received.
-  string shares = 3 [(gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec", (gogoproto.nullable) = false];
-  // has this delegation been marked as exempt.
-  bool exempt = 4;
+  string shares = 3 [
+    (cosmos_proto.scalar)  = "cosmos.Dec",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
+    (gogoproto.nullable)   = false
+  ];
+  // has this delegation been marked as a validator self bond.
+  bool validator_bond = 4;
 }
 
 // UnbondingDelegation stores all of a single delegator's unbonding bonds
@@ -294,9 +303,10 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  // exemption_factor is required for tokenize share and undelegation check for network safety
-  string exemption_factor = 7 [
-    (gogoproto.moretags) = "yaml:\"exemption_factor\"",
+  // validator_bond_factor is required as a safety check for tokenizing shares and 
+  // delegations from liquid staking providers
+  string validator_bond_factor = 7 [
+    (gogoproto.moretags) = "yaml:\"validator_bond_factor\"",
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable) = false
   ];
