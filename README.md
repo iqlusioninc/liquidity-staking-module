@@ -1,6 +1,6 @@
 # liquidity-staking-module
 
-The purpose of this repository is to develop and release a new set of staking, distrbution and slashing modules for the Cosmos Hub that are compatible with [cosmos-sdk 0.46](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.1) and do not need to wait on cosmos-sdk 0.47 to be included in a Gaia release and Cosmos hub Upgrade.
+The purpose of this repository is to develop and release a new set of staking, distrbution and slashing modules for the Cosmos Hub that are compatible with [cosmos-sdk v0.47.x](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.12) and [cosmos-sdk v0.47.x]((https://github.com/cosmos/cosmos-sdk/releases/tag/v0.47.1).
 
 ## Liquid Staking design
 
