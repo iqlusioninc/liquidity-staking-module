@@ -4,6 +4,7 @@ import (
 	"testing"
 	"time"
 
+	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,8 +32,8 @@ func TestDelegation(t *testing.T) {
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(10000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
 
-	//construct the validators
-	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
+	// construct the validators
+	amts := []math.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
 	var validators [3]types.Validator
 	for i, amt := range amts {
 		validators[i] = teststaking.NewValidator(t, valAddrs[i], PKs[i])
@@ -247,7 +248,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	require.Equal(t, startTokens, issuedShares.RoundInt())
 
 	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
-	require.True(sdk.IntEq(t, startTokens, validator.BondedTokens()))
+	require.True(math.IntEq(t, startTokens, validator.BondedTokens()))
 	require.True(t, validator.IsBonded())
 
 	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares, false)
@@ -268,8 +269,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	newBonded := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	newNotBonded := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
-	require.True(sdk.IntEq(t, newBonded, oldBonded.SubRaw(int64(maxEntries))))
-	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded.AddRaw(int64(maxEntries))))
+	require.True(math.IntEq(t, newBonded, oldBonded.SubRaw(int64(maxEntries))))
+	require.True(math.IntEq(t, newNotBonded, oldNotBonded.AddRaw(int64(maxEntries))))
 
 	oldBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	oldNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
@@ -281,8 +282,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	newBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	newNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
-	require.True(sdk.IntEq(t, newBonded, oldBonded))
-	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded))
+	require.True(math.IntEq(t, newBonded, oldBonded))
+	require.True(math.IntEq(t, newNotBonded, oldNotBonded))
 
 	// mature unbonding delegations
 	ctx = ctx.WithBlockTime(completionTime)
@@ -291,8 +292,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	newBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	newNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
-	require.True(sdk.IntEq(t, newBonded, oldBonded))
-	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded.SubRaw(int64(maxEntries))))
+	require.True(math.IntEq(t, newBonded, oldBonded))
+	require.True(math.IntEq(t, newNotBonded, oldNotBonded.SubRaw(int64(maxEntries))))
 
 	oldNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
@@ -302,8 +303,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	newBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	newNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
-	require.True(sdk.IntEq(t, newBonded, oldBonded.SubRaw(1)))
-	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded.AddRaw(1)))
+	require.True(math.IntEq(t, newBonded, oldBonded.SubRaw(1)))
+	require.True(math.IntEq(t, newNotBonded, oldNotBonded.AddRaw(1)))
 }
 
 // Make sure that that the retrieving the delegations doesn't affect the state
@@ -482,7 +483,7 @@ func TestRedelegationMaxEntries(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func TestExemptDelegationUndelegate(t *testing.T) {
+func TestValidatorBondUndelegate(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
@@ -500,18 +501,18 @@ func TestExemptDelegationUndelegate(t *testing.T) {
 	validator := teststaking.NewValidator(t, addrVals[0], PKs[0])
 	app.StakingKeeper.SetValidator(ctx, validator)
 
-	// set exemption factor
+	// set validator bond factor
 	params := app.StakingKeeper.GetParams(ctx)
-	params.ExemptionFactor = sdk.NewDec(1)
+	params.ValidatorBondFactor = sdk.NewDec(1)
 	app.StakingKeeper.SetParams(ctx, params)
 
-	// convert to exempt delegation
+	// convert to validator self-bond
 	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
 
 	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
 	err := delegateCoinsFromAccount(ctx, app, addrDels[0], startTokens, validator)
 	require.NoError(t, err)
-	_, err = msgServer.ExemptDelegation(sdk.WrapSDKContext(ctx), &types.MsgExemptDelegation{
+	_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
 		DelegatorAddress: addrDels[0].String(),
 		ValidatorAddress: addrVals[0].String(),
 	})
@@ -556,10 +557,10 @@ func TestExemptDelegationUndelegate(t *testing.T) {
 	require.NoError(t, err)
 
 	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
-	require.Equal(t, validator.TotalExemptShares, sdk.ZeroDec())
+	require.Equal(t, validator.TotalValidatorBondShares, sdk.ZeroDec())
 }
 
-func TestExemptDelegationRedelegate(t *testing.T) {
+func TestValidatorBondRedelegate(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
@@ -579,18 +580,18 @@ func TestExemptDelegationRedelegate(t *testing.T) {
 	validator2 := teststaking.NewValidator(t, addrVals[1], PKs[1])
 	app.StakingKeeper.SetValidator(ctx, validator2)
 
-	// set exemption factor
+	// set validator bond factor
 	params := app.StakingKeeper.GetParams(ctx)
-	params.ExemptionFactor = sdk.NewDec(1)
+	params.ValidatorBondFactor = sdk.NewDec(1)
 	app.StakingKeeper.SetParams(ctx, params)
 
-	// convert to exempt delegation
+	// convert to validator self-bond
 	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
 
 	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
 	err := delegateCoinsFromAccount(ctx, app, addrDels[0], startTokens, validator)
 	require.NoError(t, err)
-	_, err = msgServer.ExemptDelegation(sdk.WrapSDKContext(ctx), &types.MsgExemptDelegation{
+	_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
 		DelegatorAddress: addrDels[0].String(),
 		ValidatorAddress: addrVals[0].String(),
 	})
@@ -637,5 +638,5 @@ func TestExemptDelegationRedelegate(t *testing.T) {
 	require.NoError(t, err)
 
 	validator, _ = app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
-	require.Equal(t, validator.TotalExemptShares, sdk.ZeroDec())
+	require.Equal(t, validator.TotalValidatorBondShares, sdk.ZeroDec())
 }

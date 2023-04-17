@@ -1,7 +1,9 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
+
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,6 +14,7 @@ import (
 // staking message types
 const (
 	TypeMsgUndelegate                  = "begin_unbonding"
+	TypeMsgUnbondValidator             = "unbond_validator"
 	TypeMsgEditValidator               = "edit_validator"
 	TypeMsgCreateValidator             = "create_validator"
 	TypeMsgDelegate                    = "delegate"
@@ -20,7 +23,7 @@ const (
 	TypeMsgTokenizeShares              = "tokenize_shares"
 	TypeMsgRedeemTokensforShares       = "redeem_tokens_for_shares"
 	TypeMsgTransferTokenizeShareRecord = "transfer_tokenize_share_record"
-	TypeMsgExemptDelegation            = "exempt_delegation"
+	TypeMsgValidatorBond               = "validator_bond"
 )
 
 var (
@@ -30,11 +33,13 @@ var (
 	_ sdk.Msg                            = &MsgEditValidator{}
 	_ sdk.Msg                            = &MsgDelegate{}
 	_ sdk.Msg                            = &MsgUndelegate{}
+	_ sdk.Msg                            = &MsgUnbondValidator{}
 	_ sdk.Msg                            = &MsgBeginRedelegate{}
 	_ sdk.Msg                            = &MsgTokenizeShares{}
 	_ sdk.Msg                            = &MsgRedeemTokensforShares{}
 	_ sdk.Msg                            = &MsgTransferTokenizeShareRecord{}
 	_ sdk.Msg                            = &MsgCancelUnbondingDelegation{}
+	_ sdk.Msg                            = &MsgValidatorBond{}
 )
 
 // NewMsgCreateValidator creates a new MsgCreateValidator instance.
@@ -102,7 +107,7 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
 	if !sdk.AccAddress(valAddr).Equals(delAddr) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "validator address is invalid")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "validator address is invalid")
 	}
 
 	if msg.Pubkey == nil {
@@ -110,22 +115,20 @@ func (msg MsgCreateValidator) ValidateBasic() error {
 	}
 
 	if !msg.Value.IsValid() || !msg.Value.Amount.IsPositive() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid delegation amount")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid delegation amount")
 	}
 
 	if msg.Description == (Description{}) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
 	}
 
 	if msg.Commission == (CommissionRates{}) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty commission")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty commission")
 	}
 
-	if err := msg.Commission.Validate(); err != nil {
-		return err
-	}
+	err = msg.Commission.Validate()
 
-	return nil
+	return err
 }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
@@ -135,6 +138,7 @@ func (msg MsgCreateValidator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) 
 }
 
 // NewMsgEditValidator creates a new MsgEditValidator instance
+//
 //nolint:interfacer
 func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRate *sdk.Dec) *MsgEditValidator {
 	return &MsgEditValidator{
@@ -169,12 +173,12 @@ func (msg MsgEditValidator) ValidateBasic() error {
 	}
 
 	if msg.Description == (Description{}) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "empty description")
 	}
 
 	if msg.CommissionRate != nil {
 		if msg.CommissionRate.GT(sdk.OneDec()) || msg.CommissionRate.IsNegative() {
-			return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "commission rate must be between 0 and 1 (inclusive)")
+			return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "commission rate must be between 0 and 1 (inclusive)")
 		}
 	}
 
@@ -182,6 +186,7 @@ func (msg MsgEditValidator) ValidateBasic() error {
 }
 
 // NewMsgDelegate creates a new MsgDelegate instance.
+//
 //nolint:interfacer
 func NewMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) *MsgDelegate {
 	return &MsgDelegate{
@@ -222,7 +227,7 @@ func (msg MsgDelegate) ValidateBasic() error {
 	}
 
 	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
-		return sdkerrors.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"invalid delegation amount",
 		)
@@ -232,6 +237,7 @@ func (msg MsgDelegate) ValidateBasic() error {
 }
 
 // NewMsgBeginRedelegate creates a new MsgBeginRedelegate instance.
+//
 //nolint:interfacer
 func NewMsgBeginRedelegate(
 	delAddr sdk.AccAddress, valSrcAddr, valDstAddr sdk.ValAddress, amount sdk.Coin,
@@ -278,7 +284,7 @@ func (msg MsgBeginRedelegate) ValidateBasic() error {
 	}
 
 	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
-		return sdkerrors.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"invalid shares amount",
 		)
@@ -288,6 +294,7 @@ func (msg MsgBeginRedelegate) ValidateBasic() error {
 }
 
 // NewMsgUndelegate creates a new MsgUndelegate instance.
+//
 //nolint:interfacer
 func NewMsgUndelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.Coin) *MsgUndelegate {
 	return &MsgUndelegate{
@@ -328,10 +335,49 @@ func (msg MsgUndelegate) ValidateBasic() error {
 	}
 
 	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
-		return sdkerrors.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"invalid shares amount",
 		)
+	}
+
+	return nil
+}
+
+// NewMsgUnbondValidator creates a new MsgUnbondValidator instance.
+//
+//nolint:interfacer
+func NewMsgUnbondValidator(valAddr sdk.ValAddress) *MsgUnbondValidator {
+	return &MsgUnbondValidator{
+		ValidatorAddress: valAddr.String(),
+	}
+}
+
+// Route implements the sdk.Msg interface.
+func (msg MsgUnbondValidator) Route() string { return RouterKey }
+
+// Type implements the sdk.Msg interface.
+func (msg MsgUnbondValidator) Type() string { return TypeMsgUnbondValidator }
+
+// GetSigners implements the sdk.Msg interface.
+func (msg MsgUnbondValidator) GetSigners() []sdk.AccAddress {
+	valAddr, err := sdk.ValAddressFromBech32(msg.ValidatorAddress)
+	if err != nil {
+		panic(err)
+	}
+	return []sdk.AccAddress{valAddr.Bytes()}
+}
+
+// GetSignBytes implements the sdk.Msg interface.
+func (msg MsgUnbondValidator) GetSignBytes() []byte {
+	bz := legacy.Cdc.MustMarshalJSON(&msg)
+	return sdk.MustSortJSON(bz)
+}
+
+// ValidateBasic implements the sdk.Msg interface.
+func (msg MsgUnbondValidator) ValidateBasic() error {
+	if _, err := sdk.ValAddressFromBech32(msg.ValidatorAddress); err != nil {
+		return sdkerrors.ErrInvalidAddress.Wrapf("invalid validator address: %s", err)
 	}
 
 	return nil
@@ -365,7 +411,7 @@ func (msg MsgTokenizeShares) ValidateBasic() error {
 	}
 
 	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
-		return sdkerrors.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"invalid shares amount",
 		)
@@ -396,7 +442,7 @@ func (msg MsgRedeemTokensforShares) ValidateBasic() error {
 	}
 
 	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
-		return sdkerrors.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"invalid shares amount",
 		)
@@ -433,6 +479,7 @@ func (msg MsgTransferTokenizeShareRecord) ValidateBasic() error {
 }
 
 // NewMsgCancelUnbondingDelegation creates a new MsgCancelUnbondingDelegation instance.
+//
 //nolint:interfacer
 func NewMsgCancelUnbondingDelegation(delAddr sdk.AccAddress, valAddr sdk.ValAddress, creationHeight int64, amount sdk.Coin) *MsgCancelUnbondingDelegation {
 	return &MsgCancelUnbondingDelegation{
@@ -470,14 +517,14 @@ func (msg MsgCancelUnbondingDelegation) ValidateBasic() error {
 	}
 
 	if !msg.Amount.IsValid() || !msg.Amount.Amount.IsPositive() {
-		return sdkerrors.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"invalid amount",
 		)
 	}
 
 	if msg.CreationHeight <= 0 {
-		return sdkerrors.Wrap(
+		return errorsmod.Wrap(
 			sdkerrors.ErrInvalidRequest,
 			"invalid height",
 		)
@@ -486,23 +533,24 @@ func (msg MsgCancelUnbondingDelegation) ValidateBasic() error {
 	return nil
 }
 
-// NewMsgExemptDelegation creates a new MsgExemptDelegation instance.
+// NewMsgValidatorBond creates a new MsgValidatorBond instance.
+//
 //nolint:interfacer
-func NewMsgExemptDelegation(delAddr sdk.AccAddress, valAddr sdk.ValAddress) *MsgExemptDelegation {
-	return &MsgExemptDelegation{
+func NewMsgValidatorBond(delAddr sdk.AccAddress, valAddr sdk.ValAddress) *MsgValidatorBond {
+	return &MsgValidatorBond{
 		DelegatorAddress: delAddr.String(),
 		ValidatorAddress: valAddr.String(),
 	}
 }
 
 // Route implements the sdk.Msg interface.
-func (msg MsgExemptDelegation) Route() string { return RouterKey }
+func (msg MsgValidatorBond) Route() string { return RouterKey }
 
 // Type implements the sdk.Msg interface.
-func (msg MsgExemptDelegation) Type() string { return TypeMsgExemptDelegation }
+func (msg MsgValidatorBond) Type() string { return TypeMsgValidatorBond }
 
 // GetSigners implements the sdk.Msg interface.
-func (msg MsgExemptDelegation) GetSigners() []sdk.AccAddress {
+func (msg MsgValidatorBond) GetSigners() []sdk.AccAddress {
 	delegator, err := sdk.AccAddressFromBech32(msg.DelegatorAddress)
 	if err != nil {
 		panic(err)
@@ -511,13 +559,13 @@ func (msg MsgExemptDelegation) GetSigners() []sdk.AccAddress {
 }
 
 // GetSignBytes implements the sdk.Msg interface.
-func (msg MsgExemptDelegation) GetSignBytes() []byte {
+func (msg MsgValidatorBond) GetSignBytes() []byte {
 	bz := legacy.Cdc.MustMarshalJSON(&msg)
 	return sdk.MustSortJSON(bz)
 }
 
 // ValidateBasic implements the sdk.Msg interface.
-func (msg MsgExemptDelegation) ValidateBasic() error {
+func (msg MsgValidatorBond) ValidateBasic() error {
 	if _, err := sdk.AccAddressFromBech32(msg.DelegatorAddress); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid delegator address: %s", err)
 	}

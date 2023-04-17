@@ -137,7 +137,6 @@ Example:
 			args.algo, _ = cmd.Flags().GetString(flags.FlagKeyAlgorithm)
 
 			return initTestnetFiles(clientCtx, cmd, config, mbm, genBalIterator, args)
-
 		},
 	}
 
@@ -163,7 +162,6 @@ Example:
 	liquidstakingd testnet start --v 4 --output-dir ./.testnets
 	`,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-
 			args := startArgs{}
 			args.outputDir, _ = cmd.Flags().GetString(flagOutputDir)
 			args.chainID, _ = cmd.Flags().GetString(flags.FlagChainID)
@@ -177,7 +175,6 @@ Example:
 			args.printMnemonic, _ = cmd.Flags().GetBool(flagPrintMnemonic)
 
 			return startTestnet(cmd, args)
-
 		},
 	}
 
@@ -190,7 +187,7 @@ Example:
 	return cmd
 }
 
-const nodeDirPerm = 0755
+const nodeDirPerm = 0o755
 
 // initTestnetFiles initializes testnet files for a testnet to be run in a separate process
 func initTestnetFiles(
@@ -354,7 +351,6 @@ func initGenFiles(
 	genAccounts []authtypes.GenesisAccount, genBalances []banktypes.Balance,
 	genFiles []string, numValidators int,
 ) error {
-
 	appGenState := mbm.DefaultGenesis(clientCtx.Codec)
 
 	// set the accounts in the genesis state
@@ -404,7 +400,6 @@ func collectGenFiles(
 	nodeIDs []string, valPubKeys []cryptotypes.PubKey, numValidators int,
 	outputDir, nodeDirPrefix, nodeDaemonHome string, genBalIterator banktypes.GenesisBalancesIterator,
 ) error {
-
 	var appState json.RawMessage
 	genTime := tmtime.Now()
 
@@ -473,12 +468,12 @@ func writeFile(name string, dir string, contents []byte) error {
 	writePath := filepath.Join(dir)
 	file := filepath.Join(writePath, name)
 
-	err := tmos.EnsureDir(writePath, 0755)
+	err := tmos.EnsureDir(writePath, 0o755)
 	if err != nil {
 		return err
 	}
 
-	err = ioutil.WriteFile(file, contents, 0644) // nolint: gosec
+	err = ioutil.WriteFile(file, contents, 0o644) // nolint: gosec
 	if err != nil {
 		return err
 	}

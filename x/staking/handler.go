@@ -1,7 +1,9 @@
 package staking
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/keeper"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
@@ -34,6 +36,10 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.Undelegate(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 
+		case *types.MsgUnbondValidator:
+			res, err := msgServer.UnbondValidator(sdk.WrapSDKContext(ctx), msg)
+			return sdk.WrapServiceResult(ctx, res, err)
+
 		case *types.MsgTokenizeShares:
 			res, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
@@ -47,7 +53,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			return sdk.WrapServiceResult(ctx, res, err)
 
 		default:
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", types.ModuleName, msg)
+			return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized %s message type: %T", types.ModuleName, msg)
 		}
 	}
 }

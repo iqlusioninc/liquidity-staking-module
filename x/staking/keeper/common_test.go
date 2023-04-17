@@ -4,6 +4,7 @@ import (
 	"math/big"
 	"testing"
 
+	"cosmossdk.io/math"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -14,9 +15,7 @@ import (
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
-var (
-	PKs = simapp.CreateTestPubKeys(500)
-)
+var PKs = simapp.CreateTestPubKeys(500)
 
 func init() {
 	sdk.DefaultPowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
@@ -51,7 +50,7 @@ func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int) ([]sdk
 	return addrDels, addrVals
 }
 
-func delegateCoinsFromAccount(ctx sdk.Context, app *simapp.SimApp, addr sdk.AccAddress, amount sdk.Int, val types.Validator) error {
+func delegateCoinsFromAccount(ctx sdk.Context, app *simapp.SimApp, addr sdk.AccAddress, amount math.Int, val types.Validator) error {
 	// bondDenom := app.StakingKeeper.BondDenom(ctx)
 	// coins := sdk.Coins{sdk.NewCoin(bondDenom, amount)}
 	// app.BankKeeper.DelegateCoinsFromAccountToModule(ctx, addr, types.EpochDelegationPoolName, coins)

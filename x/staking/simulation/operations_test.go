@@ -328,5 +328,4 @@ func setupValidatorRewards(app *simapp.SimApp, ctx sdk.Context, valAddress sdk.V
 	// setup current revards
 	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)
 	app.DistrKeeper.SetValidatorCurrentRewards(ctx, valAddress, currentRewards)
-
 }
