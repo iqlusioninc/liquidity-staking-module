@@ -1,0 +1,1 @@
+go get github.com/cosmos/cosmos-sdk/x/gov/types/v1@v0.45.15-ics
