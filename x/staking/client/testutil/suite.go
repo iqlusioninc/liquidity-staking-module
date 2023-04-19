@@ -96,8 +96,7 @@ func (s *IntegrationTestSuite) TestNewCreateValidatorCmd() {
 	k, _, err := val.ClientCtx.Keyring.NewMnemonic("NewValidator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(err)
 
-	pub, err := k.GetPubKey()
-	require.NoError(err)
+	pub := k.GetPubKey()
 
 	newAddr := sdk.AccAddress(pub.Address())
 	_, err = banktestutil.MsgSendExec(
@@ -1061,8 +1060,7 @@ func (s *IntegrationTestSuite) TestNewDelegateCmd() {
 	k, _, err := val.ClientCtx.Keyring.NewMnemonic("NewAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
 
-	pub, err := k.GetPubKey()
-	s.Require().NoError(err)
+	pub := k.GetPubKey()
 
 	newAddr := sdk.AccAddress(pub.Address())
 
@@ -1548,8 +1546,7 @@ func (s *IntegrationTestSuite) TestBlockResults() {
 	// Create new account in the keyring.
 	k, _, err := val.ClientCtx.Keyring.NewMnemonic("NewDelegator", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(err)
-	pub, err := k.GetPubKey()
-	require.NoError(err)
+	pub := k.GetPubKey()
 	newAddr := sdk.AccAddress(pub.Address())
 
 	// Send some funds to the new account.

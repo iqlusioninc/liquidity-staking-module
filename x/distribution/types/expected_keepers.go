@@ -1,7 +1,6 @@
 package types
 
 import (
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -52,7 +51,7 @@ type StakingKeeper interface {
 	ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) sdkstaking.ValidatorI // get a particular validator by consensus address
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
-	Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec) math.Int
+	Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec) sdk.Int
 	Jail(sdk.Context, sdk.ConsAddress)   // jail a validator
 	Unjail(sdk.Context, sdk.ConsAddress) // unjail a validator
 
@@ -66,7 +65,7 @@ type StakingKeeper interface {
 	IterateDelegations(ctx sdk.Context, delegator sdk.AccAddress,
 		fn func(index int64, delegation sdkstaking.DelegationI) (stop bool))
 
-	GetLastTotalPower(ctx sdk.Context) math.Int
+	GetLastTotalPower(ctx sdk.Context) sdk.Int
 	GetLastValidatorPower(ctx sdk.Context, valAddr sdk.ValAddress) int64
 
 	GetAllSDKDelegations(ctx sdk.Context) []stakingtypes.Delegation

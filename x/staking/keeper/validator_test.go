@@ -5,7 +5,6 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
@@ -297,7 +296,7 @@ func TestValidatorBasics(t *testing.T) {
 	require.Equal(t, 1, len(resVals))
 	assert.True(ValEq(t, validators[0], resVals[0]))
 	assert.Equal(t, sdkstaking.Bonded, validators[0].Status)
-	assert.True(math.IntEq(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 9), validators[0].BondedTokens()))
+	assert.True(sdk.IntEq(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 9), validators[0].BondedTokens()))
 
 	// modify a records, save, and retrieve
 	validators[0].Status = sdkstaking.Bonded
@@ -354,7 +353,7 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	app, ctx, addrs, _ := bootstrapValidatorTest(t, 1000, 20)
 
 	// initialize some validators into the state
-	amts := []math.Int{
+	amts := []sdk.Int{
 		sdk.NewIntFromUint64(0),
 		app.StakingKeeper.PowerReduction(ctx).MulRaw(100),
 		app.StakingKeeper.PowerReduction(ctx),
@@ -448,7 +447,7 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 	app.StakingKeeper.SetParams(ctx, params)
 
 	// initialize some validators into the state
-	amts := []math.Int{
+	amts := []sdk.Int{
 		sdk.NewIntFromUint64(0),
 		app.StakingKeeper.PowerReduction(ctx).MulRaw(100),
 		app.StakingKeeper.PowerReduction(ctx),

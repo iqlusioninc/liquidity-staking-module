@@ -7,7 +7,6 @@ package v034
 import (
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -34,8 +33,8 @@ type (
 	BondStatus byte
 
 	Pool struct {
-		NotBondedTokens math.Int `json:"not_bonded_tokens"`
-		BondedTokens    math.Int `json:"bonded_tokens"`
+		NotBondedTokens sdk.Int `json:"not_bonded_tokens"`
+		BondedTokens    sdk.Int `json:"bonded_tokens"`
 	}
 
 	Params struct {
@@ -69,13 +68,13 @@ type (
 		ConsPubKey              string         `json:"consensus_pubkey"`    // the bech32 consensus public key of the validator
 		Jailed                  bool           `json:"jailed"`              // has the validator been jailed from bonded status?
 		Status                  BondStatus     `json:"status"`              // validator status (bonded/unbonding/unbonded)
-		Tokens                  math.Int       `json:"tokens"`              // delegated tokens (incl. self-delegation)
+		Tokens                  sdk.Int        `json:"tokens"`              // delegated tokens (incl. self-delegation)
 		DelegatorShares         sdk.Dec        `json:"delegator_shares"`    // total shares issued to a validator's delegators
 		Description             Description    `json:"description"`         // description terms for the validator
 		UnbondingHeight         int64          `json:"unbonding_height"`    // if unbonding, height at which this validator has begun unbonding
 		UnbondingCompletionTime time.Time      `json:"unbonding_time"`      // if unbonding, min time for the validator to complete unbonding
 		Commission              Commission     `json:"commission"`          // commission parameters
-		MinSelfDelegation       math.Int       `json:"min_self_delegation"` // minimum self delegation
+		MinSelfDelegation       sdk.Int        `json:"min_self_delegation"` // minimum self delegation
 	}
 
 	Validator struct {
@@ -83,13 +82,13 @@ type (
 		ConsPubKey              cryptotypes.PubKey `json:"consensus_pubkey"`
 		Jailed                  bool               `json:"jailed"`
 		Status                  BondStatus         `json:"status"`
-		Tokens                  math.Int           `json:"tokens"`
+		Tokens                  sdk.Int            `json:"tokens"`
 		DelegatorShares         sdk.Dec            `json:"delegator_shares"`
 		Description             Description        `json:"description"`
 		UnbondingHeight         int64              `json:"unbonding_height"`
 		UnbondingCompletionTime time.Time          `json:"unbonding_time"`
 		Commission              Commission         `json:"commission"`
-		MinSelfDelegation       math.Int           `json:"min_self_delegation"`
+		MinSelfDelegation       sdk.Int            `json:"min_self_delegation"`
 	}
 
 	Validators []Validator
@@ -105,8 +104,8 @@ type (
 	UnbondingDelegationEntry struct {
 		CreationHeight int64     `json:"creation_height"`
 		CompletionTime time.Time `json:"completion_time"`
-		InitialBalance math.Int  `json:"initial_balance"`
-		Balance        math.Int  `json:"balance"`
+		InitialBalance sdk.Int   `json:"initial_balance"`
+		Balance        sdk.Int   `json:"balance"`
 	}
 
 	UnbondingDelegation struct {
@@ -118,7 +117,7 @@ type (
 	RedelegationEntry struct {
 		CreationHeight int64     `json:"creation_height"`
 		CompletionTime time.Time `json:"completion_time"`
-		InitialBalance math.Int  `json:"initial_balance"`
+		InitialBalance sdk.Int   `json:"initial_balance"`
 		SharesDst      sdk.Dec   `json:"shares_dst"`
 	}
 
@@ -132,7 +131,7 @@ type (
 	GenesisState struct {
 		Pool                 Pool                  `json:"pool"`
 		Params               Params                `json:"params"`
-		LastTotalPower       math.Int              `json:"last_total_power"`
+		LastTotalPower       sdk.Int               `json:"last_total_power"`
 		LastValidatorPowers  []LastValidatorPower  `json:"last_validator_powers"`
 		Validators           Validators            `json:"validators"`
 		Delegations          Delegations           `json:"delegations"`

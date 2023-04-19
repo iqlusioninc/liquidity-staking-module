@@ -4,7 +4,6 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,7 +32,7 @@ func TestDelegation(t *testing.T) {
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
 
 	// construct the validators
-	amts := []math.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
+	amts := []sdk.Int{sdk.NewInt(9), sdk.NewInt(8), sdk.NewInt(7)}
 	var validators [3]types.Validator
 	for i, amt := range amts {
 		validators[i] = teststaking.NewValidator(t, valAddrs[i], PKs[i])
@@ -248,7 +247,7 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	require.Equal(t, startTokens, issuedShares.RoundInt())
 
 	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
-	require.True(math.IntEq(t, startTokens, validator.BondedTokens()))
+	require.True(sdk.IntEq(t, startTokens, validator.BondedTokens()))
 	require.True(t, validator.IsBonded())
 
 	delegation := types.NewDelegation(addrDels[0], addrVals[0], issuedShares, false)
@@ -269,8 +268,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	newBonded := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	newNotBonded := app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
-	require.True(math.IntEq(t, newBonded, oldBonded.SubRaw(int64(maxEntries))))
-	require.True(math.IntEq(t, newNotBonded, oldNotBonded.AddRaw(int64(maxEntries))))
+	require.True(sdk.IntEq(t, newBonded, oldBonded.SubRaw(int64(maxEntries))))
+	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded.AddRaw(int64(maxEntries))))
 
 	oldBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	oldNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
@@ -282,8 +281,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 	newBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	newNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
-	require.True(math.IntEq(t, newBonded, oldBonded))
-	require.True(math.IntEq(t, newNotBonded, oldNotBonded))
+	require.True(sdk.IntEq(t, newBonded, oldBonded))
+	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded))
 
 	// mature unbonding delegations
 	ctx = ctx.WithBlockTime(completionTime)
@@ -292,8 +291,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	newBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	newNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
-	require.True(math.IntEq(t, newBonded, oldBonded))
-	require.True(math.IntEq(t, newNotBonded, oldNotBonded.SubRaw(int64(maxEntries))))
+	require.True(sdk.IntEq(t, newBonded, oldBonded))
+	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded.SubRaw(int64(maxEntries))))
 
 	oldNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
 
@@ -303,8 +302,8 @@ func TestUnbondingDelegationsMaxEntries(t *testing.T) {
 
 	newBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetBondedPool(ctx).GetAddress(), bondDenom).Amount
 	newNotBonded = app.BankKeeper.GetBalance(ctx, app.StakingKeeper.GetNotBondedPool(ctx).GetAddress(), bondDenom).Amount
-	require.True(math.IntEq(t, newBonded, oldBonded.SubRaw(1)))
-	require.True(math.IntEq(t, newNotBonded, oldNotBonded.AddRaw(1)))
+	require.True(sdk.IntEq(t, newBonded, oldBonded.SubRaw(1)))
+	require.True(sdk.IntEq(t, newNotBonded, oldNotBonded.AddRaw(1)))
 }
 
 // Make sure that that the retrieving the delegations doesn't affect the state
