@@ -11,10 +11,10 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	simapp_test "github.com/cosmos/cosmos-sdk/simapp"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/genutil"
@@ -65,7 +65,7 @@ func (suite *GenTxTestSuite) setAccountBalance(addr sdk.AccAddress, amount int64
 	acc := suite.app.AccountKeeper.NewAccountWithAddress(suite.ctx, addr)
 	suite.app.AccountKeeper.SetAccount(suite.ctx, acc)
 
-	err := testutil.FundAccount(suite.app.BankKeeper, suite.ctx, addr, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, amount)})
+	err := simapp_test.FundAccount(suite.app.BankKeeper, suite.ctx, addr, sdk.Coins{sdk.NewInt64Coin(sdk.DefaultBondDenom, amount)})
 	suite.Require().NoError(err)
 
 	bankGenesisState := suite.app.BankKeeper.ExportGenesis(suite.ctx)
@@ -111,7 +111,7 @@ func (suite *GenTxTestSuite) TestSetGenTxsInAppGenesisState() {
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest()
-			cdc := suite.encodingConfig.Codec
+			cdc := suite.encodingConfig.Marshaler
 			txJSONEncoder := suite.encodingConfig.TxConfig.TxJSONEncoder()
 
 			tc.malleate()
@@ -178,7 +178,7 @@ func (suite *GenTxTestSuite) TestValidateAccountInGenesis() {
 	for _, tc := range testCases {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			suite.SetupTest()
-			cdc := suite.encodingConfig.Codec
+			cdc := suite.encodingConfig.Marshaler
 
 			suite.app.StakingKeeper.SetParams(suite.ctx, stakingtypes.DefaultParams())
 			stakingGenesisState := suite.app.StakingKeeper.ExportGenesis(suite.ctx)

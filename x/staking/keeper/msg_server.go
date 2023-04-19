@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -44,7 +45,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	}
 
 	if msg.Commission.Rate.LT(k.MinCommissionRate(ctx)) {
-		return nil, errorsmod.Wrapf(sdkstaking.ErrCommissionLTMinRate, "cannot set validator commission to less than minimum rate of %s", k.MinCommissionRate(ctx))
+		return nil, errorsmod.Wrapf(errors.New("commission cannot be less than min rate"), "cannot set validator commission to less than minimum rate of %s", k.MinCommissionRate(ctx))
 	}
 
 	// check to see if the pubkey or sender has been registered before
@@ -534,11 +535,11 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			sdkstaking.EventTypeCancelUnbondingDelegation,
+			"cancel_unbonding_delegation",
 			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
-			sdk.NewAttribute(sdkstaking.AttributeKeyCreationHeight, strconv.FormatInt(msg.CreationHeight, 10)),
+			sdk.NewAttribute("creation_height", strconv.FormatInt(msg.CreationHeight, 10)),
 		),
 	)
 

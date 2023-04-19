@@ -9,8 +9,8 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	simapp_test "github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking"
@@ -65,7 +65,7 @@ func TestInitGenesis(t *testing.T) {
 	// mint coins in the bonded pool representing the validators coins
 	i2 := len(validators) - 1 // -1 to exclude genesis validator
 	require.NoError(t,
-		testutil.FundModuleAccount(
+		simapp_test.FundModuleAccount(
 			app.BankKeeper,
 			ctx,
 			types.BondedPoolName,
@@ -199,7 +199,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 
 	// mint coins in the bonded pool representing the validators coins
 	require.NoError(t,
-		testutil.FundModuleAccount(
+		simapp_test.FundModuleAccount(
 			app.BankKeeper,
 			ctx,
 			types.BondedPoolName,

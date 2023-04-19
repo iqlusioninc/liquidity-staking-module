@@ -7,5 +7,6 @@ import (
 
 // ProposalHandler is the community spend proposal handler.
 var (
-	ProposalHandler = govclient.NewProposalHandler(cli.GetCmdSubmitProposal)
+	// ProposalHandler = govclient.NewProposalHandler(cli.GetCmdSubmitProposal)
+	ProposalHandler = govclient.NewProposalHandler(cli.GetCmdSubmitProposal, cli.)
 )

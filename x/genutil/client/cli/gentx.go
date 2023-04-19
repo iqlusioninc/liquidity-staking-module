@@ -120,10 +120,8 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			if err != nil {
 				return errors.Wrap(err, "failed to parse coins")
 			}
-			addr, err := key.GetAddress()
-			if err != nil {
-				return err
-			}
+			addr := key.GetAddress()
+
 			err = genutil.ValidateAccountInGenesis(genesisState, genBalIterator, addr, coins, cdc)
 			if err != nil {
 				return errors.Wrap(err, "failed to validate account in genesis")
@@ -133,10 +131,8 @@ $ %s gentx my-key-name 1000000stake --home=/path/to/home/dir --keyring-backend=o
 			if err != nil {
 				return errors.Wrap(err, "error creating tx builder")
 			}
-			pub, err := key.GetAddress()
-			if err != nil {
-				return err
-			}
+			pub := key.GetAddress()
+
 			clientCtx = clientCtx.WithInput(inBuf).WithFromAddress(pub)
 
 			// The following line comes from a discrepancy between the `gentx`
