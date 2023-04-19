@@ -28,7 +28,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/types"
 	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	"github.com/cosmos/cosmos-sdk/simapp/params"
-	"github.com/cosmos/cosmos-sdk/testutil/mock"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -73,7 +72,7 @@ func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 	encCdc := MakeTestEncodingConfig()
 	app := NewSimApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, invCheckPeriod, encCdc, EmptyAppOptions{})
 	if withGenesis {
-		return app, NewDefaultGenesisState(encCdc.Codec)
+		return app, NewDefaultGenesisState(encCdc.Marshaler)
 	}
 	return app, GenesisState{}
 }
@@ -82,8 +81,8 @@ func setup(withGenesis bool, invCheckPeriod uint) (*SimApp, GenesisState) {
 func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptions) *SimApp {
 	t.Helper()
 
-	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey()
+	pk := ed25519.GenPrivKey().PubKey()
+	pubKey, err := cryptocodec.ToTmPubKeyInterface(pk)
 	require.NoError(t, err)
 	// create validator set with single validator
 	validator := tmtypes.NewValidator(pubKey, 1)
@@ -123,8 +122,8 @@ func NewSimappWithCustomOptions(t *testing.T, isCheckTx bool, options SetupOptio
 func Setup(t *testing.T, isCheckTx bool) *SimApp {
 	t.Helper()
 
-	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey()
+	pk := ed25519.GenPrivKey().PubKey()
+	pubKey, err := cryptocodec.ToTmPubKeyInterface(pk)
 	require.NoError(t, err)
 
 	// create validator set with single validator
@@ -245,9 +244,8 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 // accounts and possible balances.
 func SetupWithGenesisAccounts(t *testing.T, genAccs []authtypes.GenesisAccount, balances ...banktypes.Balance) *SimApp {
 	t.Helper()
-
-	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey()
+	pk := ed25519.GenPrivKey().PubKey()
+	pubKey, err := cryptocodec.ToTmPubKeyInterface(pk)
 	require.NoError(t, err)
 
 	// create validator set with single validator
@@ -262,8 +260,8 @@ func SetupWithGenesisAccounts(t *testing.T, genAccs []authtypes.GenesisAccount, 
 func GenesisStateWithSingleValidator(t *testing.T, app *SimApp) GenesisState {
 	t.Helper()
 
-	privVal := mock.NewPV()
-	pubKey, err := privVal.GetPubKey()
+	pk := ed25519.GenPrivKey().PubKey()
+	pubKey, err := cryptocodec.ToTmPubKeyInterface(pk)
 	require.NoError(t, err)
 
 	// create validator set with single validator
@@ -310,7 +308,7 @@ func createIncrementalAccounts(accNum int) []sdk.AccAddress {
 		buffer.WriteString("A58856F0FD53BF058B4909A21AEC019107BA6") // base address string
 
 		buffer.WriteString(numString) // adding on final two digits to make addresses unique
-		res, _ := sdk.AccAddressFromHexUnsafe(buffer.String())
+		res, _ := sdk.AccAddressFromHex(buffer.String())
 		bech := res.String()
 		addr, _ := TestAddr(buffer.String(), bech)
 
@@ -378,7 +376,7 @@ func ConvertAddrsToValAddrs(addrs []sdk.AccAddress) []sdk.ValAddress {
 }
 
 func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
-	res, err := sdk.AccAddressFromHexUnsafe(addr)
+	res, err := sdk.AccAddressFromHex(addr)
 	if err != nil {
 		return nil, err
 	}
@@ -440,7 +438,7 @@ func SignCheckDeliver(
 
 	// Simulate a sending a transaction and committing a block
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
+	gInfo, res, err := app.Deliver(txCfg.TxEncoder(), tx)
 
 	if expPass {
 		require.NoError(t, err)
