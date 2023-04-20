@@ -23,11 +23,11 @@ func TestDelegation(t *testing.T) {
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
 	require.Len(t, delegations, 1)
 
-	app.StakingKeeper.RemoveDelegation(ctx, types.Delegation{
+	err := app.StakingKeeper.RemoveDelegation(ctx, types.Delegation{
 		ValidatorAddress: delegations[0].ValidatorAddress,
 		DelegatorAddress: delegations[0].DelegatorAddress,
 	})
-
+	require.NoError(t, err)
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 3, sdk.NewInt(10000))
 	valAddrs := simapp.ConvertAddrsToValAddrs(addrDels)
 
@@ -118,7 +118,8 @@ func TestDelegation(t *testing.T) {
 	}
 
 	// delete a record
-	app.StakingKeeper.RemoveDelegation(ctx, bond2to3)
+	err = app.StakingKeeper.RemoveDelegation(ctx, bond2to3)
+	require.NoError(t, err)
 	_, found = app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[1], valAddrs[2])
 	require.False(t, found)
 	resBonds = app.StakingKeeper.GetDelegatorDelegations(ctx, addrDels[1], 5)
@@ -130,8 +131,10 @@ func TestDelegation(t *testing.T) {
 	require.Equal(t, 2, len(resBonds))
 
 	// delete all the records from delegator 2
-	app.StakingKeeper.RemoveDelegation(ctx, bond2to1)
-	app.StakingKeeper.RemoveDelegation(ctx, bond2to2)
+	err = app.StakingKeeper.RemoveDelegation(ctx, bond2to1)
+	require.NoError(t, err)
+	err = app.StakingKeeper.RemoveDelegation(ctx, bond2to2)
+	require.NoError(t, err)
 	_, found = app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[1], valAddrs[0])
 	require.False(t, found)
 	_, found = app.StakingKeeper.GetLiquidDelegation(ctx, addrDels[1], valAddrs[1])

@@ -209,16 +209,18 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			val1.Status = sdkstaking.Bonded
 			app.StakingKeeper.SetValidator(ctx, val1)
 			app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
-			app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
+			err := app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
+			require.NoError(t, err)
 
 			val2 := teststaking.NewValidator(t, addrVal2, pk2)
 			val2.Status = sdkstaking.Bonded
 			app.StakingKeeper.SetValidator(ctx, val2)
 			app.StakingKeeper.SetValidatorByPowerIndex(ctx, val2)
-			app.StakingKeeper.SetValidatorByConsAddr(ctx, val2)
+			err = app.StakingKeeper.SetValidatorByConsAddr(ctx, val2)
+			require.NoError(t, err)
 
 			delTokens := tc.delegationAmount
-			err := delegateCoinsFromAccount(ctx, app, addrAcc2, delTokens, val1)
+			err = delegateCoinsFromAccount(ctx, app, addrAcc2, delTokens, val1)
 			require.NoError(t, err)
 
 			// apply TM updates
@@ -460,7 +462,8 @@ func TestValidatorBond(t *testing.T) {
 			val1.Status = sdkstaking.Bonded
 			app.StakingKeeper.SetValidator(ctx, val1)
 			app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
-			app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
+			err := app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
+			require.NoError(t, err)
 
 			delTokens := tc.delegationAmount
 			if delTokens.IsPositive() {
@@ -469,7 +472,7 @@ func TestValidatorBond(t *testing.T) {
 			}
 
 			msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
-			_, err := msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
+			_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
 				DelegatorAddress: addrAcc1.String(),
 				ValidatorAddress: addrVal1.String(),
 			})
@@ -506,11 +509,12 @@ func TestUnbondValidator(t *testing.T) {
 	val1.Status = sdkstaking.Bonded
 	app.StakingKeeper.SetValidator(ctx, val1)
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
-	app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
+	err := app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
+	require.NoError(t, err)
 
 	// try unbonding not available validator
 	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
-	_, err := msgServer.UnbondValidator(sdk.WrapSDKContext(ctx), &types.MsgUnbondValidator{
+	_, err = msgServer.UnbondValidator(sdk.WrapSDKContext(ctx), &types.MsgUnbondValidator{
 		ValidatorAddress: sdk.ValAddress(addrs[1]).String(),
 	})
 	require.Error(t, err)

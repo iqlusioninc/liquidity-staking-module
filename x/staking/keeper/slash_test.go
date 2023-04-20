@@ -43,7 +43,8 @@ func bootstrapSlashTest(t *testing.T, power int64) (*simapp.SimApp, sdk.Context,
 		validator := teststaking.NewValidator(t, addrVals[i], PKs[i])
 		validator, _ = validator.AddTokensFromDel(amt)
 		validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
-		app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
+		err := app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
+		require.NoError(t, err)
 	}
 
 	return app, ctx, addrDels, addrVals
@@ -616,5 +617,4 @@ func TestSlashAmount(t *testing.T) {
 	// test the case where the validator was not found, which should return no coins
 	_, addrVals := generateAddresses(app, ctx, 100)
 	require.Panics(t, func() { app.StakingKeeper.Slash(ctx, sdk.ConsAddress(addrVals[0]), ctx.BlockHeight(), 10, fraction, 0) })
-
 }
