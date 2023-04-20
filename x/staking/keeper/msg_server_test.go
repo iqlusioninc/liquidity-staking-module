@@ -296,7 +296,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 				val1, found = app.StakingKeeper.GetLiquidValidator(ctx, addrVal1)
 				require.True(t, found)
 				power := app.StakingKeeper.TokensToConsensusPower(ctx, val1.Tokens)
-				app.StakingKeeper.Slash(ctx, consAddr, 10, power, tc.slashFactor, 0)
+				app.StakingKeeper.Slash(ctx, consAddr, 10, power, tc.slashFactor)
 			}
 
 			// get deletagor balance and delegation
