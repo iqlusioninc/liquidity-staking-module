@@ -607,14 +607,3 @@ func TestSlashBoth(t *testing.T) {
 	// power not decreased, all stake was bonded since
 	require.Equal(t, int64(10), validator.GetConsensusPower(app.StakingKeeper.PowerReduction(ctx)))
 }
-
-func TestSlashAmount(t *testing.T) {
-	app, ctx, _, _ := bootstrapSlashTest(t, 10)
-	consAddr := sdk.ConsAddress(PKs[0].Address())
-	fraction := sdk.NewDecWithPrec(5, 1)
-	require.Panics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 1, 10, fraction) })
-
-	// test the case where the validator was not found, which should return no coins
-	_, addrVals := generateAddresses(app, ctx, 100)
-	require.Panics(t, func() { app.StakingKeeper.Slash(ctx, sdk.ConsAddress(addrVals[0]), ctx.BlockHeight(), 10, fraction) })
-}

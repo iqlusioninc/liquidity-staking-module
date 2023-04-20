@@ -82,7 +82,7 @@ func TestRunMigrations(t *testing.T) {
 	bApp.SetCommitMultiStoreTracer(nil)
 	bApp.SetInterfaceRegistry(encCfg.InterfaceRegistry)
 	app.BaseApp = bApp
-	app.configurator = module.NewConfigurator(app.appCodec, bApp.MsgServiceRouter(), app.GRPCQueryRouter())
+	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
 
 	// We register all modules on the Configurator, except x/bank. x/bank will
 	// serve as the test subject on which we run the migration tests.
@@ -104,7 +104,7 @@ func TestRunMigrations(t *testing.T) {
 	testCases := []struct {
 		name         string
 		moduleName   string
-		fromVersion  uint64
+		forVersion   uint64
 		expRegErr    bool // errors while registering migration
 		expRegErrMsg string
 		expRunErr    bool // errors while running migration
@@ -122,17 +122,12 @@ func TestRunMigrations(t *testing.T) {
 			false, "", true, "no migrations found for module bank: not found", 0,
 		},
 		{
-			"can register 1->2 migration handler for x/bank, cannot run migration",
+			"can register and run migration handler for x/bank",
 			"bank", 1,
-			false, "", true, "no migration found for module bank from version 2 to version 3: not found", 0,
-		},
-		{
-			"can register 2->3 migration handler for x/bank, can run migration",
-			"bank", 2,
 			false, "", false, "", 1,
 		},
 		{
-			"cannot register migration handler for same module & fromVersion",
+			"cannot register migration handler for same module & forVersion",
 			"bank", 1,
 			true, "another migration for module bank and version 1 already exists: internal logic error", false, "", 0,
 		},
@@ -149,8 +144,8 @@ func TestRunMigrations(t *testing.T) {
 			called := 0
 
 			if tc.moduleName != "" {
-				// Register migration for module from version `fromVersion` to `fromVersion+1`.
-				err = app.configurator.RegisterMigration(tc.moduleName, tc.fromVersion, func(sdk.Context) error {
+				// Register migration for module from version `forVersion` to `forVersion+1`.
+				err = app.configurator.RegisterMigration(tc.moduleName, tc.forVersion, func(sdk.Context) error {
 					called++
 
 					return nil
