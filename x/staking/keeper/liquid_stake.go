@@ -25,10 +25,7 @@ func (k Keeper) GetTotalLiquidStakedTokens(ctx sdk.Context) sdk.Int {
 	tokensBz := store.Get(types.TotalLiquidStakedTokensKey)
 
 	if tokensBz == nil {
-		// QUESTION: Should we panic here instead?
-		// This is basically protecting against the case where we failed
-		// to bootstrap the total liquid staked in the upgrade handler
-		return sdk.ZeroInt()
+		panic("total liquid staked was never initialized")
 	}
 
 	var tokens sdk.Int
