@@ -24,6 +24,9 @@ const (
 
 	// RouterKey is the msg router key for the staking module
 	RouterKey = ModuleName
+
+	// Prefix for module accounts that custodian tokenized shares
+	TokenizeShareModuleAccountPrefix = "tokenizeshare_"
 )
 
 var (
@@ -53,6 +56,7 @@ var (
 	TokenizeShareRecordIdByOwnerPrefix = []byte{0x62} // key for tokenizeshare record id by owner prefix
 	TokenizeShareRecordIdByDenomPrefix = []byte{0x63} // key for tokenizeshare record id by denom prefix
 	LastTokenizeShareRecordIdKey       = []byte{0x64} // key for last tokenize share record id
+	TotalLiquidStakedTokensKey         = []byte{0x65} // key for total liquid staked tokens
 )
 
 // GetValidatorKey creates the key for the validator with address

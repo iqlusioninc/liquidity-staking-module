@@ -32,6 +32,7 @@ type ValidatorI interface {
 	GetConsensusPower(sdk.Int) int64                        // validation power in tendermint
 	GetCommission() sdk.Dec                                 // validator commission rate
 	GetDelegatorShares() sdk.Dec                            // total outstanding delegator shares
+	GetTotalLiquidShares() sdk.Dec                          // total shares earmarked from liquid staking
 	TokensFromShares(sdk.Dec) sdk.Dec                       // token worth of provided delegator shares
 	TokensFromSharesTruncated(sdk.Dec) sdk.Dec              // token worth of provided delegator shares, truncated
 	TokensFromSharesRoundUp(sdk.Dec) sdk.Dec                // token worth of provided delegator shares, rounded up
