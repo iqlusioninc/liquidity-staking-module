@@ -6,7 +6,7 @@
 version: v1
 name: buf.build/regen/regen-ledger
 deps:
-  - buf.build/cosmos/cosmos-sdk
+  - buf.build/cosmos/cosmos-sdk:v0.47.0
   - buf.build/cosmos/cosmos-proto
   - buf.build/cosmos/gogo-proto
   - buf.build/googleapis/googleapis
