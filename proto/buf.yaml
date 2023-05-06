@@ -4,7 +4,7 @@
 # This module represents the "proto" root found in
 # the previous configuration.
 version: v1
-name: buf.build/regen/regen-ledger
+name: buf.build/iqlusioninc/liquidity-staking-module
 deps:
   - buf.build/cosmos/cosmos-sdk:v0.47.0
   - buf.build/cosmos/cosmos-proto:1935555c206d4afb9e94615dfd0fad31
