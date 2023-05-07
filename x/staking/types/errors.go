@@ -1,6 +1,6 @@
 package types
 
-import sdkerrors "cosmossdk.io/errors"
+import sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 // x/staking module sentinel errors
 //
@@ -48,13 +48,13 @@ var (
 	// ErrNoHistoricalInfo                 = sdkerrors.Register(ModuleName, 38, "no historical info found")
 	// ErrEmptyValidatorPubKey             = sdkerrors.Register(ModuleName, 39, "empty validator public key")
 	// ErrCommissionLTMinRate              = sdkerrors.Register(ModuleName, 40, "commission cannot be less than min rate")
-	ErrNotEnoughBalance                        = sdkerrors.Register(ModuleName, 41, "not enough balance")
-	ErrTokenizeShareRecordNotExists            = sdkerrors.Register(ModuleName, 42, "tokenize share record not exists")
-	ErrTokenizeShareRecordAlreadyExists        = sdkerrors.Register(ModuleName, 43, "tokenize share record already exists")
-	ErrNotTokenizeShareRecordOwner             = sdkerrors.Register(ModuleName, 44, "not tokenize share record owner")
-	ErrExceedingFreeVestingDelegations         = sdkerrors.Register(ModuleName, 45, "trying to exceed vested free delegation for vesting account")
-	ErrOnlyBondDenomAllowdForTokenize          = sdkerrors.Register(ModuleName, 46, "only bond denom is allowed for tokenize")
-	ErrInsufficientValidatorBondShares         = sdkerrors.Register(ModuleName, 47, "insufficient validator bond shares")
-	ErrRedelegationNotAllowedForValidatorBond  = sdkerrors.Register(ModuleName, 48, "redelegation is not allowed for validator bond delegation")
-	ErrValidatorBondNotAllowedForTokenizeShare = sdkerrors.Register(ModuleName, 49, "validator bond delegation is not allowed to tokenize share")
+	ErrNotEnoughBalance                        = sdkerrors.Register(ModuleName, 43, "not enough balance")
+	ErrTokenizeShareRecordNotExists            = sdkerrors.Register(ModuleName, 44, "tokenize share record not exists")
+	ErrTokenizeShareRecordAlreadyExists        = sdkerrors.Register(ModuleName, 45, "tokenize share record already exists")
+	ErrNotTokenizeShareRecordOwner             = sdkerrors.Register(ModuleName, 46, "not tokenize share record owner")
+	ErrExceedingFreeVestingDelegations         = sdkerrors.Register(ModuleName, 47, "trying to exceed vested free delegation for vesting account")
+	ErrOnlyBondDenomAllowdForTokenize          = sdkerrors.Register(ModuleName, 48, "only bond denom is allowed for tokenize")
+	ErrInsufficientValidatorBondShares         = sdkerrors.Register(ModuleName, 49, "insufficient validator bond shares")
+	ErrRedelegationNotAllowedForValidatorBond  = sdkerrors.Register(ModuleName, 50, "redelegation is not allowed for validator bond delegation")
+	ErrValidatorBondNotAllowedForTokenizeShare = sdkerrors.Register(ModuleName, 51, "validator bond delegation is not allowed to tokenize share")
 )
