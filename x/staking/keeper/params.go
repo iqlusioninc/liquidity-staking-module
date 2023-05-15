@@ -66,6 +66,12 @@ func (k Keeper) GlobalLiquidStakingCap(ctx sdk.Context) (res sdk.Dec) {
 	return
 }
 
+// Liquid staking cap for each validator
+func (k Keeper) ValidatorLiquidStakingCap(ctx sdk.Context) (res sdk.Dec) {
+	k.paramstore.Get(ctx, types.KeyValidatorLiquidStakingCap, &res)
+	return
+}
+
 // Check whether the validator bond factor is enabled
 // A non-negative factor indicates that it is enabled
 func (k Keeper) ValidatorBondFactorEnabled(ctx sdk.Context) bool {
@@ -89,6 +95,7 @@ func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 		k.MinCommissionRate(ctx),
 		k.ValidatorBondFactor(ctx),
 		k.GlobalLiquidStakingCap(ctx),
+		k.ValidatorLiquidStakingCap(ctx),
 	)
 }
 
