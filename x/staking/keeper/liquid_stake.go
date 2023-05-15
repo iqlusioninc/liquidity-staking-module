@@ -44,7 +44,7 @@ func (k Keeper) AccountIsLiquidStakingProvider(ctx sdk.Context, address sdk.AccA
 	return isModuleAccount && len(address) == 32
 }
 
-// ExceedsGlobalLiquidStakingCap checks if a liquid delegation would cause the
+// CheckExceedsGlobalLiquidStakingCap checks if a liquid delegation would cause the
 // global liquid staking cap to be exceeded
 // A liquid delegation is defined as either tokenized shares, or a delegation from an ICA Account
 // The total stake is determined by the balance of the bonded pool
@@ -65,7 +65,7 @@ func (k Keeper) CheckExceedsGlobalLiquidStakingCap(ctx sdk.Context, tokens sdk.I
 	return liquidStakePercent.GT(liquidStakingCap)
 }
 
-// ExceedsValidatorBondCap checks if a liquid delegation to a validator would cause
+// CheckExceedsValidatorBondCap checks if a liquid delegation to a validator would cause
 // the liquid shares to exceed the validator bond factor
 // A liquid delegation is defined as either tokenized shares, or a delegation from an ICA Account
 // Returns true if the cap is exceeded
@@ -73,6 +73,18 @@ func (k Keeper) CheckExceedsValidatorBondCap(ctx sdk.Context, validator types.Va
 	validatorBondFactor := k.ValidatorBondFactor(ctx)
 	maxValLiquidShares := validator.TotalValidatorBondShares.Mul(validatorBondFactor)
 	return validator.TotalLiquidShares.Add(shares).GT(maxValLiquidShares)
+}
+
+// CheckExceedsValidatorLiquidStakingCap checks if a liquid delegation could cause the
+// total liuquid shares to exceed the liquid staking cap
+// A liquid delegation is defined as either tokenized shares, or a delegation from an ICA Account
+// Returns true if the cap is exceeded
+func (k Keeper) CheckExceedsValidatorLiquidStakingCap(ctx sdk.Context, validator types.Validator, shares sdk.Dec) bool {
+	liquidStakingCap := k.ValidatorLiquidStakingCap(ctx)
+	updatedLiquidShares := validator.TotalLiquidShares.Add(shares)
+	updatedTotalShares := validator.DelegatorShares.Add(shares)
+	liquidStakePercent := updatedLiquidShares.Quo(updatedTotalShares)
+	return liquidStakePercent.GT(liquidStakingCap)
 }
 
 // SafelyIncreaseTotalLiquidStakedTokens increments the total liquid staked tokens
@@ -110,9 +122,12 @@ func (k Keeper) SafelyIncreaseValidatorTotalLiquidShares(ctx sdk.Context, valida
 		return nil
 	}
 
-	// Confirm the validator bond factor will be not exceeded
+	// Confirm the validator bond factor and validator liquid staking cap will be not exceeded
 	if k.CheckExceedsValidatorBondCap(ctx, validator, shares) {
 		return types.ErrInsufficientValidatorBondShares
+	}
+	if k.CheckExceedsValidatorLiquidStakingCap(ctx, validator, shares) {
+		return types.ErrValidatorLiquidStakingCapExceeded
 	}
 
 	// Increment the validator's total liquid shares

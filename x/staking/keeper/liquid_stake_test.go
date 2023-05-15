@@ -156,7 +156,7 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 		{
 			// Cap: 20% - Delegation Exceeds Threshold
 			// Total Liquid Stake: 20, Total Stake: 220, New Liquid Stake: 31
-			// => Total Liquid Stake: 20+31=51, Total Total: 220+31=251 => 51/251 = 21% > 20% cap
+			// => Total Liquid Stake: 20+31=51, Total Stake: 220+31=251 => 51/251 = 21% > 20% cap
 			name:             "20 percent cap _ delegation exceeds cap",
 			globalLiquidCap:  sdk.MustNewDecFromStr("0.20"),
 			totalLiquidStake: sdk.NewInt(20),
@@ -292,8 +292,9 @@ func TestCheckExceedsValidatorBondCap(t *testing.T) {
 		expectedExceeds     bool
 	}{
 		{
-			// Validator Shares: 100, Factor: 1, Current Shares: 90 => 100 Max Shares, Capacity: 10
-			// New Shares: 5 - below cap
+			// Cap: 10% - Delegation Below Threshold
+			// Liquid Shares: 5, Total Stake: 95, New Liquid Stake: 1
+			// => Total Liquid Stake: 5+1=6, Total Stake: 95+1=96 => 6/96 = 6% < 10% cap
 			name:                "factor 1 - below cap",
 			validatorShares:     sdk.NewDec(100),
 			validatorBondFactor: sdk.NewDec(1),
@@ -408,6 +409,124 @@ func TestCheckExceedsValidatorBondCap(t *testing.T) {
 
 			// Check whether the cap is exceeded
 			actualExceeds := app.StakingKeeper.CheckExceedsValidatorBondCap(ctx, validator, tc.newShares)
+			require.Equal(t, tc.expectedExceeds, actualExceeds, tc.name)
+		})
+	}
+}
+
+// Tests TestCheckExceedsValidatorLiquidStakingCap
+func TestCheckExceedsValidatorLiquidStakingCap(t *testing.T) {
+	_, app, ctx := createTestInput(t)
+
+	testCases := []struct {
+		name                  string
+		validatorLiquidCap    sdk.Dec
+		validatorLiquidShares sdk.Dec
+		validatorTotalShares  sdk.Dec
+		newLiquidShares       sdk.Dec
+		expectedExceeds       bool
+	}{
+		{
+			// Cap: 10% - Delegation Below Threshold
+			// Liquid Shares: 5, Total Shares: 95, New Liquid Shares: 1
+			// => Liquid Shares: 5+1=6, Total Shares: 95+1=96 => 6/96 = 6% < 10% cap
+			name:                  "10 percent cap _ delegation below cap",
+			validatorLiquidCap:    sdk.MustNewDecFromStr("0.1"),
+			validatorLiquidShares: sdk.NewDec(5),
+			validatorTotalShares:  sdk.NewDec(95),
+			newLiquidShares:       sdk.NewDec(1),
+			expectedExceeds:       false,
+		},
+		{
+			// Cap: 10% - Delegation At Threshold
+			// Liquid Shares: 5, Total Shares: 95, New Liquid Shares: 5
+			// => Liquid Shares: 5+5=10, Total Shares: 95+5=100 => 10/100 = 10% == 10% cap
+			name:                  "10 percent cap _ delegation equals cap",
+			validatorLiquidCap:    sdk.MustNewDecFromStr("0.1"),
+			validatorLiquidShares: sdk.NewDec(5),
+			validatorTotalShares:  sdk.NewDec(95),
+			newLiquidShares:       sdk.NewDec(4),
+			expectedExceeds:       false,
+		},
+		{
+			// Cap: 10% - Delegation Exceeds Threshold
+			// Liquid Shares: 5, Total Shares: 95, New Liquid Shares: 6
+			// => Liquid Shares: 5+6=11, Total Shares: 95+6=101 => 11/101 = 11% > 10% cap
+			name:                  "10 percent cap _ delegation exceeds cap",
+			validatorLiquidCap:    sdk.MustNewDecFromStr("0.1"),
+			validatorLiquidShares: sdk.NewDec(5),
+			validatorTotalShares:  sdk.NewDec(95),
+			newLiquidShares:       sdk.NewDec(6),
+			expectedExceeds:       true,
+		},
+		{
+			// Cap: 20% - Delegation Below Threshold
+			// Liquid Shares: 20, Total Shares: 220, New Liquid Shares: 29
+			// => Liquid Shares: 20+29=49, Total Shares: 220+29=249 => 49/249 = 19% < 20% cap
+			name:                  "20 percent cap _ delegation below cap",
+			validatorLiquidCap:    sdk.MustNewDecFromStr("0.2"),
+			validatorLiquidShares: sdk.NewDec(20),
+			validatorTotalShares:  sdk.NewDec(220),
+			newLiquidShares:       sdk.NewDec(29),
+			expectedExceeds:       false,
+		},
+		{
+			// Cap: 20% - Delegation At Threshold
+			// Liquid Shares: 20, Total Shares: 220, New Liquid Shares: 30
+			// => Liquid Shares: 20+30=50, Total Shares: 220+30=250 => 50/250 = 20% == 20% cap
+			name:                  "20 percent cap _ delegation equals cap",
+			validatorLiquidCap:    sdk.MustNewDecFromStr("0.2"),
+			validatorLiquidShares: sdk.NewDec(20),
+			validatorTotalShares:  sdk.NewDec(220),
+			newLiquidShares:       sdk.NewDec(30),
+			expectedExceeds:       false,
+		},
+		{
+			// Cap: 20% - Delegation Exceeds Threshold
+			// Liquid Shares: 20, Total Shares: 220, New Liquid Shares: 31
+			// => Liquid Shares: 20+31=51, Total Shares: 220+31=251 => 51/251 = 21% > 20% cap
+			name:                  "20 percent cap _ delegation exceeds cap",
+			validatorLiquidCap:    sdk.MustNewDecFromStr("0.2"),
+			validatorLiquidShares: sdk.NewDec(20),
+			validatorTotalShares:  sdk.NewDec(220),
+			newLiquidShares:       sdk.NewDec(31),
+			expectedExceeds:       true,
+		},
+		{
+			// Cap of 0% - everything should exceed
+			name:                  "0 percent cap",
+			validatorLiquidCap:    sdk.ZeroDec(),
+			validatorLiquidShares: sdk.NewDec(0),
+			validatorTotalShares:  sdk.NewDec(1_000_000),
+			newLiquidShares:       sdk.NewDec(1),
+			expectedExceeds:       true,
+		},
+		{
+			// Cap of 100% - nothing should exceed
+			name:                  "100 percent cap",
+			validatorLiquidCap:    sdk.OneDec(),
+			validatorLiquidShares: sdk.NewDec(1),
+			validatorTotalShares:  sdk.NewDec(1_000_000),
+			newLiquidShares:       sdk.NewDec(1),
+			expectedExceeds:       false,
+		},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.name, func(t *testing.T) {
+			// Update the validator liquid staking cap
+			params := app.StakingKeeper.GetParams(ctx)
+			params.ValidatorLiquidStakingCap = tc.validatorLiquidCap
+			app.StakingKeeper.SetParams(ctx, params)
+
+			// Create a validator with designated self-bond shares
+			validator := types.Validator{
+				TotalLiquidShares: tc.validatorLiquidShares,
+				DelegatorShares:   tc.validatorTotalShares,
+			}
+
+			// Check whether the cap is exceeded
+			actualExceeds := app.StakingKeeper.CheckExceedsValidatorLiquidStakingCap(ctx, validator, tc.newLiquidShares)
 			require.Equal(t, tc.expectedExceeds, actualExceeds, tc.name)
 		})
 	}
