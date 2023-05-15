@@ -42,6 +42,8 @@ var (
 	DefaultGlobalLiquidStakingCap = sdk.OneDec()
 	// DefaultValidatorLiquidStakingCap is set to 100%
 	DefaultValidatorLiquidStakingCap = sdk.OneDec()
+	// DefaultLiquidStakingCapsEnabled is set to true
+	DefaultLiquidStakingCapsEnabled = true
 )
 
 var (
@@ -54,6 +56,7 @@ var (
 	KeyValidatorBondFactor       = []byte("ValidatorBondFactor")
 	KeyGlobalLiquidStakingCap    = []byte("GlobalLiquidStakingCap")
 	KeyValidatorLiquidStakingCap = []byte("ValidatorLiquidStakingCap")
+	KeyLiquidStakingCapsEnabled  = []byte("LiquidStakingCapsEnabled")
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
@@ -74,6 +77,7 @@ func NewParams(
 	validatorBondFactor sdk.Dec,
 	globalLiquidStakingCap sdk.Dec,
 	validatorLiquidStakingCap sdk.Dec,
+	liquidStakingCapsEnabled bool,
 ) Params {
 	return Params{
 		UnbondingTime:             unbondingTime,
@@ -85,6 +89,7 @@ func NewParams(
 		ValidatorBondFactor:       validatorBondFactor,
 		GlobalLiquidStakingCap:    globalLiquidStakingCap,
 		ValidatorLiquidStakingCap: validatorLiquidStakingCap,
+		LiquidStakingCapsEnabled:  liquidStakingCapsEnabled,
 	}
 }
 
@@ -100,6 +105,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyValidatorBondFactor, &p.ValidatorBondFactor, validateValidatorBondFactor),
 		paramtypes.NewParamSetPair(KeyGlobalLiquidStakingCap, &p.GlobalLiquidStakingCap, validateGlobalLiquidStakingCap),
 		paramtypes.NewParamSetPair(KeyValidatorLiquidStakingCap, &p.ValidatorLiquidStakingCap, validateValidatorLiquidStakingCap),
+		paramtypes.NewParamSetPair(KeyLiquidStakingCapsEnabled, &p.LiquidStakingCapsEnabled, validateLiquidStakingCapEnabled),
 	}
 }
 
@@ -115,6 +121,7 @@ func DefaultParams() Params {
 		DefaultValidatorBondFactor,
 		DefaultGlobalLiquidStakingCap,
 		DefaultValidatorLiquidStakingCap,
+		DefaultLiquidStakingCapsEnabled,
 	)
 }
 
@@ -307,6 +314,15 @@ func validateValidatorLiquidStakingCap(i interface{}) error {
 	}
 	if v.GT(sdk.OneDec()) {
 		return fmt.Errorf("validator liquid staking cap cannot be greater than 100%%: %s", v)
+	}
+
+	return nil
+}
+
+func validateLiquidStakingCapEnabled(i interface{}) error {
+	_, ok := i.(bool)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
 	}
 
 	return nil

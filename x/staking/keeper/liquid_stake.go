@@ -91,7 +91,7 @@ func (k Keeper) CheckExceedsValidatorLiquidStakingCap(ctx sdk.Context, validator
 // if the global cap is enabled and is not surpassed by this delegation
 func (k Keeper) SafelyIncreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sdk.Int) error {
 	// If the cap is disabled, do nothing
-	if !k.GlobalLiquidStakingCapEnabled(ctx) {
+	if !k.LiquidStakingCapsEnabled(ctx) {
 		return nil
 	}
 
@@ -109,16 +109,17 @@ func (k Keeper) SafelyIncreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sd
 // DecreaseTotalLiquidStakedTokens decrements the total liquid staked tokens
 // if the global cap is enabled
 func (k Keeper) DecreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sdk.Int) {
-	if k.GlobalLiquidStakingCapEnabled(ctx) {
+	if k.LiquidStakingCapsEnabled(ctx) {
 		k.SetTotalLiquidStakedTokens(ctx, k.GetTotalLiquidStakedTokens(ctx).Sub(amount))
 	}
 }
 
-// SafelyIncreaseValidatorTotalLiquidShares increments the total liquid shares on a validator
-// if the validator bond factor is enabled and is not surpassed by this delegation
+// SafelyIncreaseValidatorTotalLiquidShares increments the total liquid shares on a validator, if:
+//  a) the validator bond factor is enabled and is not surpassed by this delegation
+//  b) the validator liquid staking cap is enabled and is not surpassed by this delegation
 func (k Keeper) SafelyIncreaseValidatorTotalLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error {
 	// If the cap is disabled, do nothing
-	if !k.ValidatorBondFactorEnabled(ctx) {
+	if !k.LiquidStakingCapsEnabled(ctx) {
 		return nil
 	}
 
@@ -140,7 +141,7 @@ func (k Keeper) SafelyIncreaseValidatorTotalLiquidShares(ctx sdk.Context, valida
 // DecreaseValidatorTotalLiquidShares decrements the total liquid shares on a validator
 // if the validator bond factor is enabled
 func (k Keeper) DecreaseValidatorTotalLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) {
-	if k.ValidatorBondFactorEnabled(ctx) {
+	if k.LiquidStakingCapsEnabled(ctx) {
 		validator.TotalLiquidShares = validator.TotalLiquidShares.Sub(shares)
 		k.SetValidator(ctx, validator)
 	}
@@ -151,7 +152,7 @@ func (k Keeper) DecreaseValidatorTotalLiquidShares(ctx sdk.Context, validator ty
 // set by validator bond factor
 func (k Keeper) SafelyDecreaseValidatorBond(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error {
 	// If the cap is disabled, do nothing
-	if !k.ValidatorBondFactorEnabled(ctx) {
+	if !k.LiquidStakingCapsEnabled(ctx) {
 		return nil
 	}
 
