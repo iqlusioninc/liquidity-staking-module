@@ -3,6 +3,7 @@ package keeper
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
+	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
@@ -152,4 +153,32 @@ func (k Keeper) SafelyDecreaseValidatorBond(ctx sdk.Context, validator types.Val
 	k.SetValidator(ctx, validator)
 
 	return nil
+}
+
+// Determines the total liquid staked by looping across each delegation record
+// and summing the stake if the delegator is a liquid staking provider
+func (k Keeper) CalculateTotalLiquidStaked(ctx sdk.Context) (sdk.Int, error) {
+	totalLiquidStaked := sdk.ZeroInt()
+	for _, delegation := range k.GetAllDelegations(ctx) {
+		delegatorAddress, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
+		if err != nil {
+			return sdk.ZeroInt(), err
+		}
+		validatorAddress, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
+		if err != nil {
+			return sdk.ZeroInt(), err
+		}
+
+		validator, found := k.GetLiquidValidator(ctx, validatorAddress)
+		if !found {
+			return sdk.ZeroInt(), sdkstaking.ErrNoValidatorFound
+		}
+
+		if k.AccountIsLiquidStakingProvider(ctx, delegatorAddress) {
+			stakeAmount := validator.TokensFromShares(delegation.Shares).TruncateInt()
+			totalLiquidStaked = totalLiquidStaked.Add(stakeAmount)
+		}
+	}
+
+	return totalLiquidStaked, nil
 }
