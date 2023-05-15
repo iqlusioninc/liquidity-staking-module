@@ -526,36 +526,47 @@ func TestDecreaseValidatorTotalLiquidShares(t *testing.T) {
 func TestCalculateTotalLiquidStaked(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
-	// With no delegations, the total should be 0
-	total, err := app.StakingKeeper.CalculateTotalLiquidStaked(ctx)
-	require.NoError(t, err, "no error expected when calculating total liquid staked")
-	require.Equal(t, int64(0), total.Int64(), "total liquid staked before delegations are created")
+	// Set an arbitrary total liquid staked tokens amount that will get overwritten by the refresh
+	app.StakingKeeper.SetTotalLiquidStakedTokens(ctx, sdk.NewInt(999))
 
 	// Add validator's with various exchange rates
 	validators := []types.Validator{
 		{
 			// Exchange rate of 1
-			OperatorAddress: "valA",
-			Tokens:          sdk.NewInt(100),
-			DelegatorShares: sdk.NewDec(100),
+			OperatorAddress:   "valA",
+			Tokens:            sdk.NewInt(100),
+			DelegatorShares:   sdk.NewDec(100),
+			TotalLiquidShares: sdk.NewDec(100), // should be overwritten
 		},
 		{
 			// Exchange rate of 0.9
-			OperatorAddress: "valB",
-			Tokens:          sdk.NewInt(90),
-			DelegatorShares: sdk.NewDec(100),
+			OperatorAddress:   "valB",
+			Tokens:            sdk.NewInt(90),
+			DelegatorShares:   sdk.NewDec(100),
+			TotalLiquidShares: sdk.NewDec(200), // should be overwritten
 		},
 		{
 			// Exchange rate of 0.75
-			OperatorAddress: "valC",
-			Tokens:          sdk.NewInt(75),
-			DelegatorShares: sdk.NewDec(100),
+			OperatorAddress:   "valC",
+			Tokens:            sdk.NewInt(75),
+			DelegatorShares:   sdk.NewDec(100),
+			TotalLiquidShares: sdk.NewDec(300), // should be overwritten
 		},
 	}
 
 	// Add various delegations across the above validator's
 	// Total Liquid Staked: 1,849 + 922 = 2,771
+	// Total Liquid Shares:
+	//   ValA: 400 + 325 = 725
+	//   ValB: 860 + 580 = 1,440
+	//   ValC: 900 + 100 = 1,000
 	expectedTotalLiquidStaked := int64(2771)
+	expectedValidatorLiquidShares := map[string]sdk.Dec{
+		"valA": sdk.NewDec(725),
+		"valB": sdk.NewDec(1440),
+		"valC": sdk.NewDec(1000),
+	}
+
 	delegations := []struct {
 		delegation types.Delegation
 		isLSTP     bool
@@ -673,9 +684,23 @@ func TestCalculateTotalLiquidStaked(t *testing.T) {
 		app.StakingKeeper.SetDelegation(ctx, delegation)
 	}
 
-	// Check total liquid staked
-	actualTotalLiquidStaked, err := app.StakingKeeper.CalculateTotalLiquidStaked(ctx)
-	require.NoError(t, err, "no error expected when calculating total liquid staked")
-	require.Equal(t, expectedTotalLiquidStaked, actualTotalLiquidStaked.Int64(),
-		"total liquid staked after delegations are created")
+	// Refresh the total liquid staked and validator liquid shares
+	err := app.StakingKeeper.RefreshTotalLiquidStakedTokensAndShares(ctx)
+	require.NoError(t, err, "no error expected when refreshing total liquid staked")
+
+	// Check the total liquid staked and liquid shares by validator
+	actualTotalLiquidStaked := app.StakingKeeper.GetTotalLiquidStakedTokens(ctx)
+	require.Equal(t, expectedTotalLiquidStaked, actualTotalLiquidStaked.Int64(), "total liquid staked tokens")
+
+	for _, moniker := range []string{"valA", "valB", "valC"} {
+		address := validatorAddresses[moniker]
+		expectedLiquidShares := expectedValidatorLiquidShares[moniker]
+
+		actualValidator, found := app.StakingKeeper.GetLiquidValidator(ctx, address)
+		require.True(t, found, "validator %s should have been found after refresh", moniker)
+
+		actualLiquidShares := actualValidator.TotalLiquidShares
+		require.Equal(t, expectedLiquidShares.TruncateInt64(), actualLiquidShares.TruncateInt64(),
+			"liquid staked shares for validator %s", moniker)
+	}
 }

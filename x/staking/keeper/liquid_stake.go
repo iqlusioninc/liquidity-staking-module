@@ -155,30 +155,51 @@ func (k Keeper) SafelyDecreaseValidatorBond(ctx sdk.Context, validator types.Val
 	return nil
 }
 
-// Determines the total liquid staked by looping across each delegation record
-// and summing the stake if the delegator is a liquid staking provider
-func (k Keeper) CalculateTotalLiquidStaked(ctx sdk.Context) (sdk.Int, error) {
-	totalLiquidStaked := sdk.ZeroInt()
+// Calculates and sets the global liquid staked tokens and total liquid shares by validator
+// The totals are determined by looping each delegation record and summing the stake
+// if the delegator is a module account. Checking for a module account will capture
+// ICA accounts, as well as tokenized delegationswhich are owned by module accounts
+// under the hood
+// This function must be called in the upgrade handler which onboards LSM, as
+// well as any time the liquid staking cap is re-enabled
+func (k Keeper) RefreshTotalLiquidStakedTokensAndShares(ctx sdk.Context) error {
+	// First reset each validator's liquid shares to 0
+	for _, validator := range k.GetAllValidators(ctx) {
+		validator.TotalLiquidShares = sdk.ZeroDec()
+		k.SetValidator(ctx, validator)
+	}
+
+	// Sum up the total liquid tokens and increment each validator's total liquid shares
+	totalLiquidStakedTokens := sdk.ZeroInt()
 	for _, delegation := range k.GetAllDelegations(ctx) {
 		delegatorAddress, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
 		if err != nil {
-			return sdk.ZeroInt(), err
+			return err
 		}
 		validatorAddress, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 		if err != nil {
-			return sdk.ZeroInt(), err
+			return err
 		}
 
 		validator, found := k.GetLiquidValidator(ctx, validatorAddress)
 		if !found {
-			return sdk.ZeroInt(), sdkstaking.ErrNoValidatorFound
+			return sdkstaking.ErrNoValidatorFound
 		}
 
+		// If the account is a liquid staking provider, increment the global number
+		// of liquid staked tokens, and the total liquid shares on the validator
 		if k.AccountIsLiquidStakingProvider(ctx, delegatorAddress) {
-			stakeAmount := validator.TokensFromShares(delegation.Shares).TruncateInt()
-			totalLiquidStaked = totalLiquidStaked.Add(stakeAmount)
+			liquidShares := delegation.Shares
+			liquidTokens := validator.TokensFromShares(liquidShares).TruncateInt()
+
+			validator.TotalLiquidShares = validator.TotalLiquidShares.Add(liquidShares)
+			k.SetValidator(ctx, validator)
+
+			totalLiquidStakedTokens = totalLiquidStakedTokens.Add(liquidTokens)
 		}
 	}
 
-	return totalLiquidStaked, nil
+	k.SetTotalLiquidStakedTokens(ctx, totalLiquidStakedTokens)
+
+	return nil
 }
