@@ -1,7 +1,6 @@
 package distribution
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
@@ -38,7 +37,7 @@ func NewHandler(k keeper.Keeper) sdk.Handler {
 			res, err := msgServer.WithdrawAllTokenizeShareRecordReward(sdk.WrapSDKContext(ctx), msg)
 			return sdk.WrapServiceResult(ctx, res, err)
 		default:
-			return nil, errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized distribution message type: %T", msg)
+			return nil, sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized distribution message type: %T", msg)
 		}
 	}
 }
@@ -50,7 +49,7 @@ func NewCommunityPoolSpendProposalHandler(k keeper.Keeper) govtypes.Handler {
 			return keeper.HandleCommunityPoolSpendProposal(ctx, k, c)
 
 		default:
-			return errorsmod.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized distr proposal content type: %T", c)
+			return sdkerrors.Wrapf(sdkerrors.ErrUnknownRequest, "unrecognized distr proposal content type: %T", c)
 		}
 	}
 }

@@ -1,7 +1,6 @@
 package types
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -162,7 +161,7 @@ func (msg MsgFundCommunityPool) GetSignBytes() []byte {
 // ValidateBasic performs basic MsgFundCommunityPool message validation.
 func (msg MsgFundCommunityPool) ValidateBasic() error {
 	if !msg.Amount.IsValid() {
-		return errorsmod.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
+		return sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, msg.Amount.String())
 	}
 	if _, err := sdk.AccAddressFromBech32(msg.Depositor); err != nil {
 		return sdkerrors.ErrInvalidAddress.Wrapf("invalid depositor address: %s", err)

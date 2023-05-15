@@ -1,7 +1,6 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
@@ -15,7 +14,7 @@ func HandleCommunityPoolSpendProposal(ctx sdk.Context, k Keeper, p *types.Commun
 	}
 
 	if k.bankKeeper.BlockedAddr(recipient) {
-		return errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive external funds", p.Recipient)
+		return sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "%s is not allowed to receive external funds", p.Recipient)
 	}
 
 	err := k.DistributeFromFeePool(ctx, p.Amount, recipient)

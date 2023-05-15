@@ -1,7 +1,6 @@
 package types
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -50,10 +49,10 @@ func (a StakeAuthorization) MsgTypeURL() string {
 
 func (a StakeAuthorization) ValidateBasic() error {
 	if a.MaxTokens != nil && a.MaxTokens.IsNegative() {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidCoins, "negative coin amount: %v", a.MaxTokens)
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidCoins, "negative coin amount: %v", a.MaxTokens)
 	}
 	if a.AuthorizationType == AuthorizationType_AUTHORIZATION_TYPE_UNSPECIFIED {
-		return errorsmod.Wrapf(sdkerrors.ErrInvalidType, "unknown authorization type")
+		return sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "unknown authorization type")
 	}
 
 	return nil

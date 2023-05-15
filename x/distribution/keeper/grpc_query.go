@@ -3,12 +3,12 @@ package keeper
 import (
 	"context"
 
-	errorsmod "cosmossdk.io/errors"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
 	"github.com/cosmos/cosmos-sdk/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	sdkdistr "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -137,7 +137,7 @@ func (k Keeper) DelegationRewards(c context.Context, req *sdkdistr.QueryDelegati
 
 	val := k.stakingKeeper.Validator(ctx, valAdr)
 	if val == nil {
-		return nil, errorsmod.Wrap(sdkdistr.ErrNoValidatorExists, req.ValidatorAddress)
+		return nil, sdkerrors.Wrap(sdkdistr.ErrNoValidatorExists, req.ValidatorAddress)
 	}
 
 	delAdr, err := sdk.AccAddressFromBech32(req.DelegatorAddress)

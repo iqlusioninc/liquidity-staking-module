@@ -7,8 +7,6 @@ import (
 	"strconv"
 	"time"
 
-	errorsmod "cosmossdk.io/errors"
-
 	metrics "github.com/armon/go-metrics"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -45,7 +43,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	}
 
 	if msg.Commission.Rate.LT(k.MinCommissionRate(ctx)) {
-		return nil, errorsmod.Wrapf(errors.New("commission cannot be less than min rate"), "cannot set validator commission to less than minimum rate of %s", k.MinCommissionRate(ctx))
+		return nil, sdkerrors.Wrapf(errors.New("commission cannot be less than min rate"), "cannot set validator commission to less than minimum rate of %s", k.MinCommissionRate(ctx))
 	}
 
 	// check to see if the pubkey or sender has been registered before
@@ -55,7 +53,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 
 	pk, ok := msg.Pubkey.GetCachedValue().(cryptotypes.PubKey)
 	if !ok {
-		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", pk)
+		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidType, "Expecting cryptotypes.PubKey, got %T", pk)
 	}
 
 	if _, found := k.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(pk)); found {
@@ -64,7 +62,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 
 	bondDenom := k.BondDenom(ctx)
 	if msg.Value.Denom != bondDenom {
-		return nil, errorsmod.Wrapf(
+		return nil, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", msg.Value.Denom, bondDenom,
 		)
 	}
@@ -84,7 +82,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 			}
 		}
 		if !hasKeyType {
-			return nil, errorsmod.Wrapf(
+			return nil, sdkerrors.Wrapf(
 				sdkstaking.ErrValidatorPubKeyTypeNotSupported,
 				"got: %s, expected: %s", pk.Type(), cp.Validator.PubKeyTypes,
 			)
@@ -219,7 +217,7 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 
 	bondDenom := k.BondDenom(ctx)
 	if msg.Amount.Denom != bondDenom {
-		return nil, errorsmod.Wrapf(
+		return nil, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", msg.Amount.Denom, bondDenom,
 		)
 	}
@@ -337,7 +335,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 
 	bondDenom := k.BondDenom(ctx)
 	if msg.Amount.Denom != bondDenom {
-		return nil, errorsmod.Wrapf(
+		return nil, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", msg.Amount.Denom, bondDenom,
 		)
 	}
@@ -431,7 +429,7 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 
 	bondDenom := k.BondDenom(ctx)
 	if msg.Amount.Denom != bondDenom {
-		return nil, errorsmod.Wrapf(
+		return nil, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", msg.Amount.Denom, bondDenom,
 		)
 	}
@@ -488,7 +486,7 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 
 	bondDenom := k.BondDenom(ctx)
 	if msg.Amount.Denom != bondDenom {
-		return nil, errorsmod.Wrapf(
+		return nil, sdkerrors.Wrapf(
 			sdkerrors.ErrInvalidRequest, "invalid coin denomination: got %s, expected %s", msg.Amount.Denom, bondDenom,
 		)
 	}
