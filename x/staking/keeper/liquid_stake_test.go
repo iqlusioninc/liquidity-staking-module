@@ -685,7 +685,7 @@ func TestCalculateTotalLiquidStaked(t *testing.T) {
 	}
 
 	// Refresh the total liquid staked and validator liquid shares
-	err := app.StakingKeeper.RefreshTotalLiquidStakedTokensAndShares(ctx)
+	err := app.StakingKeeper.RefreshTotalLiquidStaked(ctx)
 	require.NoError(t, err, "no error expected when refreshing total liquid staked")
 
 	// Check the total liquid staked and liquid shares by validator

@@ -162,7 +162,7 @@ func (k Keeper) SafelyDecreaseValidatorBond(ctx sdk.Context, validator types.Val
 // under the hood
 // This function must be called in the upgrade handler which onboards LSM, as
 // well as any time the liquid staking cap is re-enabled
-func (k Keeper) RefreshTotalLiquidStakedTokensAndShares(ctx sdk.Context) error {
+func (k Keeper) RefreshTotalLiquidStaked(ctx sdk.Context) error {
 	// First reset each validator's liquid shares to 0
 	for _, validator := range k.GetAllValidators(ctx) {
 		validator.TotalLiquidShares = sdk.ZeroDec()
