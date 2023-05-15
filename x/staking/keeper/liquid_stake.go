@@ -71,6 +71,9 @@ func (k Keeper) CheckExceedsGlobalLiquidStakingCap(ctx sdk.Context, tokens sdk.I
 // Returns true if the cap is exceeded
 func (k Keeper) CheckExceedsValidatorBondCap(ctx sdk.Context, validator types.Validator, shares sdk.Dec) bool {
 	validatorBondFactor := k.ValidatorBondFactor(ctx)
+	if validatorBondFactor.Equal(sdk.NewDec(-1)) {
+		return false
+	}
 	maxValLiquidShares := validator.TotalValidatorBondShares.Mul(validatorBondFactor)
 	return validator.TotalLiquidShares.Add(shares).GT(maxValLiquidShares)
 }
@@ -80,10 +83,12 @@ func (k Keeper) CheckExceedsValidatorBondCap(ctx sdk.Context, validator types.Va
 // A liquid delegation is defined as either tokenized shares, or a delegation from an ICA Account
 // Returns true if the cap is exceeded
 func (k Keeper) CheckExceedsValidatorLiquidStakingCap(ctx sdk.Context, validator types.Validator, shares sdk.Dec) bool {
-	liquidStakingCap := k.ValidatorLiquidStakingCap(ctx)
 	updatedLiquidShares := validator.TotalLiquidShares.Add(shares)
 	updatedTotalShares := validator.DelegatorShares.Add(shares)
+
 	liquidStakePercent := updatedLiquidShares.Quo(updatedTotalShares)
+	liquidStakingCap := k.ValidatorLiquidStakingCap(ctx)
+
 	return liquidStakePercent.GT(liquidStakingCap)
 }
 
