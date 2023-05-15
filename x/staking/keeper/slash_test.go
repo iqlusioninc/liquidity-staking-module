@@ -191,7 +191,7 @@ func TestSlashAtFutureHeight(t *testing.T) {
 
 	consAddr := sdk.ConsAddress(PKs[0].Address())
 	fraction := sdk.NewDecWithPrec(5, 1)
-	require.Panics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 1, 10, fraction) })
+	require.Panics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 1, 10, fraction, 0) })
 }
 
 // test slash at a negative height
@@ -206,7 +206,7 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 
 	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
-	app.StakingKeeper.Slash(ctx, consAddr, -2, 10, fraction)
+	app.StakingKeeper.Slash(ctx, consAddr, -2, 10, fraction, 0)
 
 	// read updated state
 	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
@@ -237,7 +237,7 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 
 	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
-	app.StakingKeeper.Slash(ctx, consAddr, ctx.BlockHeight(), 10, fraction)
+	app.StakingKeeper.Slash(ctx, consAddr, ctx.BlockHeight(), 10, fraction, 0)
 
 	// read updated state
 	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
@@ -277,7 +277,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 
 	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
-	app.StakingKeeper.Slash(ctx, consAddr, 10, 10, fraction)
+	app.StakingKeeper.Slash(ctx, consAddr, 10, 10, fraction, 0)
 
 	// end block
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 1)
@@ -307,7 +307,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 
 	// slash validator again
 	ctx = ctx.WithBlockHeight(13)
-	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction)
+	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction, 0)
 
 	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
@@ -333,7 +333,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// on the unbonding delegation, but it will slash stake bonded since the infraction
 	// this may not be the desirable behaviour, ref https://github.com/cosmos/cosmos-sdk/issues/1440
 	ctx = ctx.WithBlockHeight(13)
-	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction)
+	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction, 0)
 
 	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
@@ -359,7 +359,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// on the unbonding delegation, but it will slash stake bonded since the infraction
 	// this may not be the desirable behaviour, ref https://github.com/cosmos/cosmos-sdk/issues/1440
 	ctx = ctx.WithBlockHeight(13)
-	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction)
+	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction, 0)
 
 	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
@@ -417,7 +417,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 
-	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, fraction) })
+	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, fraction, 0) })
 	burnAmount := sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 10)).Mul(fraction).TruncateInt()
 
 	bondedPool = app.StakingKeeper.GetBondedPool(ctx)
@@ -448,7 +448,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 
-	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec()) })
+	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec(), 0) })
 	burnAmount = app.StakingKeeper.TokensFromConsensusPower(ctx, 7)
 
 	// read updated pool
@@ -482,7 +482,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 
-	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec()) })
+	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec(), 0) })
 
 	burnAmount = sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 10)).Mul(sdk.OneDec()).TruncateInt()
 	burnAmount = burnAmount.Sub(sdk.OneDec().MulInt(rdTokens).TruncateInt())
@@ -515,7 +515,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.Equal(t, validator.GetStatus(), sdkstaking.Unbonding)
 
-	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec()) })
+	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec(), 0) })
 
 	// read updated pool
 	bondedPool = app.StakingKeeper.GetBondedPool(ctx)
@@ -581,7 +581,7 @@ func TestSlashBoth(t *testing.T) {
 	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(PKs[0]))
 	require.True(t, found)
 	consAddr0 := sdk.ConsAddress(PKs[0].Address())
-	app.StakingKeeper.Slash(ctx, consAddr0, 10, 10, fraction)
+	app.StakingKeeper.Slash(ctx, consAddr0, 10, 10, fraction, 0)
 
 	burnedNotBondedAmount := fraction.MulInt(ubdATokens).TruncateInt()
 	burnedBondAmount := sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 10)).Mul(fraction).TruncateInt()
