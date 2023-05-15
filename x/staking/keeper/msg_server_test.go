@@ -46,7 +46,9 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 		redeemAmount                  math.Int
 		targetVestingDelAfterShare    math.Int
 		targetVestingDelAfterRedeem   math.Int
+		liquidStakingCapsEnabled      bool
 		globalLiquidStakingCap        sdk.Dec
+		validatorLiquidStakingCap     sdk.Dec
 		slashFactor                   sdk.Dec
 		validatorBondFactor           sdk.Dec
 		validatorBondDelegation       bool
@@ -63,7 +65,9 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			delegationAmount:              app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount:           app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			redeemAmount:                  app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			liquidStakingCapsEnabled:      false,
 			globalLiquidStakingCap:        sdk.OneDec(),
+			validatorLiquidStakingCap:     sdk.OneDec(),
 			slashFactor:                   sdk.ZeroDec(),
 			validatorBondFactor:           sdk.NewDec(-1),
 			validatorBondDelegation:       false,
@@ -78,7 +82,9 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			delegationAmount:              app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount:           app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			redeemAmount:                  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			liquidStakingCapsEnabled:      false,
 			globalLiquidStakingCap:        sdk.OneDec(),
+			validatorLiquidStakingCap:     sdk.OneDec(),
 			slashFactor:                   sdk.NewDecWithPrec(10, 2),
 			validatorBondFactor:           sdk.NewDec(-1),
 			validatorBondDelegation:       false,
@@ -93,7 +99,9 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			delegationAmount:              app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount:           app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			redeemAmount:                  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			liquidStakingCapsEnabled:      false,
 			globalLiquidStakingCap:        sdk.OneDec(),
+			validatorLiquidStakingCap:     sdk.OneDec(),
 			slashFactor:                   sdk.ZeroDec(),
 			validatorBondFactor:           sdk.NewDec(-1),
 			validatorBondDelegation:       false,
@@ -103,30 +111,34 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			recordAccountDelegationExists: false,
 		},
 		{
-			name:                    "over tokenize",
-			vestingAmount:           sdk.NewInt(0),
-			delegationAmount:        app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
-			tokenizeShareAmount:     app.StakingKeeper.TokensFromConsensusPower(ctx, 30),
-			redeemAmount:            app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
-			globalLiquidStakingCap:  sdk.OneDec(),
-			slashFactor:             sdk.ZeroDec(),
-			validatorBondFactor:     sdk.NewDec(-1),
-			validatorBondDelegation: false,
-			expTokenizeErr:          true,
-			expRedeemErr:            false,
+			name:                      "over tokenize",
+			vestingAmount:             sdk.NewInt(0),
+			delegationAmount:          app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			tokenizeShareAmount:       app.StakingKeeper.TokensFromConsensusPower(ctx, 30),
+			redeemAmount:              app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			liquidStakingCapsEnabled:  false,
+			globalLiquidStakingCap:    sdk.OneDec(),
+			validatorLiquidStakingCap: sdk.OneDec(),
+			slashFactor:               sdk.ZeroDec(),
+			validatorBondFactor:       sdk.NewDec(-1),
+			validatorBondDelegation:   false,
+			expTokenizeErr:            true,
+			expRedeemErr:              false,
 		},
 		{
-			name:                    "over redeem",
-			vestingAmount:           sdk.NewInt(0),
-			delegationAmount:        app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
-			tokenizeShareAmount:     app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
-			redeemAmount:            app.StakingKeeper.TokensFromConsensusPower(ctx, 40),
-			globalLiquidStakingCap:  sdk.OneDec(),
-			slashFactor:             sdk.ZeroDec(),
-			validatorBondFactor:     sdk.NewDec(-1),
-			validatorBondDelegation: false,
-			expTokenizeErr:          false,
-			expRedeemErr:            true,
+			name:                      "over redeem",
+			vestingAmount:             sdk.NewInt(0),
+			delegationAmount:          app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			tokenizeShareAmount:       app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			redeemAmount:              app.StakingKeeper.TokensFromConsensusPower(ctx, 40),
+			liquidStakingCapsEnabled:  false,
+			globalLiquidStakingCap:    sdk.OneDec(),
+			validatorLiquidStakingCap: sdk.OneDec(),
+			slashFactor:               sdk.ZeroDec(),
+			validatorBondFactor:       sdk.NewDec(-1),
+			validatorBondDelegation:   false,
+			expTokenizeErr:            false,
+			expRedeemErr:              true,
 		},
 		{
 			name:                        "vesting account tokenize share failure",
@@ -134,7 +146,9 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			delegationAmount:            app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount:         app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			redeemAmount:                app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			liquidStakingCapsEnabled:    false,
 			globalLiquidStakingCap:      sdk.OneDec(),
+			validatorLiquidStakingCap:   sdk.OneDec(),
 			slashFactor:                 sdk.ZeroDec(),
 			validatorBondFactor:         sdk.NewDec(-1),
 			validatorBondDelegation:     false,
@@ -150,7 +164,9 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			redeemAmount:                app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterShare:  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			liquidStakingCapsEnabled:    false,
 			globalLiquidStakingCap:      sdk.OneDec(),
+			validatorLiquidStakingCap:   sdk.OneDec(),
 			slashFactor:                 sdk.ZeroDec(),
 			validatorBondFactor:         sdk.NewDec(-1),
 			validatorBondDelegation:     false,
@@ -166,7 +182,9 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			redeemAmount:                app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterShare:  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			liquidStakingCapsEnabled:    true,
 			globalLiquidStakingCap:      sdk.OneDec(),
+			validatorLiquidStakingCap:   sdk.OneDec(),
 			slashFactor:                 sdk.ZeroDec(),
 			validatorBondFactor:         sdk.NewDec(10),
 			validatorBondDelegation:     true,
@@ -176,14 +194,16 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			prevAccountDelegationExists: true,
 		},
 		{
-			name:                        "validator bond factor enabled without validator-bond delegation tokenize share",
+			name:                        "liquid staking caps enabled without validator-bond delegation tokenize share - tokenize failure",
 			vestingAmount:               app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			delegationAmount:            app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount:         app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			redeemAmount:                app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterShare:  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			liquidStakingCapsEnabled:    true,
 			globalLiquidStakingCap:      sdk.OneDec(),
+			validatorLiquidStakingCap:   sdk.OneDec(),
 			slashFactor:                 sdk.ZeroDec(),
 			validatorBondFactor:         sdk.NewDec(10),
 			validatorBondDelegation:     false,
@@ -192,14 +212,16 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			prevAccountDelegationExists: true,
 		},
 		{
-			name:                        "validator bond factor enabled with validator-bond delegation - successful tokenize share",
+			name:                        "liquid staking caps enabled with validator-bond delegation - successful tokenize share",
 			vestingAmount:               app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			delegationAmount:            app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount:         app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			redeemAmount:                app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterShare:  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			liquidStakingCapsEnabled:    true,
 			globalLiquidStakingCap:      sdk.OneDec(),
+			validatorLiquidStakingCap:   sdk.OneDec(),
 			slashFactor:                 sdk.ZeroDec(),
 			validatorBondFactor:         sdk.NewDec(10),
 			validatorBondDelegation:     true,
@@ -209,16 +231,18 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			prevAccountDelegationExists: true,
 		},
 		{
-			name:                        "global liquid staking cap enabled with no slack - tokenization fails",
+			name:                        "liquid staking caps enabled with no global liquid staking slack - tokenization fails",
 			vestingAmount:               app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			delegationAmount:            app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount:         app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			redeemAmount:                app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterShare:  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			liquidStakingCapsEnabled:    true,
 			globalLiquidStakingCap:      sdk.MustNewDecFromStr("0.0"),
+			validatorLiquidStakingCap:   sdk.OneDec(),
 			slashFactor:                 sdk.ZeroDec(),
-			validatorBondFactor:         sdk.NewDec(10),
+			validatorBondFactor:         sdk.NewDec(-1),
 			validatorBondDelegation:     true,
 			validatorBondDelegatorIndex: 0,
 			expTokenizeErr:              true,
@@ -226,14 +250,16 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			prevAccountDelegationExists: true,
 		},
 		{
-			name:                        "global liquid staking cap enabled with adequate slack - successful tokenize share",
+			name:                        "liquid staking caps enabled with adequate liquid staking slack - successful tokenize share",
 			vestingAmount:               app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			delegationAmount:            app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount:         app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			redeemAmount:                app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterShare:  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			liquidStakingCapsEnabled:    true,
 			globalLiquidStakingCap:      sdk.MustNewDecFromStr("0.8"),
+			validatorLiquidStakingCap:   sdk.OneDec(),
 			slashFactor:                 sdk.ZeroDec(),
 			validatorBondFactor:         sdk.NewDec(-1),
 			validatorBondDelegation:     true,
@@ -243,16 +269,75 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			prevAccountDelegationExists: true,
 		},
 		{
-			name:                        "validator bond factor and global liquid staking cap enabled - successful tokenize share",
+			name:                        "liquid staking caps enabled with no validator liquid staking slack - tokenization fails",
 			vestingAmount:               app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			delegationAmount:            app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
 			tokenizeShareAmount:         app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			redeemAmount:                app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterShare:  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			liquidStakingCapsEnabled:    true,
+			globalLiquidStakingCap:      sdk.OneDec(),
+			validatorLiquidStakingCap:   sdk.MustNewDecFromStr("0.0"),
+			slashFactor:                 sdk.ZeroDec(),
+			validatorBondFactor:         sdk.NewDec(-1),
+			validatorBondDelegation:     true,
+			validatorBondDelegatorIndex: 0,
+			expTokenizeErr:              true,
+			expRedeemErr:                false,
+			prevAccountDelegationExists: true,
+		},
+		{
+			name:                        "liquid staking caps enabled with adequate validator staking slack - successful tokenize share",
+			vestingAmount:               app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			delegationAmount:            app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			tokenizeShareAmount:         app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			redeemAmount:                app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			targetVestingDelAfterShare:  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			targetVestingDelAfterRedeem: app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			liquidStakingCapsEnabled:    true,
+			globalLiquidStakingCap:      sdk.OneDec(),
+			validatorLiquidStakingCap:   sdk.MustNewDecFromStr("0.8"),
+			slashFactor:                 sdk.ZeroDec(),
+			validatorBondFactor:         sdk.NewDec(-1),
+			validatorBondDelegation:     true,
+			validatorBondDelegatorIndex: 0,
+			expTokenizeErr:              false,
+			expRedeemErr:                false,
+			prevAccountDelegationExists: true,
+		},
+		{
+			name:                        "liquid staking caps enabled with all caps set - successful tokenize share",
+			vestingAmount:               app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			delegationAmount:            app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			tokenizeShareAmount:         app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			redeemAmount:                app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			targetVestingDelAfterShare:  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			targetVestingDelAfterRedeem: app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			liquidStakingCapsEnabled:    true,
 			globalLiquidStakingCap:      sdk.MustNewDecFromStr("0.8"),
+			validatorLiquidStakingCap:   sdk.MustNewDecFromStr("0.8"),
 			slashFactor:                 sdk.ZeroDec(),
 			validatorBondFactor:         sdk.NewDec(10),
+			validatorBondDelegation:     true,
+			validatorBondDelegatorIndex: 0,
+			expTokenizeErr:              false,
+			expRedeemErr:                false,
+			prevAccountDelegationExists: true,
+		},
+		{
+			name:                        "liquid staking caps set but disabled - successful tokenize share",
+			vestingAmount:               app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			delegationAmount:            app.StakingKeeper.TokensFromConsensusPower(ctx, 20),
+			tokenizeShareAmount:         app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			redeemAmount:                app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			targetVestingDelAfterShare:  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			targetVestingDelAfterRedeem: app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
+			liquidStakingCapsEnabled:    false,
+			globalLiquidStakingCap:      sdk.MustNewDecFromStr("0.0"),
+			validatorLiquidStakingCap:   sdk.MustNewDecFromStr("0.0"),
+			slashFactor:                 sdk.ZeroDec(),
+			validatorBondFactor:         sdk.NewDec(1),
 			validatorBondDelegation:     true,
 			validatorBondDelegatorIndex: 0,
 			expTokenizeErr:              false,
@@ -268,6 +353,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			targetVestingDelAfterShare:  app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			targetVestingDelAfterRedeem: app.StakingKeeper.TokensFromConsensusPower(ctx, 10),
 			globalLiquidStakingCap:      sdk.MustNewDecFromStr("0.8"),
+			validatorLiquidStakingCap:   sdk.MustNewDecFromStr("0.8"),
 			delegatorIsLSTP:             true,
 			slashFactor:                 sdk.ZeroDec(),
 			validatorBondFactor:         sdk.NewDec(10),
@@ -306,6 +392,8 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			params := app.StakingKeeper.GetParams(ctx)
 			params.ValidatorBondFactor = tc.validatorBondFactor
 			params.GlobalLiquidStakingCap = tc.globalLiquidStakingCap
+			params.ValidatorLiquidStakingCap = tc.validatorLiquidStakingCap
+			params.LiquidStakingCapsEnabled = tc.liquidStakingCapsEnabled
 			app.StakingKeeper.SetParams(ctx, params)
 
 			// set the total liquid staked tokens
@@ -384,7 +472,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			// if liquid staking global cap was enabled, and the delegator was not a provider,
 			// check that the total liquid staked increases
 			totalLiquidTokensAfterTokenization := app.StakingKeeper.GetTotalLiquidStakedTokens(ctx)
-			if !tc.delegatorIsLSTP && tc.globalLiquidStakingCap.LT(sdk.OneDec()) {
+			if !tc.delegatorIsLSTP && tc.liquidStakingCapsEnabled {
 				require.Equal(t, tc.tokenizeShareAmount.String(), totalLiquidTokensAfterTokenization.String(), "total liquid tokens after tokenization")
 			} else {
 				require.True(t, totalLiquidTokensAfterTokenization.IsZero(), "zero liquid tokens after tokenization")
@@ -393,7 +481,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			// if the validator bond cap was enabled, and the delegator was not a provider,
 			// check that the validator bond shares increase
 			validatorLiquidSharesAfterTokenization := newValidator.TotalLiquidShares
-			if !tc.delegatorIsLSTP && tc.validatorBondFactor.IsPositive() {
+			if !tc.delegatorIsLSTP && tc.liquidStakingCapsEnabled {
 				require.Equal(t, tc.tokenizeShareAmount.String(), validatorLiquidSharesAfterTokenization.TruncateInt().String(), "validator liquid shares after tokenization")
 			} else {
 				require.True(t, validatorLiquidSharesAfterTokenization.IsZero(), "zero liquid validator shares after tokenization")
@@ -464,7 +552,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			// if liquid staking global cap was enabled, and the delegator was not a provider,
 			// check that the total liquid staked decreases
 			totalLiquidTokensAfterRedemption := app.StakingKeeper.GetTotalLiquidStakedTokens(ctx)
-			if !tc.delegatorIsLSTP && tc.globalLiquidStakingCap.LT(sdk.OneDec()) {
+			if !tc.delegatorIsLSTP && tc.liquidStakingCapsEnabled {
 				expectedLiquidTokens := totalLiquidTokensAfterTokenization.Sub(tc.redeemAmount)
 				require.Equal(t, expectedLiquidTokens.String(), totalLiquidTokensAfterRedemption.String(), "total liquid tokens after tokenization")
 			} else {
@@ -474,7 +562,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			// if the validator bond cap was enabled, and the delegator was not a provider,
 			// check that the validator bond shares decrease
 			validatorLiquidSharesAfterRedemption := newValidator.TotalLiquidShares
-			if !tc.delegatorIsLSTP && tc.validatorBondFactor.IsPositive() {
+			if !tc.delegatorIsLSTP && tc.liquidStakingCapsEnabled {
 				expectedLiquidShares := validatorLiquidSharesAfterTokenization.Sub(sdk.NewDecFromInt(tc.redeemAmount))
 				require.Equal(t, expectedLiquidShares.String(), validatorLiquidSharesAfterRedemption.String(), "validator liquid shares after tokenization")
 			} else {

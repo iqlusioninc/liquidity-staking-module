@@ -43,7 +43,7 @@ var (
 	// DefaultValidatorLiquidStakingCap is set to 100%
 	DefaultValidatorLiquidStakingCap = sdk.OneDec()
 	// DefaultLiquidStakingCapsEnabled is set to true
-	DefaultLiquidStakingCapsEnabled = true
+	DefaultLiquidStakingCapsEnabled = false
 )
 
 var (
