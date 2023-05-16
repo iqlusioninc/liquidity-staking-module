@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"bytes"
+	errorsmod "cosmossdk.io/errors"
 	"fmt"
 	"time"
 
@@ -728,7 +729,7 @@ func (k Keeper) Unbond(
 
 	// ensure that we have enough shares to remove
 	if delegation.Shares.LT(shares) {
-		return amount, sdkerrors.Wrap(sdkstaking.ErrNotEnoughDelegationShares, delegation.Shares.String())
+		return amount, errorsmod.Wrap(sdkstaking.ErrNotEnoughDelegationShares, delegation.Shares.String())
 	}
 
 	// get validator
@@ -1003,7 +1004,7 @@ func (k Keeper) ValidateUnbondAmount(
 
 	delShares := del.GetShares()
 	if sharesTruncated.GT(delShares) {
-		return shares, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid shares amount")
+		return shares, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid shares amount")
 	}
 
 	// Cap the shares at the delegation's shares. Shares being greater could occur

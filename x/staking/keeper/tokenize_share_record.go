@@ -2,9 +2,9 @@ package keeper
 
 import (
 	"fmt"
+	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
@@ -29,7 +29,7 @@ func (k Keeper) GetTokenizeShareRecord(ctx sdk.Context, id uint64) (tokenizeShar
 
 	bz := store.Get(types.GetTokenizeShareRecordByIndexKey(id))
 	if bz == nil {
-		return tokenizeShareRecord, sdkerrors.Wrap(types.ErrTokenizeShareRecordNotExists, fmt.Sprintf("tokenizeShareRecord %d does not exist", id))
+		return tokenizeShareRecord, errorsmod.Wrap(types.ErrTokenizeShareRecordNotExists, fmt.Sprintf("tokenizeShareRecord %d does not exist", id))
 	}
 
 	k.cdc.MustUnmarshal(bz, &tokenizeShareRecord)
@@ -85,7 +85,7 @@ func (k Keeper) GetAllTokenizeShareRecords(ctx sdk.Context) (tokenizeShareRecord
 
 func (k Keeper) AddTokenizeShareRecord(ctx sdk.Context, tokenizeShareRecord types.TokenizeShareRecord) error {
 	if k.hasTokenizeShareRecord(ctx, tokenizeShareRecord.Id) {
-		return sdkerrors.Wrapf(types.ErrTokenizeShareRecordAlreadyExists, "TokenizeShareRecord already exists: %d", tokenizeShareRecord.Id)
+		return errorsmod.Wrapf(types.ErrTokenizeShareRecordAlreadyExists, "TokenizeShareRecord already exists: %d", tokenizeShareRecord.Id)
 	}
 
 	k.setTokenizeShareRecord(ctx, tokenizeShareRecord)

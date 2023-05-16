@@ -1,6 +1,7 @@
 package types
 
 import (
+	errorsmod "cosmossdk.io/errors"
 	"sort"
 
 	"github.com/gogo/protobuf/proto"
@@ -9,7 +10,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 )
 
@@ -46,11 +46,11 @@ func UnmarshalHistoricalInfo(cdc codec.BinaryCodec, value []byte) (hi Historical
 // ValidateBasic will ensure HistoricalInfo is not nil and sorted
 func ValidateBasic(hi HistoricalInfo) error {
 	if len(hi.Valset) == 0 {
-		return sdkerrors.Wrap(sdkstaking.ErrInvalidHistoricalInfo, "validator set is empty")
+		return errorsmod.Wrap(sdkstaking.ErrInvalidHistoricalInfo, "validator set is empty")
 	}
 
 	if !sort.IsSorted(Validators(hi.Valset)) {
-		return sdkerrors.Wrap(sdkstaking.ErrInvalidHistoricalInfo, "validator set is not sorted by address")
+		return errorsmod.Wrap(sdkstaking.ErrInvalidHistoricalInfo, "validator set is not sorted by address")
 	}
 
 	return nil
