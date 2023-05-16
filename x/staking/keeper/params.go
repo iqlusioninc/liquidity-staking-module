@@ -72,12 +72,6 @@ func (k Keeper) ValidatorLiquidStakingCap(ctx sdk.Context) (res sdk.Dec) {
 	return
 }
 
-// Liquid staking cap for each validator
-func (k Keeper) LiquidStakingCapsEnabled(ctx sdk.Context) (res bool) {
-	k.paramstore.Get(ctx, types.KeyLiquidStakingCapsEnabled, &res)
-	return
-}
-
 // Get all parameters as types.Params
 func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 	return types.NewParams(
@@ -90,7 +84,6 @@ func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 		k.ValidatorBondFactor(ctx),
 		k.GlobalLiquidStakingCap(ctx),
 		k.ValidatorLiquidStakingCap(ctx),
-		k.LiquidStakingCapsEnabled(ctx),
 	)
 }
 

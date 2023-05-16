@@ -77,7 +77,6 @@ func RandomizedGenState(simState *module.SimulationState) {
 		validatorBondFactor,
 		globalLiquidStakingCap,
 		validatorLiquidStakingCap,
-		true,
 	)
 
 	// validators & delegations

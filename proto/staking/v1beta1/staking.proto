@@ -334,7 +334,6 @@ message Params {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Dec",
     (gogoproto.nullable)   = false
   ];
-  bool liquid_staking_caps_enabled = 10;
 }
 
 // DelegationResponse is equivalent to Delegation except that it contains a
