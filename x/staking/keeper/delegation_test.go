@@ -504,7 +504,6 @@ func TestValidatorBondUndelegate(t *testing.T) {
 	// set validator bond factor
 	params := app.StakingKeeper.GetParams(ctx)
 	params.ValidatorBondFactor = sdk.NewDec(1)
-	params.LiquidStakingCapsEnabled = true
 	app.StakingKeeper.SetParams(ctx, params)
 
 	// set total liquid stake
@@ -587,7 +586,6 @@ func TestValidatorBondRedelegate(t *testing.T) {
 	// set validator bond factor
 	params := app.StakingKeeper.GetParams(ctx)
 	params.ValidatorBondFactor = sdk.NewDec(1)
-	params.LiquidStakingCapsEnabled = true
 	app.StakingKeeper.SetParams(ctx, params)
 
 	// set total liquid stake

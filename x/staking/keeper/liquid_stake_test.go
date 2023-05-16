@@ -213,13 +213,6 @@ func TestSafelyIncreaseTotalLiquidStakedTokens(t *testing.T) {
 	increaseAmount := sdk.NewInt(10)
 	poolBalance := sdk.NewInt(200)
 
-	// Set the global cap such that a small delegation would exceed the cap,
-	// but disable the cap
-	params := app.StakingKeeper.GetParams(ctx)
-	params.GlobalLiquidStakingCap = sdk.MustNewDecFromStr("0.0001")
-	params.LiquidStakingCapsEnabled = false
-	app.StakingKeeper.SetParams(ctx, params)
-
 	// Set the total staked and total liquid staked amounts
 	// which are required components when checking the global cap
 	// Total stake is calculated from the pool balance
@@ -227,19 +220,14 @@ func TestSafelyIncreaseTotalLiquidStakedTokens(t *testing.T) {
 	fundPoolBalance(t, app, ctx, poolBalance)
 	app.StakingKeeper.SetTotalLiquidStakedTokens(ctx, intitialTotalLiquidStaked)
 
-	// Attempt to increase the total liquid stake, it should not be changed and there
-	// should be no error since the cap is disabled
-	err := app.StakingKeeper.SafelyIncreaseTotalLiquidStakedTokens(ctx, increaseAmount)
-	require.NoError(t, err)
-	require.Equal(t, intitialTotalLiquidStaked, app.StakingKeeper.GetTotalLiquidStakedTokens(ctx))
-
-	// Now enable the cap
-	params.LiquidStakingCapsEnabled = true
+	// Set the global cap such that a small delegation would exceed the cap
+	params := app.StakingKeeper.GetParams(ctx)
+	params.GlobalLiquidStakingCap = sdk.MustNewDecFromStr("0.0001")
 	app.StakingKeeper.SetParams(ctx, params)
 
-	// Attempt to increase the total liquid stake again, this time it should error since
+	// Attempt to increase the total liquid stake again,it should error since
 	// the cap was exceeded
-	err = app.StakingKeeper.SafelyIncreaseTotalLiquidStakedTokens(ctx, increaseAmount)
+	err := app.StakingKeeper.SafelyIncreaseTotalLiquidStakedTokens(ctx, increaseAmount)
 	require.ErrorIs(t, err, types.ErrGlobalLiquidStakingCapExceeded)
 	require.Equal(t, intitialTotalLiquidStaked, app.StakingKeeper.GetTotalLiquidStakedTokens(ctx))
 
@@ -263,21 +251,7 @@ func TestDecreaseTotalLiquidStakedTokens(t *testing.T) {
 	// Set the total liquid staked to an arbitrary value
 	app.StakingKeeper.SetTotalLiquidStakedTokens(ctx, intitialTotalLiquidStaked)
 
-	// Disable the cap
-	params := app.StakingKeeper.GetParams(ctx)
-	params.LiquidStakingCapsEnabled = false
-	app.StakingKeeper.SetParams(ctx, params)
-
-	// Attempt to decrease the total liquid stake, it should not be changed since the cap is disabled
-	app.StakingKeeper.DecreaseTotalLiquidStakedTokens(ctx, decreaseAmount)
-	require.Equal(t, intitialTotalLiquidStaked, app.StakingKeeper.GetTotalLiquidStakedTokens(ctx))
-
-	// Now relax the cap and enable it
-	params.GlobalLiquidStakingCap = sdk.MustNewDecFromStr("0.50")
-	params.LiquidStakingCapsEnabled = true
-	app.StakingKeeper.SetParams(ctx, params)
-
-	// Attempt to decrease the total liquid stake again, now it should succeed
+	// Decrease the total liquid stake and confirm the total was updated
 	app.StakingKeeper.DecreaseTotalLiquidStakedTokens(ctx, decreaseAmount)
 	require.Equal(t, intitialTotalLiquidStaked.Sub(decreaseAmount), app.StakingKeeper.GetTotalLiquidStakedTokens(ctx))
 }
@@ -295,9 +269,8 @@ func TestCheckExceedsValidatorBondCap(t *testing.T) {
 		expectedExceeds     bool
 	}{
 		{
-			// Cap: 10% - Delegation Below Threshold
-			// Liquid Shares: 5, Total Stake: 95, New Liquid Stake: 1
-			// => Total Liquid Stake: 5+1=6, Total Stake: 95+1=96 => 6/96 = 6% < 10% cap
+			// Validator Shares: 100, Factor: 1, Current Shares: 90 => 100 Max Shares, Capacity: 10
+			// New Shares: 5 - below cap
 			name:                "factor 1 - below cap",
 			validatorShares:     sdk.NewDec(100),
 			validatorBondFactor: sdk.NewDec(1),
@@ -394,6 +367,15 @@ func TestCheckExceedsValidatorBondCap(t *testing.T) {
 			currentLiquidShares: sdk.NewDec(90),
 			newShares:           sdk.NewDec(9911),
 			expectedExceeds:     true,
+		},
+		{
+			// Factor of -1 (disabled): Should always return false
+			name:                "factor disabled",
+			validatorShares:     sdk.NewDec(1),
+			validatorBondFactor: sdk.NewDec(-1),
+			currentLiquidShares: sdk.NewDec(1),
+			newShares:           sdk.NewDec(1_000_000),
+			expectedExceeds:     false,
 		},
 	}
 
@@ -586,26 +568,15 @@ func TestSafelyIncreaseValidatorTotalLiquidShares(t *testing.T) {
 
 	// Set validator bond factor to a small number such that any delegation would fail,
 	// and set the liquid staking cap such that the first stake would succeed, but the second
-	// would fail. Then disable the caps altogether
+	// would fail
 	params := app.StakingKeeper.GetParams(ctx)
 	params.ValidatorBondFactor = initialBondFactor
 	params.ValidatorLiquidStakingCap = initialLiquidStakingCap
-	params.LiquidStakingCapsEnabled = false
 	app.StakingKeeper.SetParams(ctx, params)
 
-	// Attempt to increase the validator liquid shares
-	// it should do nothing since the check is disabled
-	err := app.StakingKeeper.SafelyIncreaseValidatorTotalLiquidShares(ctx, initialValidator, firstIncreaseAmount)
-	require.NoError(t, err)
-	checkValidatorLiquidShares(initialLiquidShares, "shares with cap disabled")
-
-	// Enable the validator bond factor - the delegation will fail
-	params.LiquidStakingCapsEnabled = true
-	app.StakingKeeper.SetParams(ctx, params)
-
-	// Attempt to increase the validator liquid shares again, this time it should throw an
+	// Attempt to increase the validator liquid shares, it should throw an
 	// error that the validator bond cap was exceeded
-	err = app.StakingKeeper.SafelyIncreaseValidatorTotalLiquidShares(ctx, initialValidator, firstIncreaseAmount)
+	err := app.StakingKeeper.SafelyIncreaseValidatorTotalLiquidShares(ctx, initialValidator, firstIncreaseAmount)
 	require.ErrorIs(t, err, types.ErrInsufficientValidatorBondShares)
 	checkValidatorLiquidShares(initialLiquidShares, "shares after low bond factor")
 
@@ -653,25 +624,9 @@ func TestDecreaseValidatorTotalLiquidShares(t *testing.T) {
 	}
 	app.StakingKeeper.SetValidator(ctx, initialValidator)
 
-	// Set a conservative validator bond cap, but disable the liquid staking caps altogether
-	params := app.StakingKeeper.GetParams(ctx)
-	params.ValidatorBondFactor = sdk.NewDec(10)
-	params.LiquidStakingCapsEnabled = false
-	app.StakingKeeper.SetParams(ctx, params)
-
-	// Attempt to decrease the validator liquid shares, it should not be changed since the cap is disabled
+	// Decrease the validator liquid shares, and confirm the new share amount has been updated
 	app.StakingKeeper.DecreaseValidatorTotalLiquidShares(ctx, initialValidator, decreaseAmount)
 	actualValidator, found := app.StakingKeeper.GetLiquidValidator(ctx, valAddress)
-	require.True(t, found)
-	require.Equal(t, initialLiquidShares, actualValidator.TotalLiquidShares, "shares with cap disabled")
-
-	// Now re-enable the cap
-	params.LiquidStakingCapsEnabled = true
-	app.StakingKeeper.SetParams(ctx, params)
-
-	// Attempt to decrease the validator liquid shares again, now it should succeed
-	app.StakingKeeper.DecreaseValidatorTotalLiquidShares(ctx, initialValidator, decreaseAmount)
-	actualValidator, found = app.StakingKeeper.GetLiquidValidator(ctx, valAddress)
 	require.True(t, found)
 	require.Equal(t, initialLiquidShares.Sub(decreaseAmount), actualValidator.TotalLiquidShares, "shares with cap disabled")
 }
