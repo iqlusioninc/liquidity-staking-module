@@ -886,6 +886,27 @@ func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types
 	return &types.MsgTransferTokenizeShareRecordResponse{}, nil
 }
 
+// DisableTokenizeShares prevents an address from tokenizing any of their delegations
+func (k msgServer) DisableTokenizeShares(goCtx context.Context, msg *types.MsgDisableTokenizeShares) (*types.MsgDisableTokenizeSharesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	_ = ctx
+	fmt.Println("DISABLE")
+
+	return &types.MsgDisableTokenizeSharesResponse{}, nil
+}
+
+// EnableTokenizeShares begins the re-allowing of tokenizing shares for an address,
+// which will complete after the unbonding period
+func (k msgServer) EnableTokenizeShares(goCtx context.Context, msg *types.MsgEnableTokenizeShares) (*types.MsgEnableTokenizeSharesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	_ = ctx
+	fmt.Println("ENABLE")
+
+	return &types.MsgEnableTokenizeSharesResponse{}, nil
+}
+
 func (k msgServer) ValidatorBond(goCtx context.Context, msg *types.MsgValidatorBond) (*types.MsgValidatorBondResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
