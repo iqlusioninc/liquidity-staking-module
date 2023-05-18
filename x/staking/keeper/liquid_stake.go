@@ -156,13 +156,14 @@ func (k Keeper) SafelyDecreaseValidatorBond(ctx sdk.Context, validator types.Val
 	return nil
 }
 
-// AddTokenizeSharesLock adds a lock that prevents tokenizing shares for an account
+// Adds a lock that prevents tokenizing shares for an account
 // The tokenize share lock store is implemented by keying on the account address
-// with a fixed value for each entry
+// and storing a timestamp as the value. The timestamp is empty when the lock is
+// set and gets populated with the unlock completion time once the unlock has started
 func (k Keeper) AddTokenizeSharesLock(ctx sdk.Context, address sdk.AccAddress) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetTokenizeSharesLockKey(address)
-	store.Set(key, []byte{types.TokenizeSharesLockValue})
+	store.Set(key, sdk.FormatTimeBytes(time.Time{}))
 }
 
 // Removes the tokenize share lock for an account to enable tokenizing shares
@@ -172,16 +173,28 @@ func (k Keeper) RemoveTokenizeSharesLock(ctx sdk.Context, address sdk.AccAddress
 	store.Delete(key)
 }
 
+// Updates the timestamp associated with a lock to the time at which the lock expires
+func (k Keeper) SetTokenizeShareUnlockTime(ctx sdk.Context, address sdk.AccAddress, completionTime time.Time) {
+	store := ctx.KVStore(k.storeKey)
+	key := types.GetTokenizeSharesLockKey(address)
+	store.Set(key, sdk.FormatTimeBytes(completionTime))
+}
+
 // Checks if there is currently a tokenize share lock for a given account
-// Returns true if the account is locked
-func (k Keeper) IsTokenizeSharesDisabled(ctx sdk.Context, address sdk.AccAddress) bool {
+// Returns a bool indicating if the account is locked, as well as the unlock time
+// which may be empty if an unlock has not been initiated
+func (k Keeper) IsTokenizeSharesDisabled(ctx sdk.Context, address sdk.AccAddress) (disabled bool, unlockTime time.Time) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetTokenizeSharesLockKey(address)
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return false
+		return false, unlockTime
 	}
-	return len(bz) == 1 && bz[0] == types.TokenizeSharesLockValue
+	unlockTime, err := sdk.ParseTimeBytes(bz)
+	if err != nil {
+		panic(err)
+	}
+	return true, unlockTime
 }
 
 // Returns a list of addresses pending tokenize share unlocking at the same time
@@ -215,31 +228,37 @@ func (k Keeper) QueueTokenizeSharesAuthorization(ctx sdk.Context, address sdk.Ac
 	params := k.GetParams(ctx)
 	completionTime := ctx.BlockTime().Add(params.UnbondingTime)
 
+	// Append the address to the list of addresses that also unlock at this time
 	authorizations := k.GetPendingTokenizeShareAuthorizations(ctx, completionTime)
 	authorizations.Addresses = append(authorizations.Addresses, address.String())
 
 	k.SetPendingTokenizeShareAuthorizations(ctx, completionTime, authorizations)
+	k.SetTokenizeShareUnlockTime(ctx, address, completionTime)
 
 	return completionTime
 }
 
 // Unlocks all queued tokenize share authorizations that have matured
 // (i.e. have waited the full unbonding period)
-func (k Keeper) RemoveExpiredTokenizeShareLocks(ctx sdk.Context) {
+func (k Keeper) RemoveExpiredTokenizeShareLocks(ctx sdk.Context, blockTime time.Time) (unlockedAddresses []string) {
 	store := ctx.KVStore(k.storeKey)
 
 	// iterators all time slices from time 0 until the current block time
-	prefixEnd := sdk.InclusiveEndBytes(types.GetTokenizeShareAuthorizationTimeKey(ctx.BlockTime()))
+	prefixEnd := sdk.InclusiveEndBytes(types.GetTokenizeShareAuthorizationTimeKey(blockTime))
 	iterator := store.Iterator(types.TokenizeSharesUnlockQueueKey, prefixEnd)
 	defer iterator.Close()
 
+	unlockedAddresses = []string{}
 	for ; iterator.Valid(); iterator.Next() {
 		authorizations := types.PendingTokenizeShareAuthorizations{}
 		k.cdc.MustUnmarshal(iterator.Value(), &authorizations)
 
-		for _, address := range authorizations.Addresses {
-			k.RemoveTokenizeSharesLock(ctx, sdk.MustAccAddressFromBech32(address))
+		for _, addressString := range authorizations.Addresses {
+			k.RemoveTokenizeSharesLock(ctx, sdk.MustAccAddressFromBech32(addressString))
+			unlockedAddresses = append(unlockedAddresses, addressString)
 		}
 		store.Delete(iterator.Key())
 	}
+
+	return unlockedAddresses
 }

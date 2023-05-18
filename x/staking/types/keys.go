@@ -53,14 +53,13 @@ var (
 
 	HistoricalInfoKey = []byte{0x50} // prefix for the historical info
 
-	TokenizeShareRecordPrefix                = []byte{0x61} // key for tokenizeshare record prefix
-	TokenizeShareRecordIdByOwnerPrefix       = []byte{0x62} // key for tokenizeshare record id by owner prefix
-	TokenizeShareRecordIdByDenomPrefix       = []byte{0x63} // key for tokenizeshare record id by denom prefix
-	LastTokenizeShareRecordIdKey             = []byte{0x64} // key for last tokenize share record id
-	TotalLiquidStakedTokensKey               = []byte{0x65} // key for total liquid staked tokens
-	TokenizeSharesLockKey                    = []byte{0x66} // key for locking tokenize shares
-	TokenizeSharesLockValue            uint8 = 67           // Fixed value stored for each entry in the tokenize lock store
-	TokenizeSharesUnlockQueueKey             = []byte{0x68} // key for the queue that unlocks tokenize shares
+	TokenizeShareRecordPrefix          = []byte{0x61} // key for tokenizeshare record prefix
+	TokenizeShareRecordIdByOwnerPrefix = []byte{0x62} // key for tokenizeshare record id by owner prefix
+	TokenizeShareRecordIdByDenomPrefix = []byte{0x63} // key for tokenizeshare record id by denom prefix
+	LastTokenizeShareRecordIdKey       = []byte{0x64} // key for last tokenize share record id
+	TotalLiquidStakedTokensKey         = []byte{0x65} // key for total liquid staked tokens
+	TokenizeSharesLockKey              = []byte{0x66} // key for locking tokenize shares
+	TokenizeSharesUnlockQueueKey       = []byte{0x67} // key for the queue that unlocks tokenize shares
 )
 
 // GetValidatorKey creates the key for the validator with address

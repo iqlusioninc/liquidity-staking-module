@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"testing"
+	"time"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -508,4 +509,173 @@ func TestDecreaseValidatorTotalLiquidShares(t *testing.T) {
 	actualValidator, found = app.StakingKeeper.GetLiquidValidator(ctx, valAddress)
 	require.True(t, found)
 	require.Equal(t, initialLiquidShares.Sub(decreaseAmount), actualValidator.TotalLiquidShares, "shares with cap disabled")
+}
+
+// Tests Add/Remove/SetTokenizeSharesLock and IsTokenizeSharesDisabled
+func TestTokenizeSharesLock(t *testing.T) {
+	_, app, ctx := createTestInput(t)
+
+	addresses := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1))
+	addressA, addressB := addresses[0], addresses[1]
+
+	// Confirm both accounts start unlocked
+	disabled, _ := app.StakingKeeper.IsTokenizeSharesDisabled(ctx, addressA)
+	require.False(t, disabled, "addressA unlocked at start")
+
+	disabled, _ = app.StakingKeeper.IsTokenizeSharesDisabled(ctx, addressB)
+	require.False(t, disabled, "addressB unlocked at start")
+
+	// Lock the first account
+	app.StakingKeeper.AddTokenizeSharesLock(ctx, addressA)
+
+	// The first account should now have tokenize shares disabled
+	// and the unlock time should be the zero time
+	disabled, actualUnlockTime := app.StakingKeeper.IsTokenizeSharesDisabled(ctx, addressA)
+	require.True(t, disabled, "addressA locked")
+	require.True(t, actualUnlockTime.IsZero(), "addressA unlock time uninititalized")
+
+	disabled, _ = app.StakingKeeper.IsTokenizeSharesDisabled(ctx, addressB)
+	require.False(t, disabled, "addressB still unlocked")
+
+	// Update the lock time and confirm it was set
+	expectedUnlockTime := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+	app.StakingKeeper.SetTokenizeShareUnlockTime(ctx, addressA, expectedUnlockTime)
+
+	disabled, actualUnlockTime = app.StakingKeeper.IsTokenizeSharesDisabled(ctx, addressA)
+	require.True(t, disabled, "addressA still locked")
+	require.Equal(t, expectedUnlockTime, actualUnlockTime, "addressA unlock time")
+
+	// Confirm B is still unlocked
+	disabled, _ = app.StakingKeeper.IsTokenizeSharesDisabled(ctx, addressB)
+	require.False(t, disabled, "addressB still unlocked")
+
+	// Remove the lock
+	app.StakingKeeper.RemoveTokenizeSharesLock(ctx, addressA)
+	disabled, _ = app.StakingKeeper.IsTokenizeSharesDisabled(ctx, addressA)
+	require.False(t, disabled, "addressA unlocked at end")
+
+	disabled, _ = app.StakingKeeper.IsTokenizeSharesDisabled(ctx, addressB)
+	require.False(t, disabled, "addressB unlocked at end")
+}
+
+// Test Get/SetPendingTokenizeShareAuthorizations
+func TestPendingTokenizeShareAuthorizations(t *testing.T) {
+	_, app, ctx := createTestInput(t)
+
+	// Create dummy accounts and completion times
+	addresses := simapp.AddTestAddrs(app, ctx, 3, sdk.NewInt(1))
+	addressStrings := []string{}
+	for _, address := range addresses {
+		addressStrings = append(addressStrings, address.String())
+	}
+
+	timeA := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+	timeB := timeA.Add(time.Hour)
+
+	// There should be no addresses returned originally
+	authorizationsA := app.StakingKeeper.GetPendingTokenizeShareAuthorizations(ctx, timeA)
+	require.Empty(t, authorizationsA.Addresses, "no addresses at timeA expected")
+
+	authorizationsB := app.StakingKeeper.GetPendingTokenizeShareAuthorizations(ctx, timeB)
+	require.Empty(t, authorizationsB.Addresses, "no addresses at timeB expected")
+
+	// Store addresses for timeB
+	app.StakingKeeper.SetPendingTokenizeShareAuthorizations(ctx, timeB, types.PendingTokenizeShareAuthorizations{
+		Addresses: addressStrings,
+	})
+
+	// Check addresses
+	authorizationsA = app.StakingKeeper.GetPendingTokenizeShareAuthorizations(ctx, timeA)
+	require.Empty(t, authorizationsA.Addresses, "no addresses at timeA expected at end")
+
+	authorizationsB = app.StakingKeeper.GetPendingTokenizeShareAuthorizations(ctx, timeB)
+	require.Equal(t, addressStrings, authorizationsB.Addresses, "address length")
+}
+
+// Test QueueTokenizeSharesAuthorization and RemoveExpiredTokenizeShareLocks
+func TestTokenizeShareAuthorizationQueue(t *testing.T) {
+	_, app, ctx := createTestInput(t)
+
+	// We'll start by adding the following addresses to the queue
+	//   Time 0: [address0]
+	//   Time 1: []
+	//   Time 2: [address1, address2, address3]
+	//   Time 3: [address4, address5]
+	//   Time 4: [address6]
+	addresses := simapp.AddTestAddrs(app, ctx, 7, sdk.NewInt(1))
+	addressesByTime := map[int][]sdk.AccAddress{
+		0: {addresses[0]},
+		1: {},
+		2: {addresses[1], addresses[2], addresses[3]},
+		3: {addresses[4], addresses[5]},
+		4: {addresses[6]},
+	}
+
+	// Set the unbonding time to 1 day
+	unbondingPeriod := time.Hour * 24
+	params := app.StakingKeeper.GetParams(ctx)
+	params.UnbondingTime = unbondingPeriod
+	app.StakingKeeper.SetParams(ctx, params)
+
+	// Add each address to the queue and then increment the block time
+	// such that the times line up as follows
+	//   Time 0: 2023-01-01 00:00:00
+	//   Time 1: 2023-01-01 00:01:00
+	//   Time 2: 2023-01-01 00:02:00
+	//   Time 3: 2023-01-01 00:03:00
+	startTime := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+	ctx = ctx.WithBlockTime(startTime)
+	blockTimeIncrement := time.Hour
+
+	for timeIndex := 0; timeIndex <= 4; timeIndex++ {
+		for _, address := range addressesByTime[timeIndex] {
+			app.StakingKeeper.QueueTokenizeSharesAuthorization(ctx, address)
+		}
+		ctx = ctx.WithBlockTime(ctx.BlockTime().Add(blockTimeIncrement))
+	}
+
+	// We'll unlock the tokens using the following progression
+	// The "alias'"/keys for these times assume a starting point of the Time 0
+	// from above, plus the Unbonding Time
+	//   Time -1  (2023-01-01 23:59:99): []
+	//   Time  0  (2023-01-02 00:00:00): [address0]
+	//   Time  1  (2023-01-02 00:01:00): []
+	//   Time 2.5 (2023-01-02 00:02:30): [address1, address2, address3]
+	//   Time 10  (2023-01-02 00:10:00): [address4, address5, address6]
+	unlockBlockTimes := map[string]time.Time{
+		"-1":  startTime.Add(unbondingPeriod).Add(-time.Second),
+		"0":   startTime.Add(unbondingPeriod),
+		"1":   startTime.Add(unbondingPeriod).Add(blockTimeIncrement),
+		"2.5": startTime.Add(unbondingPeriod).Add(2 * blockTimeIncrement).Add(blockTimeIncrement / 2),
+		"10":  startTime.Add(unbondingPeriod).Add(10 * blockTimeIncrement),
+	}
+	expectedUnlockedAddresses := map[string][]string{
+		"-1":  {},
+		"0":   {addresses[0].String()},
+		"1":   {},
+		"2.5": {addresses[1].String(), addresses[2].String(), addresses[3].String()},
+		"10":  {addresses[4].String(), addresses[5].String(), addresses[6].String()},
+	}
+
+	// Now we'll remove items from the queue sequentially
+	// First check with a block time before the first expiration - it should remove no addresses
+	actualAddresses := app.StakingKeeper.RemoveExpiredTokenizeShareLocks(ctx, unlockBlockTimes["-1"])
+	require.Equal(t, expectedUnlockedAddresses["-1"], actualAddresses, "no addresses unlocked from time -1")
+
+	// Then pass in (time 0 + unbonding time) - it should remove the first address
+	actualAddresses = app.StakingKeeper.RemoveExpiredTokenizeShareLocks(ctx, unlockBlockTimes["0"])
+	require.Equal(t, expectedUnlockedAddresses["0"], actualAddresses, "one address unlocked from time 0")
+
+	// Now pass in (time 1 + unbonding time) - it should remove no addresses since
+	// the address at time 0 was already removed
+	actualAddresses = app.StakingKeeper.RemoveExpiredTokenizeShareLocks(ctx, unlockBlockTimes["1"])
+	require.Equal(t, expectedUnlockedAddresses["1"], actualAddresses, "no addresses unlocked from time 1")
+
+	// Now pass in (time 2.5 + unbonding time) - it should remove the three addresses from time 2
+	actualAddresses = app.StakingKeeper.RemoveExpiredTokenizeShareLocks(ctx, unlockBlockTimes["2.5"])
+	require.Equal(t, expectedUnlockedAddresses["2.5"], actualAddresses, "addresses unlocked from time 2.5")
+
+	// Finally pass in a block time far in the future, which should remove all the remaining locks
+	actualAddresses = app.StakingKeeper.RemoveExpiredTokenizeShareLocks(ctx, unlockBlockTimes["10"])
+	require.Equal(t, expectedUnlockedAddresses["10"], actualAddresses, "addresses unlocked from time 10")
 }
