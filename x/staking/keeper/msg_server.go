@@ -610,6 +610,14 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
+	// Check if the delegator has disabled tokenization
+	if disabled, unlockTime := k.IsTokenizeSharesDisabled(ctx, delegatorAddress); disabled {
+		if unlockTime.IsZero() {
+			return nil, types.ErrTokenizeSharesDisabledForAccount
+		}
+		return nil, types.ErrTokenizeSharesDisabledForAccount.Wrapf("tokenization will be allowed at %s", unlockTime)
+	}
+
 	delegation, found := k.GetLiquidDelegation(ctx, delegatorAddress, valAddr)
 	if !found {
 		return nil, sdkstaking.ErrNoDelegatorForAddress
@@ -893,8 +901,13 @@ func (k msgServer) DisableTokenizeShares(goCtx context.Context, msg *types.MsgDi
 	delegator := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
 
 	// If tokenization is already disabled, do nothing
-	if k.IsTokenizeSharesDisabled(ctx, delegator) {
+	if disabled, _ := k.IsTokenizeSharesDisabled(ctx, delegator); disabled {
 		return &types.MsgDisableTokenizeSharesResponse{}, nil
+	}
+
+	// If the user already has a tokenized delegation, they cannot disable tokenization
+	if len(k.GetTokenizeShareRecordsByOwner(ctx, delegator)) != 0 {
+		return nil, types.ErrUnableToDisableTokenizeShares.Wrapf("account already has tokenized shares")
 	}
 
 	// Otherwise, create a new tokenization lock for the user
@@ -911,11 +924,12 @@ func (k msgServer) EnableTokenizeShares(goCtx context.Context, msg *types.MsgEna
 	delegator := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
 
 	// If there's no existing lock, do nothing
-	if !k.IsTokenizeSharesDisabled(ctx, delegator) {
+	// QUESTION: We could also throw an error here?
+	if disabled, _ := k.IsTokenizeSharesDisabled(ctx, delegator); !disabled {
 		return &types.MsgEnableTokenizeSharesResponse{CompletionTime: ctx.BlockTime()}, nil
 	}
 
-	// Otherwise queue the enablement
+	// Otherwise queue the unlock
 	completionTime := k.QueueTokenizeSharesAuthorization(ctx, delegator)
 
 	return &types.MsgEnableTokenizeSharesResponse{CompletionTime: completionTime}, nil
