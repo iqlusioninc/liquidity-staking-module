@@ -890,8 +890,15 @@ func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types
 func (k msgServer) DisableTokenizeShares(goCtx context.Context, msg *types.MsgDisableTokenizeShares) (*types.MsgDisableTokenizeSharesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	_ = ctx
-	fmt.Println("DISABLE")
+	delegator := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
+
+	// If tokenization is already disabled, do nothing
+	if k.IsTokenizeSharesDisabled(ctx, delegator) {
+		return &types.MsgDisableTokenizeSharesResponse{}, nil
+	}
+
+	// Otherwise, create a new tokenization lock for the user
+	k.AddTokenizeSharesLock(ctx, delegator)
 
 	return &types.MsgDisableTokenizeSharesResponse{}, nil
 }
@@ -901,10 +908,17 @@ func (k msgServer) DisableTokenizeShares(goCtx context.Context, msg *types.MsgDi
 func (k msgServer) EnableTokenizeShares(goCtx context.Context, msg *types.MsgEnableTokenizeShares) (*types.MsgEnableTokenizeSharesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
-	_ = ctx
-	fmt.Println("ENABLE")
+	delegator := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
 
-	return &types.MsgEnableTokenizeSharesResponse{}, nil
+	// If there's no existing lock, do nothing
+	if !k.IsTokenizeSharesDisabled(ctx, delegator) {
+		return &types.MsgEnableTokenizeSharesResponse{CompletionTime: ctx.BlockTime()}, nil
+	}
+
+	// Otherwise queue the enablement
+	completionTime := k.QueueTokenizeSharesAuthorization(ctx, delegator)
+
+	return &types.MsgEnableTokenizeSharesResponse{CompletionTime: completionTime}, nil
 }
 
 func (k msgServer) ValidatorBond(goCtx context.Context, msg *types.MsgValidatorBond) (*types.MsgValidatorBondResponse, error) {
