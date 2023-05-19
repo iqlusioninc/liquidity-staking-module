@@ -900,14 +900,10 @@ func (k msgServer) DisableTokenizeShares(goCtx context.Context, msg *types.MsgDi
 
 	delegator := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
 
-	// If tokenization is already disabled, do nothing
+	// If tokenized shares is already disabled, alert the user
 	if disabled, _ := k.IsTokenizeSharesDisabled(ctx, delegator); disabled {
-		return &types.MsgDisableTokenizeSharesResponse{}, nil
+		return nil, types.ErrTokenizeSharesAlreadyDisabledForAccount
 	}
-
-	// QUESTION: I don't think there's an easy way to track if a user already has an LSM token,
-	// but I think it's fine (and maybe even preferred) to still allow disabling tokenize shares
-	// even if they have one already
 
 	// Otherwise, create a new tokenization lock for the user
 	k.AddTokenizeSharesLock(ctx, delegator)
@@ -915,17 +911,16 @@ func (k msgServer) DisableTokenizeShares(goCtx context.Context, msg *types.MsgDi
 	return &types.MsgDisableTokenizeSharesResponse{}, nil
 }
 
-// EnableTokenizeShares begins the re-allowing of tokenizing shares for an address,
-// which will complete after the unbonding period
+// EnableTokenizeShares begins the countdown after which tokenizing shares by the
+// sender address is re-allowed, which will complete after the unbonding period
 func (k msgServer) EnableTokenizeShares(goCtx context.Context, msg *types.MsgEnableTokenizeShares) (*types.MsgEnableTokenizeSharesResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 
 	delegator := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
 
-	// If there's no existing lock, do nothing
-	// QUESTION: We could also throw an error here?
+	// If tokenized shares aren't current disabled, alert the user
 	if disabled, _ := k.IsTokenizeSharesDisabled(ctx, delegator); !disabled {
-		return &types.MsgEnableTokenizeSharesResponse{CompletionTime: ctx.BlockTime()}, nil
+		return nil, types.ErrTokenizeSharesAlreadyEnabledForAccount
 	}
 
 	// Otherwise queue the unlock

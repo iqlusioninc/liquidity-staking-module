@@ -221,7 +221,7 @@ func (k Keeper) GetPendingTokenizeShareAuthorizations(ctx sdk.Context, completio
 	return authorizations
 }
 
-// Inserts thea ddress into a queue where it will sit for 1 unbonding period
+// Inserts the address into a queue where it will sit for 1 unbonding period
 // before the tokenize share lock is removed
 // Returns the completion time
 func (k Keeper) QueueTokenizeSharesAuthorization(ctx sdk.Context, address sdk.AccAddress) time.Time {

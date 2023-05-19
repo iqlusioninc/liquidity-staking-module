@@ -737,7 +737,7 @@ func TestEnableDisableTokenizeShares(t *testing.T) {
 	params.UnbondingTime = unbondingPeriod
 	app.StakingKeeper.SetParams(ctx, params)
 
-	// Build test messages (some on which will be reused)
+	// Build test messages (some of which will be reused)
 	delegateMsg := types.MsgDelegate{
 		DelegatorAddress: delegatorAddress.String(),
 		ValidatorAddress: validatorAddress.String(),
@@ -775,13 +775,17 @@ func TestEnableDisableTokenizeShares(t *testing.T) {
 	_, err = msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &redeemMsg)
 	require.NoError(t, err, "no error expected when redeeming")
 
-	// Attempt to disable again, now it should succeed
+	// Attempt to enable tokenizing shares when there is no lock in place, it should error
+	_, err = msgServer.EnableTokenizeShares(sdk.WrapSDKContext(ctx), &enableMsg)
+	require.ErrorIs(t, err, types.ErrTokenizeSharesAlreadyEnabledForAccount)
+
+	// Attempt to disable when no lock is in place, it should succeed
 	_, err = msgServer.DisableTokenizeShares(sdk.WrapSDKContext(ctx), &disableMsg)
 	require.NoError(t, err, "no error expected when disabling tokenization")
 
-	// Disabling again while the lock is already in place, does nothing, but should not error
+	// Disabling again while the lock is already in place, should error
 	_, err = msgServer.DisableTokenizeShares(sdk.WrapSDKContext(ctx), &disableMsg)
-	require.NoError(t, err, "no error expected when disabling again")
+	require.ErrorIs(t, err, types.ErrTokenizeSharesAlreadyDisabledForAccount)
 
 	// Attempt to tokenize, it should fail since tokenization is disabled
 	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &tokenizeMsg)
