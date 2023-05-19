@@ -650,8 +650,8 @@ func (k Querier) TotalTokenizeSharedAssets(c context.Context, req *types.QueryTo
 	}, nil
 }
 
-// Query for the completion time of an expiring tokenize share lock
-func (k Querier) ExpiringTokenizeShareLock(c context.Context, req *types.QueryExpiringTokenizeShareLock) (*types.QueryExpiringTokenizeShareLockResponse, error) {
+// Query status of an account's tokenize share lock
+func (k Querier) TokenizeShareLockInfo(c context.Context, req *types.QueryTokenizeShareLockInfo) (*types.QueryTokenizeShareLockInfoResponse, error) {
 	if req == nil {
 		return nil, status.Error(codes.InvalidArgument, "empty request")
 	}
@@ -660,13 +660,18 @@ func (k Querier) ExpiringTokenizeShareLock(c context.Context, req *types.QueryEx
 	address := sdk.MustAccAddressFromBech32(req.Address)
 	disabled, completionTime := k.IsTokenizeSharesDisabled(ctx, address)
 	if !disabled {
-		return nil, types.ErrNoExpiringTokenizeShareLock.Wrap("tokenize shares is enabled for this account")
+		return &types.QueryTokenizeShareLockInfoResponse{
+			Status: types.TokenizeShareLockStatus_UNLOCKED.String(),
+		}, nil
 	}
 	if completionTime.IsZero() {
-		return nil, types.ErrNoExpiringTokenizeShareLock.Wrap("tokenizing shares has not been re-enabled")
+		return &types.QueryTokenizeShareLockInfoResponse{
+			Status: types.TokenizeShareLockStatus_LOCKED.String(),
+		}, nil
 	}
 
-	return &types.QueryExpiringTokenizeShareLockResponse{
-		CompletionTime: completionTime.String(),
+	return &types.QueryTokenizeShareLockInfoResponse{
+		Status:         types.TokenizeShareLockStatus_LOCK_EXPIRING.String(),
+		ExpirationTime: completionTime.String(),
 	}, nil
 }

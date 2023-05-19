@@ -45,7 +45,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryAllTokenizeShareRecords(),
 		GetCmdQueryLastTokenizeShareRecordId(),
 		GetCmdQueryTotalTokenizeSharedAssets(),
-		GetCmdQueryExpiringTokenizeShareLock(),
+		GetCmdQueryTokenizeShareLockInfo(),
 	)
 
 	return stakingQueryCmd
@@ -984,20 +984,19 @@ $ %s query staking total-tokenize-share-assets
 	return cmd
 }
 
-// GetCmdQueryExpiringTokenizeShareLock returns the completion time associated with an expiring lock
-func GetCmdQueryExpiringTokenizeShareLock() *cobra.Command {
+// GetCmdQueryTokenizeShareLockInfo returns the tokenize share lock status for a user
+func GetCmdQueryTokenizeShareLockInfo() *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
 
 	cmd := &cobra.Command{
-		Use:   "expiring-tokenize-share-lock [address]",
+		Use:   "tokenize-share-lock-info [address]",
 		Args:  cobra.ExactArgs(1),
-		Short: "Query expiring tokenize share lock",
+		Short: "Query tokenize share lock information",
 		Long: strings.TrimSpace(
-			fmt.Sprintf(`Query the completion time for an expiring tokenize share lock after
-tokenizing shares has been reactivated.
+			fmt.Sprintf(`Query the status of a tokenize share lock for a given account
 
 Example:
-$ %s query staking expiring-tokenize-share-lock %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
+$ %s query staking tokenize-share-lock-info %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `,
 				version.AppName, bech32PrefixAccAddr,
 			),
@@ -1014,9 +1013,9 @@ $ %s query staking expiring-tokenize-share-lock %s1gghjut3ccd8ay0zduzj64hwre2fxs
 				return err
 			}
 
-			res, err := queryClient.ExpiringTokenizeShareLock(
+			res, err := queryClient.TokenizeShareLockInfo(
 				cmd.Context(),
-				&types.QueryExpiringTokenizeShareLock{Address: address},
+				&types.QueryTokenizeShareLockInfo{Address: address},
 			)
 			if err != nil {
 				return err
