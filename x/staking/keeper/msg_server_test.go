@@ -770,12 +770,6 @@ func TestEnableDisableTokenizeShares(t *testing.T) {
 	liquidToken := app.BankKeeper.GetBalance(ctx, delegatorAddress, validatorAddress.String()+"/1")
 	require.Equal(t, stakeAmount.Int64(), liquidToken.Amount.Int64(), "user received token after tokenizing share")
 
-	// Attempt to disable tokenize shares - it should fail since there is an
-	// active tokenization for this account
-	_, err = msgServer.DisableTokenizeShares(sdk.WrapSDKContext(ctx), &disableMsg)
-	require.ErrorIs(t, err, types.ErrUnableToDisableTokenizeShares)
-	require.ErrorContains(t, err, "account already has tokenized shares")
-
 	// Redeem to remove all tokenized shares
 	redeemMsg.Amount = liquidToken
 	_, err = msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &redeemMsg)
@@ -784,6 +778,10 @@ func TestEnableDisableTokenizeShares(t *testing.T) {
 	// Attempt to disable again, now it should succeed
 	_, err = msgServer.DisableTokenizeShares(sdk.WrapSDKContext(ctx), &disableMsg)
 	require.NoError(t, err, "no error expected when disabling tokenization")
+
+	// Disabling again while the lock is already in place, does nothing, but should not error
+	_, err = msgServer.DisableTokenizeShares(sdk.WrapSDKContext(ctx), &disableMsg)
+	require.NoError(t, err, "no error expected when disabling again")
 
 	// Attempt to tokenize, it should fail since tokenization is disabled
 	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &tokenizeMsg)

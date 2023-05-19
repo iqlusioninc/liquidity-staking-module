@@ -197,6 +197,14 @@ func (k Keeper) IsTokenizeSharesDisabled(ctx sdk.Context, address sdk.AccAddress
 	return true, unlockTime
 }
 
+// Stores a list of addresses pending tokenize share unlocking at the same time
+func (k Keeper) SetPendingTokenizeShareAuthorizations(ctx sdk.Context, completionTime time.Time, authorizations types.PendingTokenizeShareAuthorizations) {
+	store := ctx.KVStore(k.storeKey)
+	timeKey := types.GetTokenizeShareAuthorizationTimeKey(completionTime)
+	bz := k.cdc.MustMarshal(&authorizations)
+	store.Set(timeKey, bz)
+}
+
 // Returns a list of addresses pending tokenize share unlocking at the same time
 func (k Keeper) GetPendingTokenizeShareAuthorizations(ctx sdk.Context, completionTime time.Time) types.PendingTokenizeShareAuthorizations {
 	store := ctx.KVStore(k.storeKey)
@@ -211,14 +219,6 @@ func (k Keeper) GetPendingTokenizeShareAuthorizations(ctx sdk.Context, completio
 	k.cdc.MustUnmarshal(bz, &authorizations)
 
 	return authorizations
-}
-
-// Stores a list of addresses pending tokenize share unlocking at the same time
-func (k Keeper) SetPendingTokenizeShareAuthorizations(ctx sdk.Context, completionTime time.Time, authorizations types.PendingTokenizeShareAuthorizations) {
-	store := ctx.KVStore(k.storeKey)
-	timeKey := types.GetTokenizeShareAuthorizationTimeKey(completionTime)
-	bz := k.cdc.MustMarshal(&authorizations)
-	store.Set(timeKey, bz)
 }
 
 // Inserts thea ddress into a queue where it will sit for 1 unbonding period

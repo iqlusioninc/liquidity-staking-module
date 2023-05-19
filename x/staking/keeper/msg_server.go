@@ -905,10 +905,9 @@ func (k msgServer) DisableTokenizeShares(goCtx context.Context, msg *types.MsgDi
 		return &types.MsgDisableTokenizeSharesResponse{}, nil
 	}
 
-	// If the user already has a tokenized delegation, they cannot disable tokenization
-	if len(k.GetTokenizeShareRecordsByOwner(ctx, delegator)) != 0 {
-		return nil, types.ErrUnableToDisableTokenizeShares.Wrapf("account already has tokenized shares")
-	}
+	// QUESTION: I don't think there's an easy way to track if a user already has an LSM token,
+	// but I think it's fine (and maybe even preferred) to still allow disabling tokenize shares
+	// even if they have one already
 
 	// Otherwise, create a new tokenization lock for the user
 	k.AddTokenizeSharesLock(ctx, delegator)
