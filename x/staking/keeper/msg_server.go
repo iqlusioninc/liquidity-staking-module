@@ -611,10 +611,11 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	}
 
 	// Check if the delegator has disabled tokenization
-	if disabled, unlockTime := k.IsTokenizeSharesDisabled(ctx, delegatorAddress); disabled {
-		if unlockTime.IsZero() {
-			return nil, types.ErrTokenizeSharesDisabledForAccount
-		}
+	lockStatus, unlockTime := k.GetTokenizeSharesLock(ctx, delegatorAddress)
+	if lockStatus == types.TokenizeShareLockStatus_LOCKED {
+		return nil, types.ErrTokenizeSharesDisabledForAccount
+	}
+	if lockStatus == types.TokenizeShareLockStatus_LOCK_EXPIRING {
 		return nil, types.ErrTokenizeSharesDisabledForAccount.Wrapf("tokenization will be allowed at %s", unlockTime)
 	}
 
@@ -901,11 +902,13 @@ func (k msgServer) DisableTokenizeShares(goCtx context.Context, msg *types.MsgDi
 	delegator := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
 
 	// If tokenized shares is already disabled, alert the user
-	if disabled, _ := k.IsTokenizeSharesDisabled(ctx, delegator); disabled {
+	lockStatus, _ := k.GetTokenizeSharesLock(ctx, delegator)
+	if lockStatus == types.TokenizeShareLockStatus_LOCKED {
 		return nil, types.ErrTokenizeSharesAlreadyDisabledForAccount
 	}
 
 	// Otherwise, create a new tokenization lock for the user
+	// Note: if there is a lock expiration in progress, this will override the expiration
 	k.AddTokenizeSharesLock(ctx, delegator)
 
 	return &types.MsgDisableTokenizeSharesResponse{}, nil
@@ -919,8 +922,13 @@ func (k msgServer) EnableTokenizeShares(goCtx context.Context, msg *types.MsgEna
 	delegator := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
 
 	// If tokenized shares aren't current disabled, alert the user
-	if disabled, _ := k.IsTokenizeSharesDisabled(ctx, delegator); !disabled {
+	lockStatus, unlockTime := k.GetTokenizeSharesLock(ctx, delegator)
+	if lockStatus == types.TokenizeShareLockStatus_UNLOCKED {
 		return nil, types.ErrTokenizeSharesAlreadyEnabledForAccount
+	}
+	if lockStatus == types.TokenizeShareLockStatus_LOCK_EXPIRING {
+		return nil, types.ErrTokenizeSharesAlreadyEnabledForAccount.Wrapf(
+			"tokenize shares re-enablement already in progress, ending at %s", unlockTime)
 	}
 
 	// Otherwise queue the unlock

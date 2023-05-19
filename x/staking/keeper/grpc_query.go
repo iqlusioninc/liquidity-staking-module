@@ -658,20 +658,15 @@ func (k Querier) TokenizeShareLockInfo(c context.Context, req *types.QueryTokeni
 	ctx := sdk.UnwrapSDKContext(c)
 
 	address := sdk.MustAccAddressFromBech32(req.Address)
-	disabled, completionTime := k.IsTokenizeSharesDisabled(ctx, address)
-	if !disabled {
-		return &types.QueryTokenizeShareLockInfoResponse{
-			Status: types.TokenizeShareLockStatus_UNLOCKED.String(),
-		}, nil
-	}
-	if completionTime.IsZero() {
-		return &types.QueryTokenizeShareLockInfoResponse{
-			Status: types.TokenizeShareLockStatus_LOCKED.String(),
-		}, nil
+	status, completionTime := k.GetTokenizeSharesLock(ctx, address)
+
+	timeString := ""
+	if !completionTime.IsZero() {
+		timeString = completionTime.String()
 	}
 
 	return &types.QueryTokenizeShareLockInfoResponse{
-		Status:         types.TokenizeShareLockStatus_LOCK_EXPIRING.String(),
-		ExpirationTime: completionTime.String(),
+		Status:         status.String(),
+		ExpirationTime: timeString,
 	}, nil
 }

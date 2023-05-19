@@ -511,51 +511,54 @@ func TestDecreaseValidatorTotalLiquidShares(t *testing.T) {
 	require.Equal(t, initialLiquidShares.Sub(decreaseAmount), actualValidator.TotalLiquidShares, "shares with cap disabled")
 }
 
-// Tests Add/Remove/SetTokenizeSharesLock and IsTokenizeSharesDisabled
+// Tests Add/Remove/Get/SetTokenizeSharesLock
 func TestTokenizeSharesLock(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
 	addresses := simapp.AddTestAddrs(app, ctx, 2, sdk.NewInt(1))
 	addressA, addressB := addresses[0], addresses[1]
 
-	// Confirm both accounts start unlocked
-	disabled, _ := app.StakingKeeper.IsTokenizeSharesDisabled(ctx, addressA)
-	require.False(t, disabled, "addressA unlocked at start")
+	unlocked := types.TokenizeShareLockStatus_UNLOCKED.String()
+	locked := types.TokenizeShareLockStatus_LOCKED.String()
+	lockExpiring := types.TokenizeShareLockStatus_LOCK_EXPIRING.String()
 
-	disabled, _ = app.StakingKeeper.IsTokenizeSharesDisabled(ctx, addressB)
-	require.False(t, disabled, "addressB unlocked at start")
+	// Confirm both accounts start unlocked
+	status, _ := app.StakingKeeper.GetTokenizeSharesLock(ctx, addressA)
+	require.Equal(t, unlocked, status.String(), "addressA unlocked at start")
+
+	status, _ = app.StakingKeeper.GetTokenizeSharesLock(ctx, addressB)
+	require.Equal(t, unlocked, status.String(), "addressB unlocked at start")
 
 	// Lock the first account
 	app.StakingKeeper.AddTokenizeSharesLock(ctx, addressA)
 
 	// The first account should now have tokenize shares disabled
 	// and the unlock time should be the zero time
-	disabled, actualUnlockTime := app.StakingKeeper.IsTokenizeSharesDisabled(ctx, addressA)
-	require.True(t, disabled, "addressA locked")
-	require.True(t, actualUnlockTime.IsZero(), "addressA unlock time uninititalized")
+	status, _ = app.StakingKeeper.GetTokenizeSharesLock(ctx, addressA)
+	require.Equal(t, locked, status.String(), "addressA locked")
 
-	disabled, _ = app.StakingKeeper.IsTokenizeSharesDisabled(ctx, addressB)
-	require.False(t, disabled, "addressB still unlocked")
+	status, _ = app.StakingKeeper.GetTokenizeSharesLock(ctx, addressB)
+	require.Equal(t, unlocked, status.String(), "addressB still unlocked")
 
 	// Update the lock time and confirm it was set
 	expectedUnlockTime := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
-	app.StakingKeeper.SetTokenizeShareUnlockTime(ctx, addressA, expectedUnlockTime)
+	app.StakingKeeper.SetTokenizeSharesUnlockTime(ctx, addressA, expectedUnlockTime)
 
-	disabled, actualUnlockTime = app.StakingKeeper.IsTokenizeSharesDisabled(ctx, addressA)
-	require.True(t, disabled, "addressA still locked")
+	status, actualUnlockTime := app.StakingKeeper.GetTokenizeSharesLock(ctx, addressA)
+	require.Equal(t, lockExpiring, status.String(), "addressA lock expiring")
 	require.Equal(t, expectedUnlockTime, actualUnlockTime, "addressA unlock time")
 
 	// Confirm B is still unlocked
-	disabled, _ = app.StakingKeeper.IsTokenizeSharesDisabled(ctx, addressB)
-	require.False(t, disabled, "addressB still unlocked")
+	status, _ = app.StakingKeeper.GetTokenizeSharesLock(ctx, addressB)
+	require.Equal(t, unlocked, status.String(), "addressB still unlocked")
 
 	// Remove the lock
 	app.StakingKeeper.RemoveTokenizeSharesLock(ctx, addressA)
-	disabled, _ = app.StakingKeeper.IsTokenizeSharesDisabled(ctx, addressA)
-	require.False(t, disabled, "addressA unlocked at end")
+	status, _ = app.StakingKeeper.GetTokenizeSharesLock(ctx, addressA)
+	require.Equal(t, unlocked, status.String(), "addressA unlocked at end")
 
-	disabled, _ = app.StakingKeeper.IsTokenizeSharesDisabled(ctx, addressB)
-	require.False(t, disabled, "addressB unlocked at end")
+	status, _ = app.StakingKeeper.GetTokenizeSharesLock(ctx, addressB)
+	require.Equal(t, unlocked, status.String(), "addressB unlocked at end")
 }
 
 // Test Get/SetPendingTokenizeShareAuthorizations

@@ -174,27 +174,30 @@ func (k Keeper) RemoveTokenizeSharesLock(ctx sdk.Context, address sdk.AccAddress
 }
 
 // Updates the timestamp associated with a lock to the time at which the lock expires
-func (k Keeper) SetTokenizeShareUnlockTime(ctx sdk.Context, address sdk.AccAddress, completionTime time.Time) {
+func (k Keeper) SetTokenizeSharesUnlockTime(ctx sdk.Context, address sdk.AccAddress, completionTime time.Time) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetTokenizeSharesLockKey(address)
 	store.Set(key, sdk.FormatTimeBytes(completionTime))
 }
 
 // Checks if there is currently a tokenize share lock for a given account
-// Returns a bool indicating if the account is locked, as well as the unlock time
-// which may be empty if an unlock has not been initiated
-func (k Keeper) IsTokenizeSharesDisabled(ctx sdk.Context, address sdk.AccAddress) (disabled bool, unlockTime time.Time) {
+// Returns the status indicating whether the account is locked, unlocked,
+// or as a lock expiring. If the lock is expiring, the expiration time is returned
+func (k Keeper) GetTokenizeSharesLock(ctx sdk.Context, address sdk.AccAddress) (status types.TokenizeShareLockStatus, unlockTime time.Time) {
 	store := ctx.KVStore(k.storeKey)
 	key := types.GetTokenizeSharesLockKey(address)
 	bz := store.Get(key)
 	if len(bz) == 0 {
-		return false, unlockTime
+		return types.TokenizeShareLockStatus_UNLOCKED, time.Time{}
 	}
 	unlockTime, err := sdk.ParseTimeBytes(bz)
 	if err != nil {
 		panic(err)
 	}
-	return true, unlockTime
+	if unlockTime.IsZero() {
+		return types.TokenizeShareLockStatus_LOCKED, time.Time{}
+	}
+	return types.TokenizeShareLockStatus_LOCK_EXPIRING, unlockTime
 }
 
 // Stores a list of addresses pending tokenize share unlocking at the same time
@@ -233,7 +236,7 @@ func (k Keeper) QueueTokenizeSharesAuthorization(ctx sdk.Context, address sdk.Ac
 	authorizations.Addresses = append(authorizations.Addresses, address.String())
 
 	k.SetPendingTokenizeShareAuthorizations(ctx, completionTime, authorizations)
-	k.SetTokenizeShareUnlockTime(ctx, address, completionTime)
+	k.SetTokenizeSharesUnlockTime(ctx, address, completionTime)
 
 	return completionTime
 }
