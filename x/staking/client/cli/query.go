@@ -46,6 +46,7 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryLastTokenizeShareRecordId(),
 		GetCmdQueryTotalTokenizeSharedAssets(),
 		GetCmdQueryTokenizeShareLockInfo(),
+		GetCmdQueryTotalLiquidStaked(),
 	)
 
 	return stakingQueryCmd
@@ -984,6 +985,43 @@ $ %s query staking total-tokenize-share-assets
 	return cmd
 }
 
+// GetCmdQueryTotalLiquidStaked implements the query for total liquid staked tokens
+func GetCmdQueryTotalLiquidStaked() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "total-liquid-staked",
+		Args:  cobra.NoArgs,
+		Short: "Query for total liquid staked tokens",
+		Long: strings.TrimSpace(
+			fmt.Sprintf(`Query for total number of liquid staked tokens.
+Liquid staked tokens are identified as either a tokenized delegation, 
+or tokens owned by an interchain account.
+Example:
+$ %s query staking total-liquid-staked
+`,
+				version.AppName,
+			),
+		),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			clientCtx, err := client.GetClientQueryContext(cmd)
+			if err != nil {
+				return err
+			}
+			queryClient := types.NewQueryClient(clientCtx)
+
+			res, err := queryClient.TotalLiquidStaked(cmd.Context(), &types.QueryTotalLiquidStaked{})
+			if err != nil {
+				return err
+			}
+
+			return clientCtx.PrintProto(res)
+		},
+	}
+
+	flags.AddQueryFlagsToCmd(cmd)
+
+	return cmd
+}
+
 // GetCmdQueryTokenizeShareLockInfo returns the tokenize share lock status for a user
 func GetCmdQueryTokenizeShareLockInfo() *cobra.Command {
 	bech32PrefixAccAddr := sdk.GetConfig().GetBech32AccountAddrPrefix()
@@ -994,7 +1032,6 @@ func GetCmdQueryTokenizeShareLockInfo() *cobra.Command {
 		Short: "Query tokenize share lock information",
 		Long: strings.TrimSpace(
 			fmt.Sprintf(`Query the status of a tokenize share lock for a given account
-
 Example:
 $ %s query staking tokenize-share-lock-info %s1gghjut3ccd8ay0zduzj64hwre2fxs9ldmqhffj
 `,

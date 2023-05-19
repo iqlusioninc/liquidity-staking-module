@@ -111,6 +111,9 @@ service Query {
   // Query for total tokenized staked assets
   rpc TotalTokenizeSharedAssets(QueryTotalTokenizeSharedAssetsRequest) returns (QueryTotalTokenizeSharedAssetsResponse) {}
 
+  // Query for total liquid staked (including tokenized shares or owned by an liquid staking provider)
+  rpc TotalLiquidStaked(QueryTotalLiquidStaked) returns (QueryTotalLiquidStakedResponse) {}
+
   // Query tokenize share locks
   rpc TokenizeShareLockInfo(QueryTokenizeShareLockInfo) returns (QueryTokenizeShareLockInfoResponse) {}
 }
@@ -434,6 +437,20 @@ message QueryTotalTokenizeSharedAssetsRequest {}
 // Query/QueryTotalTokenizeSharedAssets RPC method.
 message QueryTotalTokenizeSharedAssetsResponse {
   cosmos.base.v1beta1.Coin value = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryQueryTotalLiquidStakedRequest is request type for the 
+// Query/QueryQueryTotalLiquidStaked RPC method.
+message QueryTotalLiquidStaked {}
+
+// QueryQueryTotalLiquidStakedResponse is response type for the 
+// Query/QueryQueryTotalLiquidStaked RPC method.
+message QueryTotalLiquidStakedResponse {
+  string tokens = 1 [
+    (cosmos_proto.scalar)  = "cosmos.Int",
+    (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
+    (gogoproto.nullable)   = false
+  ];
 }
 
 // QueryTokenizeShareLockInfo queries the tokenize share lock information
