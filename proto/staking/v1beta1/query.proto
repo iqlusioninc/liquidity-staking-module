@@ -110,6 +110,9 @@ service Query {
 
   // Query for total tokenized staked assets
   rpc TotalTokenizeSharedAssets(QueryTotalTokenizeSharedAssetsRequest) returns (QueryTotalTokenizeSharedAssetsResponse) {}
+
+  // Query tokenize share locks
+  rpc ExpiringTokenizeShareLock(QueryExpiringTokenizeShareLock) returns (QueryExpiringTokenizeShareLockResponse) {}
 }
 
 // QueryValidatorsRequest is request type for Query/Validators RPC method.
@@ -431,4 +434,16 @@ message QueryTotalTokenizeSharedAssetsRequest {}
 // Query/QueryTotalTokenizeSharedAssets RPC method.
 message QueryTotalTokenizeSharedAssetsResponse {
   cosmos.base.v1beta1.Coin value = 1 [ (gogoproto.nullable) = false ];
+}
+
+// QueryExpiringTokenizeShareLock queries whether the completion
+// time for an expiring tokenize share lock
+message QueryExpiringTokenizeShareLock {
+  string address = 1;
+}
+
+// QueryTokenizeShareLockResponse is the response from the 
+// QueryTokenizeShareLock queyr
+message QueryExpiringTokenizeShareLockResponse{
+  string completion_time = 1;
 }

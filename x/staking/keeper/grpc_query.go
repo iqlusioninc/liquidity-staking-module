@@ -649,3 +649,24 @@ func (k Querier) TotalTokenizeSharedAssets(c context.Context, req *types.QueryTo
 		Value: sdk.NewCoin(k.BondDenom(ctx), totalTokenizeShared),
 	}, nil
 }
+
+// Query for the completion time of an expiring tokenize share lock
+func (k Querier) ExpiringTokenizeShareLock(c context.Context, req *types.QueryExpiringTokenizeShareLock) (*types.QueryExpiringTokenizeShareLockResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	address := sdk.MustAccAddressFromBech32(req.Address)
+	disabled, completionTime := k.IsTokenizeSharesDisabled(ctx, address)
+	if !disabled {
+		return nil, types.ErrNoExpiringTokenizeShareLock.Wrap("tokenize shares is enabled for this account")
+	}
+	if completionTime.IsZero() {
+		return nil, types.ErrNoExpiringTokenizeShareLock.Wrap("tokenizing shares has not been re-enabled")
+	}
+
+	return &types.QueryExpiringTokenizeShareLockResponse{
+		CompletionTime: completionTime.String(),
+	}, nil
+}
