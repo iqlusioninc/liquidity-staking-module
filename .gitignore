@@ -4,6 +4,7 @@
 *.swo
 *.swl
 *.swm
+*.dot
 *.swn
 .vscode
 .idea
