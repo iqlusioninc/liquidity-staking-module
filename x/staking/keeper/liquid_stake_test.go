@@ -13,6 +13,27 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
+// Helper function to create a base account from an account name
+// Used to differentiate against liquid staking provider module account
+func createBaseAccount(app *simapp.SimApp, ctx sdk.Context, accountName string) sdk.AccAddress {
+	baseAccountAddress := sdk.AccAddress(accountName)
+	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(baseAccountAddress))
+	return baseAccountAddress
+}
+
+// Helper function to create a module account from an account name
+// Used to mock an liquid staking provider's ICA account
+func createICAAccount(app *simapp.SimApp, ctx sdk.Context, accountName string) sdk.AccAddress {
+	accountAddress := address.Module(accountName, []byte(accountName))
+	account := authtypes.NewModuleAccount(
+		authtypes.NewBaseAccountWithAddress(accountAddress),
+		accountName,
+	)
+	app.AccountKeeper.SetAccount(ctx, account)
+
+	return accountAddress
+}
+
 // Tests Set/Get TotalLiquidStakedTokens
 func TestTotalLiquidStakedTokens(t *testing.T) {
 	_, app, ctx := createTestInput(t)
@@ -47,18 +68,9 @@ func TestValidatorTotalLiquidShares(t *testing.T) {
 func TestAccountIsLiquidStakingProvider(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
-	// Create base account
-	baseAccountAddress := sdk.AccAddress("base-account")
-	app.AccountKeeper.SetAccount(ctx, authtypes.NewBaseAccountWithAddress(baseAccountAddress))
-
-	// Create an ICA module account
-	icaModuleAccountName := "ica-account"
-	icaAccountAddress := address.Module(icaModuleAccountName, []byte("ica-module-account"))
-	icaAccount := authtypes.NewModuleAccount(
-		authtypes.NewBaseAccountWithAddress(icaAccountAddress),
-		icaModuleAccountName,
-	)
-	app.AccountKeeper.SetAccount(ctx, icaAccount)
+	// Create base and ICA accounts
+	baseAccountAddress := createBaseAccount(app, ctx, "base-account")
+	icaAccountAddress := createICAAccount(app, ctx, "ica-module-account")
 
 	// Only the ICA module account should be considered a liquid staking provider
 	require.False(t, app.StakingKeeper.AccountIsLiquidStakingProvider(ctx, baseAccountAddress), "base account")
@@ -508,4 +520,187 @@ func TestDecreaseValidatorTotalLiquidShares(t *testing.T) {
 	actualValidator, found = app.StakingKeeper.GetLiquidValidator(ctx, valAddress)
 	require.True(t, found)
 	require.Equal(t, initialLiquidShares.Sub(decreaseAmount), actualValidator.TotalLiquidShares, "shares with cap disabled")
+}
+
+// Test CalculateTotalLiquidStaked
+func TestCalculateTotalLiquidStaked(t *testing.T) {
+	_, app, ctx := createTestInput(t)
+
+	// Set an arbitrary total liquid staked tokens amount that will get overwritten by the refresh
+	app.StakingKeeper.SetTotalLiquidStakedTokens(ctx, sdk.NewInt(999))
+
+	// Add validator's with various exchange rates
+	validators := []types.Validator{
+		{
+			// Exchange rate of 1
+			OperatorAddress:   "valA",
+			Tokens:            sdk.NewInt(100),
+			DelegatorShares:   sdk.NewDec(100),
+			TotalLiquidShares: sdk.NewDec(100), // should be overwritten
+		},
+		{
+			// Exchange rate of 0.9
+			OperatorAddress:   "valB",
+			Tokens:            sdk.NewInt(90),
+			DelegatorShares:   sdk.NewDec(100),
+			TotalLiquidShares: sdk.NewDec(200), // should be overwritten
+		},
+		{
+			// Exchange rate of 0.75
+			OperatorAddress:   "valC",
+			Tokens:            sdk.NewInt(75),
+			DelegatorShares:   sdk.NewDec(100),
+			TotalLiquidShares: sdk.NewDec(300), // should be overwritten
+		},
+	}
+
+	// Add various delegations across the above validator's
+	// Total Liquid Staked: 1,849 + 922 = 2,771
+	// Total Liquid Shares:
+	//   ValA: 400 + 325 = 725
+	//   ValB: 860 + 580 = 1,440
+	//   ValC: 900 + 100 = 1,000
+	expectedTotalLiquidStaked := int64(2771)
+	expectedValidatorLiquidShares := map[string]sdk.Dec{
+		"valA": sdk.NewDec(725),
+		"valB": sdk.NewDec(1440),
+		"valC": sdk.NewDec(1000),
+	}
+
+	delegations := []struct {
+		delegation types.Delegation
+		isLSTP     bool
+	}{
+		// Delegator A - Not a liquid staking provider
+		// Number of tokens/shares is irrelevant for this test
+		{
+			isLSTP: false,
+			delegation: types.Delegation{
+				DelegatorAddress: "delA",
+				ValidatorAddress: "valA",
+				Shares:           sdk.NewDec(100),
+			},
+		},
+		{
+			isLSTP: false,
+			delegation: types.Delegation{
+				DelegatorAddress: "delA",
+				ValidatorAddress: "valB",
+				Shares:           sdk.NewDec(860),
+			},
+		},
+		{
+			isLSTP: false,
+			delegation: types.Delegation{
+				DelegatorAddress: "delA",
+				ValidatorAddress: "valC",
+				Shares:           sdk.NewDec(750),
+			},
+		},
+		// Delegator B - Liquid staking provider, tokens included in total
+		// Total liquid staked: 400 + 774 + 675 = 1,849
+		{
+			// Shares: 400 shares, Exchange Rate: 1.0, Tokens: 400
+			isLSTP: true,
+			delegation: types.Delegation{
+				DelegatorAddress: "delB-LSTP",
+				ValidatorAddress: "valA",
+				Shares:           sdk.NewDec(400),
+			},
+		},
+		{
+			// Shares: 860 shares, Exchange Rate: 0.9, Tokens: 774
+			isLSTP: true,
+			delegation: types.Delegation{
+				DelegatorAddress: "delB-LSTP",
+				ValidatorAddress: "valB",
+				Shares:           sdk.NewDec(860),
+			},
+		},
+		{
+			// Shares: 900 shares, Exchange Rate: 0.75, Tokens: 675
+			isLSTP: true,
+			delegation: types.Delegation{
+				DelegatorAddress: "delB-LSTP",
+				ValidatorAddress: "valC",
+				Shares:           sdk.NewDec(900),
+			},
+		},
+		// Delegator C - Liquid staking provider, tokens included in total
+		// Total liquid staked: 325 + 522 + 75 = 922
+		{
+			// Shares: 325 shares, Exchange Rate: 1.0, Tokens: 325
+			isLSTP: true,
+			delegation: types.Delegation{
+				DelegatorAddress: "delC-LSTP",
+				ValidatorAddress: "valA",
+				Shares:           sdk.NewDec(325),
+			},
+		},
+		{
+			// Shares: 580 shares, Exchange Rate: 0.9, Tokens: 522
+			isLSTP: true,
+			delegation: types.Delegation{
+				DelegatorAddress: "delC-LSTP",
+				ValidatorAddress: "valB",
+				Shares:           sdk.NewDec(580),
+			},
+		},
+		{
+			// Shares: 100 shares, Exchange Rate: 0.75, Tokens: 75
+			isLSTP: true,
+			delegation: types.Delegation{
+				DelegatorAddress: "delC-LSTP",
+				ValidatorAddress: "valC",
+				Shares:           sdk.NewDec(100),
+			},
+		},
+	}
+
+	// Create validators based on the above (must use an actual validator address)
+	addresses := simapp.AddTestAddrsIncremental(app, ctx, 5, app.StakingKeeper.TokensFromConsensusPower(ctx, 300))
+	validatorAddresses := map[string]sdk.ValAddress{
+		"valA": sdk.ValAddress(addresses[0]),
+		"valB": sdk.ValAddress(addresses[1]),
+		"valC": sdk.ValAddress(addresses[2]),
+	}
+	for _, validator := range validators {
+		validator.OperatorAddress = validatorAddresses[validator.OperatorAddress].String()
+		app.StakingKeeper.SetValidator(ctx, validator)
+	}
+
+	// Create the delegations based on the above (must use actual delegator addresses)
+	for _, delegationCase := range delegations {
+		var delegatorAddress sdk.AccAddress
+		if delegationCase.isLSTP {
+			delegatorAddress = createICAAccount(app, ctx, delegationCase.delegation.DelegatorAddress)
+		} else {
+			delegatorAddress = createBaseAccount(app, ctx, delegationCase.delegation.DelegatorAddress)
+		}
+
+		delegation := delegationCase.delegation
+		delegation.DelegatorAddress = delegatorAddress.String()
+		delegation.ValidatorAddress = validatorAddresses[delegation.ValidatorAddress].String()
+		app.StakingKeeper.SetDelegation(ctx, delegation)
+	}
+
+	// Refresh the total liquid staked and validator liquid shares
+	err := app.StakingKeeper.RefreshTotalLiquidStaked(ctx)
+	require.NoError(t, err, "no error expected when refreshing total liquid staked")
+
+	// Check the total liquid staked and liquid shares by validator
+	actualTotalLiquidStaked := app.StakingKeeper.GetTotalLiquidStakedTokens(ctx)
+	require.Equal(t, expectedTotalLiquidStaked, actualTotalLiquidStaked.Int64(), "total liquid staked tokens")
+
+	for _, moniker := range []string{"valA", "valB", "valC"} {
+		address := validatorAddresses[moniker]
+		expectedLiquidShares := expectedValidatorLiquidShares[moniker]
+
+		actualValidator, found := app.StakingKeeper.GetLiquidValidator(ctx, address)
+		require.True(t, found, "validator %s should have been found after refresh", moniker)
+
+		actualLiquidShares := actualValidator.TotalLiquidShares
+		require.Equal(t, expectedLiquidShares.TruncateInt64(), actualLiquidShares.TruncateInt64(),
+			"liquid staked shares for validator %s", moniker)
+	}
 }
