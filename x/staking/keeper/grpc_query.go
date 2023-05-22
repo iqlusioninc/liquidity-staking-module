@@ -649,3 +649,17 @@ func (k Querier) TotalTokenizeSharedAssets(c context.Context, req *types.QueryTo
 		Value: sdk.NewCoin(k.BondDenom(ctx), totalTokenizeShared),
 	}, nil
 }
+
+// Query for total tokenized staked tokens
+// Liquid staked tokens are either tokenized delegations or delegations
+// owned by a module account
+func (k Querier) TotalLiquidStaked(c context.Context, req *types.QueryTotalLiquidStaked) (*types.QueryTotalLiquidStakedResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+	totalLiquidStaked := k.GetTotalLiquidStakedTokens(ctx)
+	return &types.QueryTotalLiquidStakedResponse{
+		Tokens: totalLiquidStaked,
+	}, nil
+}

@@ -12,7 +12,7 @@ import (
 
 func (k Keeper) GetLastTokenizeShareRecordID(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
-	bytes := store.Get(types.LastTokenizeShareRecordIDKey)
+	bytes := store.Get(types.LastTokenizeShareRecordIdKey)
 	if bytes == nil {
 		return 0
 	}
@@ -21,7 +21,7 @@ func (k Keeper) GetLastTokenizeShareRecordID(ctx sdk.Context) uint64 {
 
 func (k Keeper) SetLastTokenizeShareRecordID(ctx sdk.Context, id uint64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.LastTokenizeShareRecordIDKey, sdk.Uint64ToBigEndian(id))
+	store.Set(types.LastTokenizeShareRecordIdKey, sdk.Uint64ToBigEndian(id))
 }
 
 func (k Keeper) GetTokenizeShareRecord(ctx sdk.Context, id uint64) (tokenizeShareRecord types.TokenizeShareRecord, err error) {
