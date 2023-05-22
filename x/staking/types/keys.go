@@ -54,9 +54,9 @@ var (
 	HistoricalInfoKey = []byte{0x50} // prefix for the historical info
 
 	TokenizeShareRecordPrefix          = []byte{0x61} // key for tokenizeshare record prefix
-	TokenizeShareRecordIdByOwnerPrefix = []byte{0x62} // key for tokenizeshare record id by owner prefix
-	TokenizeShareRecordIdByDenomPrefix = []byte{0x63} // key for tokenizeshare record id by denom prefix
-	LastTokenizeShareRecordIdKey       = []byte{0x64} // key for last tokenize share record id
+	TokenizeShareRecordIDByOwnerPrefix = []byte{0x62} // key for tokenizeshare record id by owner prefix
+	TokenizeShareRecordIDByDenomPrefix = []byte{0x63} // key for tokenizeshare record id by denom prefix
+	LastTokenizeShareRecordIDKey       = []byte{0x64} // key for last tokenize share record id
 	TotalLiquidStakedTokensKey         = []byte{0x65} // key for total liquid staked tokens
 )
 
@@ -365,14 +365,14 @@ func GetTokenizeShareRecordByIndexKey(id uint64) []byte {
 
 // GetTokenizeShareRecordIdsByOwnerPrefix returns the key of the specified owner. Intended for querying all tokenizeShareRecords of an owner
 func GetTokenizeShareRecordIdsByOwnerPrefix(owner sdk.AccAddress) []byte {
-	return append(TokenizeShareRecordIdByOwnerPrefix, address.MustLengthPrefix(owner)...)
+	return append(TokenizeShareRecordIDByOwnerPrefix, address.MustLengthPrefix(owner)...)
 }
 
 // GetTokenizeShareRecordIdByOwnerAndIdKey returns the key of the specified owner and id. Intended for setting tokenizeShareRecord of an owner
 func GetTokenizeShareRecordIDByOwnerAndIDKey(owner sdk.AccAddress, id uint64) []byte {
-	return append(append(TokenizeShareRecordIdByOwnerPrefix, address.MustLengthPrefix(owner)...), sdk.Uint64ToBigEndian(id)...)
+	return append(append(TokenizeShareRecordIDByOwnerPrefix, address.MustLengthPrefix(owner)...), sdk.Uint64ToBigEndian(id)...)
 }
 
 func GetTokenizeShareRecordIDByDenomKey(denom string) []byte {
-	return append(TokenizeShareRecordIdByDenomPrefix, []byte(denom)...)
+	return append(TokenizeShareRecordIDByDenomPrefix, []byte(denom)...)
 }

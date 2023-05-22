@@ -277,7 +277,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			delegationCoin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), tc.delegationAmount)
 			err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(delegationCoin))
 			require.NoError(t, err)
-			app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, icaAccountAddress, sdk.NewCoins(delegationCoin))
+			err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, icaAccountAddress, sdk.NewCoins(delegationCoin))
 			require.NoError(t, err)
 
 			// set the delegator address depending on whether the delegator should be a liquid staking provider
@@ -643,7 +643,8 @@ func TestValidatorBond(t *testing.T) {
 				validator.Status = types.Bonded
 				app.StakingKeeper.SetValidator(ctx, validator)
 				app.StakingKeeper.SetValidatorByPowerIndex(ctx, validator)
-				app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
+				err = app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
+				require.NoError(t, err, "no error expected when setting validator by consensus address")
 
 				// Optionally create the delegation, depending on the test case
 				if tc.createDelegation {
