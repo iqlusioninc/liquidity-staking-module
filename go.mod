@@ -167,6 +167,8 @@ replace (
 	github.com/cosmos/iavl v0.21.0-beta.1 => github.com/cosmos/iavl v0.20.0
 	// securely enjoy gin
 	github.com/gin-gonic/gin => github.com/gin-gonic/gin v1.9.0
+
 	// use cosmos-flavored protocol buffers
+	// TODO: we should figure out how to permanently remove this.
 	github.com/gogo/protobuf => github.com/regen-network/protobuf v1.3.3-alpha.regen.1
 )
