@@ -8,7 +8,6 @@ import (
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/address"
 
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
@@ -21,21 +20,6 @@ import (
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 	"github.com/stretchr/testify/require"
 )
-
-// helper function to create an ICA account that will be used as the validator
-// returns the address
-func createICAAccount(app *simapp.SimApp, ctx sdk.Context) sdk.AccAddress {
-	icaModuleAccountName := "ica-account"
-	icaAccountAddress := address.Module(icaModuleAccountName, []byte("ica-module-account"))
-
-	icaAccount := authtypes.NewModuleAccount(
-		authtypes.NewBaseAccountWithAddress(icaAccountAddress),
-		icaModuleAccountName,
-	)
-	app.AccountKeeper.SetAccount(ctx, icaAccount)
-
-	return icaAccountAddress
-}
 
 func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 	_, app, ctx := createTestInput(t)
@@ -289,7 +273,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
 
 			// Create ICA module account
-			icaAccountAddress := createICAAccount(app, ctx)
+			icaAccountAddress := createICAAccount(app, ctx, "ica-module-account")
 
 			// Fund module account
 			delegationCoin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), tc.delegationAmount)
@@ -636,7 +620,7 @@ func TestValidatorBond(t *testing.T) {
 
 			delegatorAddress := sdk.AccAddress(delegatorPubKey.Address())
 			validatorAddress := sdk.ValAddress(validatorPubKey.Address())
-			icaAccountAddress := createICAAccount(app, ctx)
+			icaAccountAddress := createICAAccount(app, ctx, "ica-module-account")
 
 			// Set the delegator address to either be a user account or an ICA account depending on the test case
 			if tc.delegatorIsLSTP {
