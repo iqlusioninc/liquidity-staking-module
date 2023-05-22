@@ -14,7 +14,7 @@ import (
 )
 
 func TestExportAndInitGenesis(t *testing.T) {
-	app := simapp.Setup(t, false)
+	app := simapp.Setup(t)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
 	app.SlashingKeeper.SetParams(ctx, testslashing.TestParams())

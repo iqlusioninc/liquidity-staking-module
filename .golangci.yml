@@ -57,8 +57,6 @@ issues:
   max-same-issues: 10000
 
 linters-settings:
-  dogsled:
-    max-blank-identifiers: 3
   maligned:
     # print struct with more effective memory layout or not, false by default
     suggest-new: true
