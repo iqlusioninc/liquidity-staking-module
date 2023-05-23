@@ -35,13 +35,16 @@ func TestWeightedOperations(t *testing.T) {
 	app, ctx, accs := createTestApp(t, false, r, 3)
 	ctx.WithChainID("test-chain")
 
+	cdc := app.AppCodec()
+	appParams := make(simtypes.AppParams)
+
 	expected := []struct {
 		weight     int
 		opMsgRoute string
 		opMsgName  string
 	}{{simappparams.DefaultWeightMsgUnjail, types.ModuleName, types.TypeMsgUnjail}}
 
-	weightesOps := simulation.WeightedOperations(app.AccountKeeper, app.BankKeeper, app.SlashingKeeper, app.StakingKeeper)
+	weightesOps := simulation.WeightedOperations(appParams, cdc, app.AccountKeeper, app.BankKeeper, app.SlashingKeeper, app.StakingKeeper)
 	for i, w := range weightesOps {
 		operationMsg, _, _ := w.Op()(r, app.BaseApp, ctx, accs, ctx.ChainID())
 		// the following checks are very much dependent from the ordering of the output given
