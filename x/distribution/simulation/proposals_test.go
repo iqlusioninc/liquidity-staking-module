@@ -30,7 +30,7 @@ func TestProposalContents(t *testing.T) {
 	w0 := weightedProposalContent[0]
 
 	// tests w0 interface:
-	require.Equal(t, simulation.OpWeightSubmitCommunitySpendProposal, w0.AppParamsKey())
+	require.Equal(t, simulation.OpWeightMsgDeposit, w0.AppParamsKey())
 	require.Equal(t, simulation.DefaultWeightTextProposal, w0.DefaultWeight())
 
 	amount := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)), sdk.NewCoin("atoken", sdk.NewInt(2)))
@@ -41,8 +41,8 @@ func TestProposalContents(t *testing.T) {
 
 	content := w0.ContentSimulatorFn()(r, ctx, accounts)
 
-	require.Equal(t, "sTxPjfweXhSUkMhPjMaxKlMIJMOXcnQfyzeOcbWwNbeHVIkPZBSpYuLyYggwexjxusrBqDOTtGTOWeLrQKjLxzIivHSlcxgdXhhu", content.GetDescription())
-	require.Equal(t, "xKGLwQvuyN", content.GetTitle())
-	require.Equal(t, "distribution", content.ProposalRoute())
-	require.Equal(t, "CommunityPoolSpend", content.ProposalType())
+	require.Equal(t, "fyzeOcbWwNbeHVIkPZBSpYuLyYggwexjxusrBqDOTtGTOWeLrQKjLxzIivHSlcxgdXhhuTSkuxKGLwQvuyNhYFmBZHeAerqyNEUz", content.GetDescription())
+	require.Equal(t, "GqiQWIXnku", content.GetTitle())
+	require.Equal(t, "gov", content.ProposalRoute())
+	require.Equal(t, "Text", content.ProposalType())
 }

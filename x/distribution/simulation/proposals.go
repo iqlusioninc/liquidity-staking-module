@@ -32,8 +32,8 @@ func ProposalContents() []simtypes.WeightedProposalContent {
 
 func SimulateLegacyTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) simtypes.Content {
 	return v1beta1.NewTextProposal(
-		simtypes.RandStringOfLength(r, 140),
-		simtypes.RandStringOfLength(r, 5000),
+		simtypes.RandStringOfLength(r, 10),
+		simtypes.RandStringOfLength(r, 100),
 	)
 }
 
