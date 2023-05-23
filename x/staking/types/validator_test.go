@@ -6,9 +6,9 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
@@ -94,7 +94,7 @@ func TestRemoveTokens(t *testing.T) {
 
 	// update validator to from bonded -> unbonded
 	validator = validator.UpdateStatus(sdkstaking.Unbonded)
-	require.Equal(t, sdkstaking.Unbonded, validator.Status)
+	require.Equal(t, types.Unbonded, validator.Status)
 
 	validator = validator.RemoveTokens(sdk.NewInt(10))
 	require.Panics(t, func() { validator.RemoveTokens(sdk.NewInt(-1)) })
@@ -117,7 +117,7 @@ func TestAddTokensValidatorUnbonding(t *testing.T) {
 	validator, delShares := validator.AddTokensFromDel(sdk.NewInt(10))
 
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), delShares))
-	assert.Equal(t, sdkstaking.Unbonding, validator.Status)
+	assert.Equal(t, types.Unbonding, validator.Status)
 	assert.True(math.IntEq(t, sdk.NewInt(10), validator.Tokens))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 }
@@ -128,7 +128,7 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 	validator, delShares := validator.AddTokensFromDel(sdk.NewInt(10))
 
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), delShares))
-	assert.Equal(t, sdkstaking.Unbonded, validator.Status)
+	assert.Equal(t, types.Unbonded, validator.Status)
 	assert.True(math.IntEq(t, sdk.NewInt(10), validator.Tokens))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 }
@@ -138,7 +138,7 @@ func TestRemoveDelShares(t *testing.T) {
 	valA := types.Validator{
 		OperatorAddress: valAddr1.String(),
 		ConsensusPubkey: pk1Any,
-		Status:          sdkstaking.Bonded,
+		Status:          types.Bonded,
 		Tokens:          sdk.NewInt(100),
 		DelegatorShares: sdk.NewDec(100),
 	}
@@ -173,20 +173,20 @@ func TestAddTokensFromDel(t *testing.T) {
 func TestUpdateStatus(t *testing.T) {
 	validator := newValidator(t, valAddr1, pk1)
 	validator, _ = validator.AddTokensFromDel(sdk.NewInt(100))
-	require.Equal(t, sdkstaking.Unbonded, validator.Status)
+	require.Equal(t, types.Unbonded, validator.Status)
 	require.Equal(t, int64(100), validator.Tokens.Int64())
 
 	// Unbonded to Bonded
 	validator = validator.UpdateStatus(sdkstaking.Bonded)
-	require.Equal(t, sdkstaking.Bonded, validator.Status)
+	require.Equal(t, types.Bonded, validator.Status)
 
 	// Bonded to Unbonding
 	validator = validator.UpdateStatus(sdkstaking.Unbonding)
-	require.Equal(t, sdkstaking.Unbonding, validator.Status)
+	require.Equal(t, types.Unbonding, validator.Status)
 
 	// Unbonding to Bonded
 	validator = validator.UpdateStatus(sdkstaking.Bonded)
-	require.Equal(t, sdkstaking.Bonded, validator.Status)
+	require.Equal(t, types.Bonded, validator.Status)
 }
 
 func TestPossibleOverflow(t *testing.T) {
@@ -262,9 +262,7 @@ func TestValidatorsSortDeterminism(t *testing.T) {
 	// Randomly shuffle validators, sort, and check it is equal to original sort
 	for i := 0; i < 10; i++ {
 		rand.Shuffle(10, func(i, j int) {
-			it := vals[i]
-			vals[i] = vals[j]
-			vals[j] = it
+			vals[i], vals[j] = vals[j], vals[i]
 		})
 
 		types.Validators(vals).Sort()
@@ -280,7 +278,7 @@ func TestValidatorsSortTendermint(t *testing.T) {
 		pk := ed25519.GenPrivKey().PubKey()
 		pk2 := ed25519.GenPrivKey().PubKey()
 		vals[i] = newValidator(t, sdk.ValAddress(pk2.Address()), pk)
-		vals[i].Status = sdkstaking.Bonded
+		vals[i].Status = types.Bonded
 		vals[i].Tokens = sdk.NewInt(rand.Int63())
 	}
 	// create some validators with the same power
@@ -312,7 +310,7 @@ func TestValidatorToTm(t *testing.T) {
 	for i := range vals {
 		pk := ed25519.GenPrivKey().PubKey()
 		val := newValidator(t, sdk.ValAddress(pk.Address()), pk)
-		val.Status = sdkstaking.Bonded
+		val.Status = types.Bonded
 		val.Tokens = sdk.NewInt(rand.Int63())
 		vals[i] = val
 		tmPk, err := cryptocodec.ToTmPubKeyInterface(pk)
@@ -339,7 +337,7 @@ func mkValidator(tokens int64, shares sdk.Dec) types.Validator {
 	return types.Validator{
 		OperatorAddress: valAddr1.String(),
 		ConsensusPubkey: pk1Any,
-		Status:          sdkstaking.Bonded,
+		Status:          types.Bonded,
 		Tokens:          sdk.NewInt(tokens),
 		DelegatorShares: shares,
 	}

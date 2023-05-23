@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	errorsmod "cosmossdk.io/errors"
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
@@ -181,8 +181,8 @@ func (k Keeper) FundCommunityPool(ctx sdk.Context, amount sdk.Coins, sender sdk.
 	return nil
 }
 
-func (k Keeper) WithdrawSingleShareRecordReward(ctx sdk.Context, recordId uint64) error {
-	record, err := k.stakingKeeper.GetTokenizeShareRecord(ctx, recordId)
+func (k Keeper) WithdrawSingleShareRecordReward(ctx sdk.Context, recordID uint64) error {
+	record, err := k.stakingKeeper.GetTokenizeShareRecord(ctx, recordID)
 	if err != nil {
 		return err
 	}
@@ -229,8 +229,8 @@ func (k Keeper) WithdrawSingleShareRecordReward(ctx sdk.Context, recordId uint64
 }
 
 // withdraw reward for owning TokenizeShareRecord
-func (k Keeper) WithdrawTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk.AccAddress, recordId uint64) (sdk.Coins, error) {
-	record, err := k.stakingKeeper.GetTokenizeShareRecord(ctx, recordId)
+func (k Keeper) WithdrawTokenizeShareRecordReward(ctx sdk.Context, ownerAddr sdk.AccAddress, recordID uint64) (sdk.Coins, error) {
+	record, err := k.stakingKeeper.GetTokenizeShareRecord(ctx, recordID)
 	if err != nil {
 		return nil, err
 	}

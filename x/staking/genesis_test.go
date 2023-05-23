@@ -7,19 +7,10 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
-	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/teststaking"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
-
-func bootstrapGenesisTest(t *testing.T, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress) {
-	_, app, ctx := getBaseSimappWithCustomKeeper(t)
-
-	addrDels, _ := generateAddresses(app, ctx, numAddrs, sdk.NewInt(10000))
-	return app, ctx, addrDels
-}
 
 func TestValidateGenesis(t *testing.T) {
 	genValidators1 := make([]types.Validator, 1, 5)
@@ -46,7 +37,7 @@ func TestValidateGenesis(t *testing.T) {
 		{"jailed and bonded validator", func(data *types.GenesisState) {
 			data.Validators = genValidators1
 			data.Validators[0].Jailed = true
-			data.Validators[0].Status = sdkstaking.Bonded
+			data.Validators[0].Status = types.Bonded
 		}, true},
 	}
 

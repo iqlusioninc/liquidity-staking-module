@@ -1,22 +1,19 @@
 package cmd
 
-// DONTCOVER
-
 import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
 
+	tmconfig "github.com/cometbft/cometbft/config"
+	tmos "github.com/cometbft/cometbft/libs/os"
+	tmrand "github.com/cometbft/cometbft/libs/rand"
+	"github.com/cometbft/cometbft/types"
+	tmtime "github.com/cometbft/cometbft/types/time"
 	"github.com/spf13/cobra"
-	tmconfig "github.com/tendermint/tendermint/config"
-	tmos "github.com/tendermint/tendermint/libs/os"
-	tmrand "github.com/tendermint/tendermint/libs/rand"
-	"github.com/tendermint/tendermint/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -80,7 +77,7 @@ func addTestnetFlagsToCmd(cmd *cobra.Command) {
 	cmd.Flags().StringP(flagOutputDir, "o", "./.testnets", "Directory to store initialization data for the testnet")
 	cmd.Flags().String(flags.FlagChainID, "", "genesis file chain-id, if left blank will be randomly created")
 	cmd.Flags().String(server.FlagMinGasPrices, fmt.Sprintf("0.000006%s", sdk.DefaultBondDenom), "Minimum gas prices to accept for transactions; All fees in a tx must meet this minimum (e.g. 0.01photino,0.001stake)")
-	cmd.Flags().String(flags.FlagKeyAlgorithm, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
+	cmd.Flags().String(flags.FlagKeyType, string(hd.Secp256k1Type), "Key signing algorithm to generate keys for")
 }
 
 // NewTestnetCmd creates a root testnet command with subcommands to run an in-process testnet or initialize
@@ -134,7 +131,7 @@ Example:
 			args.nodeDaemonHome, _ = cmd.Flags().GetString(flagNodeDaemonHome)
 			args.startingIPAddress, _ = cmd.Flags().GetString(flagStartingIPAddress)
 			args.numValidators, _ = cmd.Flags().GetInt(flagNumValidators)
-			args.algo, _ = cmd.Flags().GetString(flags.FlagKeyAlgorithm)
+			args.algo, _ = cmd.Flags().GetString(flags.FlagKeyType)
 
 			return initTestnetFiles(clientCtx, cmd, config, mbm, genBalIterator, args)
 		},
@@ -167,7 +164,7 @@ Example:
 			args.chainID, _ = cmd.Flags().GetString(flags.FlagChainID)
 			args.minGasPrices, _ = cmd.Flags().GetString(server.FlagMinGasPrices)
 			args.numValidators, _ = cmd.Flags().GetInt(flagNumValidators)
-			args.algo, _ = cmd.Flags().GetString(flags.FlagKeyAlgorithm)
+			args.algo, _ = cmd.Flags().GetString(flags.FlagKeyType)
 			args.enableLogging, _ = cmd.Flags().GetBool(flagEnableLogging)
 			args.rpcAddress, _ = cmd.Flags().GetString(flagRPCAddress)
 			args.apiAddress, _ = cmd.Flags().GetString(flagAPIAddress)
@@ -465,7 +462,7 @@ func calculateIP(ip string, i int) (string, error) {
 }
 
 func writeFile(name string, dir string, contents []byte) error {
-	writePath := filepath.Join(dir)
+	writePath := filepath.Join(dir) //nolint:gocritic
 	file := filepath.Join(writePath, name)
 
 	err := tmos.EnsureDir(writePath, 0o755)
@@ -473,7 +470,7 @@ func writeFile(name string, dir string, contents []byte) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(file, contents, 0o644) // nolint: gosec
+	err = os.WriteFile(file, contents, 0o644) //nolint: gosec
 	if err != nil {
 		return err
 	}
@@ -512,7 +509,10 @@ func startTestnet(cmd *cobra.Command, args startArgs) error {
 		return err
 	}
 
-	testnet.WaitForHeight(1)
+	_, err = testnet.WaitForHeight(1)
+	if err != nil {
+		return err
+	}
 	cmd.Println("press the Enter Key to terminate")
 	fmt.Scanln() // wait for Enter Key
 	testnet.Cleanup()

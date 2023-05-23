@@ -6,10 +6,10 @@ import (
 	"time"
 
 	"cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,7 +29,7 @@ func newMonikerValidator(t testing.TB, operator sdk.ValAddress, pubKey cryptotyp
 }
 
 func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
-	_, app, ctx := createTestInput(&testing.T{})
+	app, ctx := createTestInput(&testing.T{})
 
 	addrDels, addrVals := generateAddresses(app, ctx, numAddrs)
 
@@ -56,7 +56,8 @@ func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*simapp.Si
 	return app, ctx, addrDels, addrVals
 }
 
-func initValidators(t testing.TB, power int64, numAddrs int, powers []int64) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress, []types.Validator) {
+// initValidators initializes a set of validators with the given powers.
+func initValidators(t testing.TB, power int64, numAddrs int, powers []int64) (*simapp.SimApp, sdk.Context, []sdk.ValAddress, []types.Validator) {
 	app, ctx, addrs, valAddrs := bootstrapValidatorTest(t, power, numAddrs)
 	pks := simapp.CreateTestPubKeys(numAddrs)
 
@@ -66,7 +67,7 @@ func initValidators(t testing.TB, power int64, numAddrs int, powers []int64) (*s
 		tokens := app.StakingKeeper.TokensFromConsensusPower(ctx, power)
 		vs[i], _ = vs[i].AddTokensFromDel(tokens)
 	}
-	return app, ctx, addrs, valAddrs, vs
+	return app, ctx, valAddrs, vs
 }
 
 func TestSetValidator(t *testing.T) {
@@ -79,7 +80,7 @@ func TestSetValidator(t *testing.T) {
 	// test how the validator is set from a purely unbonbed pool
 	validator := teststaking.NewValidator(t, valAddr, valPubKey)
 	validator, _ = validator.AddTokensFromDel(valTokens)
-	require.Equal(t, sdkstaking.Unbonded, validator.Status)
+	require.Equal(t, types.Unbonded, validator.Status)
 	assert.Equal(t, valTokens, validator.Tokens)
 	assert.Equal(t, valTokens, validator.DelegatorShares.RoundInt())
 	app.StakingKeeper.SetValidator(ctx, validator)
@@ -92,7 +93,7 @@ func TestSetValidator(t *testing.T) {
 	require.Equal(t, validator.ABCIValidatorUpdate(app.StakingKeeper.PowerReduction(ctx)), updates[0])
 
 	// after the save the validator should be bonded
-	require.Equal(t, sdkstaking.Bonded, validator.Status)
+	require.Equal(t, types.Bonded, validator.Status)
 	assert.Equal(t, valTokens, validator.Tokens)
 	assert.Equal(t, valTokens, validator.DelegatorShares.RoundInt())
 
@@ -135,7 +136,7 @@ func TestUpdateValidatorByPowerIndex(t *testing.T) {
 	// add a validator
 	validator := teststaking.NewValidator(t, addrVals[0], PKs[0])
 	validator, delSharesCreated := validator.AddTokensFromDel(app.StakingKeeper.TokensFromConsensusPower(ctx, 100))
-	require.Equal(t, sdkstaking.Unbonded, validator.Status)
+	require.Equal(t, types.Unbonded, validator.Status)
 	require.Equal(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 100), validator.Tokens)
 	keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
 	validator, found := app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
@@ -170,7 +171,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 
 	// create keeper parameters
-	params := app.StakingKeeper.GetParams(ctx)
+	params := app.StakingKeeper.GetAllParams(ctx)
 	params.MaxValidators = uint32(maxVals)
 	app.StakingKeeper.SetParams(ctx, params)
 
@@ -199,7 +200,7 @@ func TestUpdateBondedValidatorsDecreaseCliff(t *testing.T) {
 	app.StakingKeeper.DeleteValidatorByPowerIndex(ctx, nextCliffVal)
 	shares := app.StakingKeeper.TokensFromConsensusPower(ctx, 21)
 	nextCliffVal, _ = nextCliffVal.RemoveDelShares(sdk.NewDecFromInt(shares))
-	nextCliffVal = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, nextCliffVal, true)
+	_ = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, nextCliffVal, true)
 
 	expectedValStatus := map[int]sdkstaking.BondStatus{
 		9: sdkstaking.Bonded, 8: sdkstaking.Bonded, 7: sdkstaking.Bonded, 5: sdkstaking.Bonded, 4: sdkstaking.Bonded,
@@ -235,9 +236,10 @@ func TestSlashToZeroPowerRemoved(t *testing.T) {
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
 	validator, _ = validator.AddTokensFromDel(valTokens)
-	require.Equal(t, sdkstaking.Unbonded, validator.Status)
+	require.Equal(t, types.Unbonded, validator.Status)
 	require.Equal(t, valTokens, validator.Tokens)
-	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
+	err := app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
+	require.NoError(t, err)
 	validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
 	require.Equal(t, valTokens, validator.Tokens, "\nvalidator %v\npool %v", validator, valTokens)
 
@@ -259,7 +261,7 @@ func TestValidatorBasics(t *testing.T) {
 	powers := []int64{9, 8, 7}
 	for i, power := range powers {
 		validators[i] = teststaking.NewValidator(t, addrVals[i], PKs[i])
-		validators[i].Status = sdkstaking.Unbonded
+		validators[i].Status = types.Unbonded
 		validators[i].Tokens = sdk.ZeroInt()
 		tokens := app.StakingKeeper.TokensFromConsensusPower(ctx, power)
 
@@ -280,7 +282,8 @@ func TestValidatorBasics(t *testing.T) {
 
 	// set and retrieve a record
 	validators[0] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[0], true)
-	app.StakingKeeper.SetValidatorByConsAddr(ctx, validators[0])
+	err := app.StakingKeeper.SetValidatorByConsAddr(ctx, validators[0])
+	require.NoError(t, err)
 	resVal, found := app.StakingKeeper.GetLiquidValidator(ctx, addrVals[0])
 	require.True(t, found)
 	assert.True(ValEq(t, validators[0], resVal))
@@ -296,11 +299,11 @@ func TestValidatorBasics(t *testing.T) {
 	resVals = app.StakingKeeper.GetLastValidators(ctx)
 	require.Equal(t, 1, len(resVals))
 	assert.True(ValEq(t, validators[0], resVals[0]))
-	assert.Equal(t, sdkstaking.Bonded, validators[0].Status)
+	assert.Equal(t, types.Bonded, validators[0].Status)
 	assert.True(math.IntEq(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 9), validators[0].BondedTokens()))
 
 	// modify a records, save, and retrieve
-	validators[0].Status = sdkstaking.Bonded
+	validators[0].Status = types.Bonded
 	validators[0].Tokens = app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	validators[0].DelegatorShares = sdk.NewDecFromInt(validators[0].Tokens)
 	validators[0] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[0], true)
@@ -336,7 +339,7 @@ func TestValidatorBasics(t *testing.T) {
 		func() { app.StakingKeeper.RemoveValidator(ctx, validators[1].GetOperator()) })
 
 	// shouldn't be able to remove if there are still tokens left
-	validators[1].Status = sdkstaking.Unbonded
+	validators[1].Status = types.Unbonded
 	app.StakingKeeper.SetValidator(ctx, validators[1])
 	assert.PanicsWithValue(t,
 		"attempting to remove a validator which still contains tokens",
@@ -365,7 +368,7 @@ func TestGetValidatorSortingUnmixed(t *testing.T) {
 	var validators [5]types.Validator
 	for i, amt := range amts {
 		validators[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i])
-		validators[i].Status = sdkstaking.Bonded
+		validators[i].Status = types.Bonded
 		validators[i].Tokens = amt
 		validators[i].DelegatorShares = sdk.NewDecFromInt(amt)
 		keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[i], true)
@@ -443,7 +446,7 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
 	// now 2 max resValidators
-	params := app.StakingKeeper.GetParams(ctx)
+	params := app.StakingKeeper.GetAllParams(ctx)
 	params.MaxValidators = 2
 	app.StakingKeeper.SetParams(ctx, params)
 
@@ -460,7 +463,7 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 	for i, amt := range amts {
 		validators[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), PKs[i])
 		validators[i].DelegatorShares = sdk.NewDecFromInt(amt)
-		validators[i].Status = sdkstaking.Bonded
+		validators[i].Status = types.Bonded
 		validators[i].Tokens = amt
 		keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[i], true)
 	}
@@ -475,11 +478,11 @@ func TestGetValidatorSortingMixed(t *testing.T) {
 	require.True(t, found)
 	val4, found := app.StakingKeeper.GetLiquidValidator(ctx, sdk.ValAddress(addrs[4]))
 	require.True(t, found)
-	require.Equal(t, sdkstaking.Bonded, val0.Status)
-	require.Equal(t, sdkstaking.Unbonding, val1.Status)
-	require.Equal(t, sdkstaking.Unbonding, val2.Status)
-	require.Equal(t, sdkstaking.Bonded, val3.Status)
-	require.Equal(t, sdkstaking.Bonded, val4.Status)
+	require.Equal(t, types.Bonded, val0.Status)
+	require.Equal(t, types.Unbonding, val1.Status)
+	require.Equal(t, types.Unbonding, val2.Status)
+	require.Equal(t, types.Bonded, val3.Status)
+	require.Equal(t, types.Bonded, val4.Status)
 
 	// first make sure everything made it in to the gotValidator group
 	resValidators := app.StakingKeeper.GetLiquidBondedValidatorsByPower(ctx)
@@ -496,7 +499,7 @@ func TestGetValidatorsEdgeCases(t *testing.T) {
 	app, ctx, addrs, _ := bootstrapValidatorTest(t, 1000, 20)
 
 	// set max validators to 2
-	params := app.StakingKeeper.GetParams(ctx)
+	params := app.StakingKeeper.GetAllParams(ctx)
 	nMax := uint32(2)
 	params.MaxValidators = nMax
 	app.StakingKeeper.SetParams(ctx, params)
@@ -608,7 +611,7 @@ func TestValidatorBondHeight(t *testing.T) {
 	app, ctx, addrs, _ := bootstrapValidatorTest(t, 1000, 20)
 
 	// now 2 max resValidators
-	params := app.StakingKeeper.GetParams(ctx)
+	params := app.StakingKeeper.GetAllParams(ctx)
 	params.MaxValidators = 2
 	app.StakingKeeper.SetParams(ctx, params)
 
@@ -653,7 +656,7 @@ func TestValidatorBondHeight(t *testing.T) {
 
 func TestFullValidatorSetPowerChange(t *testing.T) {
 	app, ctx, addrs, _ := bootstrapValidatorTest(t, 1000, 20)
-	params := app.StakingKeeper.GetParams(ctx)
+	params := app.StakingKeeper.GetAllParams(ctx)
 	max := 2
 	params.MaxValidators = uint32(2)
 	app.StakingKeeper.SetParams(ctx, params)
@@ -672,11 +675,11 @@ func TestFullValidatorSetPowerChange(t *testing.T) {
 		validators[i], found = app.StakingKeeper.GetLiquidValidator(ctx, validators[i].GetOperator())
 		require.True(t, found)
 	}
-	assert.Equal(t, sdkstaking.Unbonded, validators[0].Status)
-	assert.Equal(t, sdkstaking.Unbonding, validators[1].Status)
-	assert.Equal(t, sdkstaking.Bonded, validators[2].Status)
-	assert.Equal(t, sdkstaking.Bonded, validators[3].Status)
-	assert.Equal(t, sdkstaking.Unbonded, validators[4].Status)
+	assert.Equal(t, types.Unbonded, validators[0].Status)
+	assert.Equal(t, types.Unbonding, validators[1].Status)
+	assert.Equal(t, types.Bonded, validators[2].Status)
+	assert.Equal(t, types.Bonded, validators[3].Status)
+	assert.Equal(t, types.Unbonded, validators[4].Status)
 	resValidators := app.StakingKeeper.GetLiquidBondedValidatorsByPower(ctx)
 	assert.Equal(t, max, len(resValidators))
 	assert.True(ValEq(t, validators[2], resValidators[0])) // in the order of txs
@@ -763,7 +766,7 @@ func TestApplyAndReturnValidatorSetUpdatesSingleValueChange(t *testing.T) {
 
 	// test single value change
 	//  tendermintUpdate set: {} -> {c1'}
-	validators[0].Status = sdkstaking.Bonded
+	validators[0].Status = types.Bonded
 	validators[0].Tokens = app.StakingKeeper.TokensFromConsensusPower(ctx, 600)
 	validators[0] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[0], false)
 
@@ -774,7 +777,7 @@ func TestApplyAndReturnValidatorSetUpdatesSingleValueChange(t *testing.T) {
 func TestApplyAndReturnValidatorSetUpdatesMultipleValueChange(t *testing.T) {
 	powers := []int64{10, 20}
 	// TODO: use it in other places
-	app, ctx, _, _, validators := initValidators(t, 1000, 20, powers)
+	app, ctx, _, validators := initValidators(t, 1000, 20, powers)
 
 	validators[0] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[0], false)
 	validators[1] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[1], false)
@@ -796,7 +799,7 @@ func TestApplyAndReturnValidatorSetUpdatesMultipleValueChange(t *testing.T) {
 
 func TestApplyAndReturnValidatorSetUpdatesInserted(t *testing.T) {
 	powers := []int64{10, 20, 5, 15, 25}
-	app, ctx, _, _, validators := initValidators(t, 1000, 20, powers)
+	app, ctx, _, validators := initValidators(t, 1000, 20, powers)
 
 	validators[0] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[0], false)
 	validators[1] = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validators[1], false)
@@ -902,7 +905,7 @@ func TestApplyAndReturnValidatorSetUpdatesPowerDecrease(t *testing.T) {
 
 func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
 	app, ctx, _, _ := bootstrapValidatorTest(t, 1000, 20)
-	params := app.StakingKeeper.GetParams(ctx)
+	params := app.StakingKeeper.GetAllParams(ctx)
 	params.MaxValidators = uint32(3)
 
 	app.StakingKeeper.SetParams(ctx, params)
@@ -980,7 +983,7 @@ func TestApplyAndReturnValidatorSetUpdatesNewValidator(t *testing.T) {
 
 func TestApplyAndReturnValidatorSetUpdatesBondTransition(t *testing.T) {
 	app, ctx, _, _ := bootstrapValidatorTest(t, 1000, 20)
-	params := app.StakingKeeper.GetParams(ctx)
+	params := app.StakingKeeper.GetAllParams(ctx)
 	params.MaxValidators = uint32(2)
 
 	app.StakingKeeper.SetParams(ctx, params)
@@ -1057,7 +1060,7 @@ func TestUpdateValidatorCommission(t *testing.T) {
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Now().UTC()})
 
 	// Set MinCommissionRate to 0.05
-	params := app.StakingKeeper.GetParams(ctx)
+	params := app.StakingKeeper.GetAllParams(ctx)
 	params.MinCommissionRate = sdk.NewDecWithPrec(5, 2)
 	app.StakingKeeper.SetParams(ctx, params)
 

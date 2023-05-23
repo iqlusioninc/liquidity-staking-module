@@ -6,11 +6,11 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
+	simappparams "github.com/iqlusioninc/liquidity-staking-module/app/params"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/keeper"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
@@ -22,6 +22,8 @@ const (
 )
 
 // Simulation operation weights constants
+//
+//nolint:gosec // allow gosec to ignore G101 as this is not a hardcoded credential but rather a variable name
 const (
 	OpWeightMsgCreateValidator             = "op_weight_msg_create_validator"
 	OpWeightMsgEditValidator               = "op_weight_msg_edit_validator"
@@ -78,12 +80,6 @@ func WeightedOperations(
 	appParams.GetOrGenerate(cdc, OpWeightMsgBeginRedelegate, &weightMsgBeginRedelegate, nil,
 		func(_ *rand.Rand) {
 			weightMsgBeginRedelegate = simappparams.DefaultWeightMsgBeginRedelegate
-		},
-	)
-
-	appParams.GetOrGenerate(cdc, OpWeightMsgCancelUnbondingDelegation, &weightMsgCancelUnbondingDelegation, nil,
-		func(_ *rand.Rand) {
-			weightMsgCancelUnbondingDelegation = simappparams.DefaultWeightMsgCancelUnbondingDelegation
 		},
 	)
 

@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/tendermint/tendermint/libs/log"
-	dbm "github.com/tendermint/tm-db"
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
+	"github.com/iqlusioninc/liquidity-staking-module/app/helpers"
 
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
 	"github.com/cosmos/cosmos-sdk/types/module"
@@ -39,7 +39,7 @@ func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DB, string,
 		return simtypes.Config{}, nil, "", nil, false, err
 	}
 
-	db, err := sdk.NewLevelDB(dbName, dir)
+	db, err := dbm.NewDB(dbName, "goleveldb", dir)
 	if err != nil {
 		return simtypes.Config{}, nil, "", nil, false, err
 	}
@@ -67,8 +67,6 @@ func SimulationOperations(app App, cdc codec.JSONCodec, config simtypes.Config) 
 		}
 	}
 
-	simState.ParamChanges = app.SimulationManager().GenerateParamChanges(config.Seed)
-	simState.Contents = app.SimulationManager().GetProposalContents(simState)
 	return app.SimulationManager().WeightedOperations(simState)
 }
 
@@ -79,7 +77,7 @@ func CheckExportSimulation(
 ) error {
 	if config.ExportStatePath != "" {
 		fmt.Println("exporting app state...")
-		exported, err := app.ExportAppStateAndValidators(false, nil)
+		exported, err := app.ExportAppStateAndValidators(false, nil, nil)
 		if err != nil {
 			return err
 		}

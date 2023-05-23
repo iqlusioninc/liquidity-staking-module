@@ -65,7 +65,10 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 	operatorAddress := validator.GetOperator()
 
 	// call the before-modification hook
-	k.BeforeValidatorModified(ctx, operatorAddress)
+	err := k.BeforeValidatorModified(ctx, operatorAddress)
+	if err != nil {
+		panic(err)
+	}
 
 	// Track remaining slash amount for the validator
 	// This will decrease when we slash unbondings and
@@ -123,7 +126,10 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 			effectiveFraction = sdk.OneDec()
 		}
 		// call the before-slashed hook
-		k.BeforeValidatorSlashed(ctx, operatorAddress, effectiveFraction)
+		err := k.BeforeValidatorSlashed(ctx, operatorAddress, effectiveFraction)
+		if err != nil {
+			panic(err)
+		}
 	}
 
 	// Deduct from validator's bonded tokens and update the validator.
@@ -150,6 +156,11 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		"burned", tokensToBurn,
 	)
 	return tokensToBurn
+}
+
+// SlashWithInfractionReason implementation doesn't require the infraction (types.Infraction) to work but is required by Interchain Security.
+func (k Keeper) SlashWithInfractionReason(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeight int64, power int64, slashFactor sdk.Dec, _ types.Infraction) math.Int {
+	return k.Slash(ctx, consAddr, infractionHeight, power, slashFactor)
 }
 
 // jail a validator
@@ -227,7 +238,7 @@ func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 // (the amount actually slashed may be less if there's
 // insufficient stake remaining)
 // NOTE this is only slashing for prior infractions from the source validator
-func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator, redelegation types.Redelegation,
+func (k Keeper) SlashRedelegation(ctx sdk.Context, _ types.Validator, redelegation types.Redelegation,
 	infractionHeight int64, slashFactor sdk.Dec,
 ) (totalSlashAmount math.Int) {
 	now := ctx.BlockHeader().Time

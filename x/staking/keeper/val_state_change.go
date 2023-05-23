@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"sort"
 
+	abci "github.com/cometbft/cometbft/abci/types"
 	gogotypes "github.com/gogo/protobuf/types"
-	abci "github.com/tendermint/tendermint/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -298,7 +298,10 @@ func (k Keeper) bondValidator(ctx sdk.Context, validator types.Validator) (types
 	if err != nil {
 		return validator, err
 	}
-	k.AfterValidatorBonded(ctx, consAddr, validator.GetOperator())
+	err = k.AfterValidatorBonded(ctx, consAddr, validator.GetOperator())
+	if err != nil {
+		return validator, err
+	}
 
 	return validator, err
 }
@@ -311,7 +314,7 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 
 	// sanity check
-	if validator.Status != sdkstaking.Bonded {
+	if validator.Status != types.Bonded {
 		panic(fmt.Sprintf("should not already be unbonded or unbonding, validator: %v\n", validator))
 	}
 
@@ -333,7 +336,10 @@ func (k Keeper) beginUnbondingValidator(ctx sdk.Context, validator types.Validat
 	if err != nil {
 		return validator, err
 	}
-	k.AfterValidatorBeginUnbonding(ctx, consAddr, validator.GetOperator())
+	err = k.AfterValidatorBeginUnbonding(ctx, consAddr, validator.GetOperator())
+	if err != nil {
+		return validator, err
+	}
 
 	return validator, nil
 }

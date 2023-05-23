@@ -1,6 +1,7 @@
 package types
 
 // staking module event types
+
 const (
 	EventTypeCompleteUnbonding           = "complete_unbonding"
 	EventTypeCompleteRedelegation        = "complete_redelegation"
@@ -22,7 +23,7 @@ const (
 	AttributeKeyCompletionTime = "completion_time"
 	AttributeKeyNewShares      = "new_shares"
 	AttributeKeyShareOwner     = "share_owner"
-	AttributeKeyShareRecordId  = "share_record_id"
+	AttributeKeyShareRecordID  = "share_record_id"
 	AttributeKeyAmount         = "amount"
 	AttributeValueCategory     = ModuleName
 )

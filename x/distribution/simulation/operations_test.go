@@ -6,9 +6,9 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
@@ -16,9 +16,8 @@ import (
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	simappparams "github.com/iqlusioninc/liquidity-staking-module/app/params"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/simulation"
-	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
-	distrtypes "github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
-	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
+	lsdistrtypes "github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
+	lstakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 // TestWeightedOperations tests the weights of the operations.
@@ -40,11 +39,11 @@ func (suite *SimTestSuite) TestWeightedOperations() {
 		opMsgRoute string
 		opMsgName  string
 	}{
-		{simappparams.DefaultWeightMsgSetWithdrawAddress, types.ModuleName, types.TypeMsgSetWithdrawAddress},
-		{simappparams.DefaultWeightMsgWithdrawDelegationReward, types.ModuleName, types.TypeMsgWithdrawDelegatorReward},
-		{simappparams.DefaultWeightMsgWithdrawValidatorCommission, types.ModuleName, types.TypeMsgWithdrawValidatorCommission},
-		{simappparams.DefaultWeightMsgFundCommunityPool, types.ModuleName, types.TypeMsgFundCommunityPool},
-		{simulation.DefaultWeightMsgWithdrawAllTokenizeShareRecordReward, types.ModuleName, types.TypeMsgWithdrawAllTokenizeShareRecordReward},
+		{simappparams.DefaultWeightMsgSetWithdrawAddress, lsdistrtypes.ModuleName, lsdistrtypes.TypeMsgSetWithdrawAddress},
+		{simappparams.DefaultWeightMsgWithdrawDelegationReward, lsdistrtypes.ModuleName, lsdistrtypes.TypeMsgWithdrawDelegatorReward},
+		{simappparams.DefaultWeightMsgWithdrawValidatorCommission, lsdistrtypes.ModuleName, lsdistrtypes.TypeMsgWithdrawValidatorCommission},
+		{simappparams.DefaultWeightMsgFundCommunityPool, lsdistrtypes.ModuleName, lsdistrtypes.TypeMsgFundCommunityPool},
+		{simulation.DefaultWeightMsgWithdrawAllTokenizeShareRecordReward, lsdistrtypes.ModuleName, lsdistrtypes.TypeMsgWithdrawAllTokenizeShareRecordReward},
 	}
 
 	for i, w := range weightesOps {
@@ -74,14 +73,15 @@ func (suite *SimTestSuite) TestSimulateMsgSetWithdrawAddress() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg types.MsgSetWithdrawAddress
-	legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	var msg lsdistrtypes.MsgSetWithdrawAddress
+	err = legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.Require().NoError(err)
 
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.DelegatorAddress)
 	suite.Require().Equal("cosmos1p8wcgrjr4pjju90xg6u9cgq55dxwq8j7u4x9a0", msg.WithdrawAddress)
-	suite.Require().Equal(types.TypeMsgSetWithdrawAddress, msg.Type())
-	suite.Require().Equal(types.ModuleName, msg.Route())
+	suite.Require().Equal(lsdistrtypes.TypeMsgSetWithdrawAddress, msg.Type())
+	suite.Require().Equal(lsdistrtypes.ModuleName, msg.Route())
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -101,9 +101,9 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	delTokens := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 2)
 	validator0, issuedShares := validator0.AddTokensFromDel(delTokens)
 	delegator := accounts[1]
-	delegation := stakingtypes.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares, false)
+	delegation := lstakingtypes.NewDelegation(delegator.Address, validator0.GetOperator(), issuedShares, false)
 	suite.app.StakingKeeper.SetDelegation(suite.ctx, delegation)
-	suite.app.DistrKeeper.SetDelegatorStartingInfo(suite.ctx, validator0.GetOperator(), delegator.Address, distrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
+	suite.app.DistrKeeper.SetDelegatorStartingInfo(suite.ctx, validator0.GetOperator(), delegator.Address, lsdistrtypes.NewDelegatorStartingInfo(2, sdk.OneDec(), 200))
 
 	suite.setupValidatorRewards(validator0.GetOperator())
 
@@ -115,14 +115,15 @@ func (suite *SimTestSuite) TestSimulateMsgWithdrawDelegatorReward() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg types.MsgWithdrawDelegatorReward
-	legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	var msg lsdistrtypes.MsgWithdrawDelegatorReward
+	err = legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.Require().NoError(err)
 
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal("cosmosvaloper1l4s054098kk9hmr5753c6k3m2kw65h686d3mhr", msg.ValidatorAddress)
 	suite.Require().Equal("cosmos1d6u7zhjwmsucs678d7qn95uqajd4ucl9jcjt26", msg.DelegatorAddress)
-	suite.Require().Equal(types.TypeMsgWithdrawDelegatorReward, msg.Type())
-	suite.Require().Equal(types.ModuleName, msg.Route())
+	suite.Require().Equal(lsdistrtypes.TypeMsgWithdrawDelegatorReward, msg.Type())
+	suite.Require().Equal(lsdistrtypes.ModuleName, msg.Route())
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -158,12 +159,12 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 		sdk.NewDecCoinFromDec("stake", sdk.NewDec(1).Quo(sdk.NewDec(1))),
 	)
 
-	suite.app.DistrKeeper.SetValidatorOutstandingRewards(suite.ctx, validator0.GetOperator(), types.ValidatorOutstandingRewards{Rewards: valCommission})
-	suite.app.DistrKeeper.SetValidatorOutstandingRewards(suite.ctx, suite.genesisVals[0].GetOperator(), types.ValidatorOutstandingRewards{Rewards: valCommission})
+	suite.app.DistrKeeper.SetValidatorOutstandingRewards(suite.ctx, validator0.GetOperator(), lsdistrtypes.ValidatorOutstandingRewards{Rewards: valCommission})
+	suite.app.DistrKeeper.SetValidatorOutstandingRewards(suite.ctx, suite.genesisVals[0].GetOperator(), lsdistrtypes.ValidatorOutstandingRewards{Rewards: valCommission})
 
 	// setup validator accumulated commission
-	suite.app.DistrKeeper.SetValidatorAccumulatedCommission(suite.ctx, validator0.GetOperator(), types.ValidatorAccumulatedCommission{Commission: valCommission})
-	suite.app.DistrKeeper.SetValidatorAccumulatedCommission(suite.ctx, suite.genesisVals[0].GetOperator(), types.ValidatorAccumulatedCommission{Commission: valCommission})
+	suite.app.DistrKeeper.SetValidatorAccumulatedCommission(suite.ctx, validator0.GetOperator(), lsdistrtypes.ValidatorAccumulatedCommission{Commission: valCommission})
+	suite.app.DistrKeeper.SetValidatorAccumulatedCommission(suite.ctx, suite.genesisVals[0].GetOperator(), lsdistrtypes.ValidatorAccumulatedCommission{Commission: valCommission})
 
 	// begin a new block
 	suite.app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{Height: suite.app.LastBlockHeight() + 1, AppHash: suite.app.LastCommitID().Hash}})
@@ -176,13 +177,14 @@ func (suite *SimTestSuite) testSimulateMsgWithdrawValidatorCommission(tokenName 
 	} else {
 		suite.Require().NoError(err)
 
-		var msg types.MsgWithdrawValidatorCommission
-		legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
+		var msg lsdistrtypes.MsgWithdrawValidatorCommission
+		err = legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
+		suite.Require().NoError(err)
 
 		suite.Require().True(operationMsg.OK)
 		suite.Require().Equal("cosmosvaloper1tnh2q55v8wyygtt9srz5safamzdengsn9dsd7z", msg.ValidatorAddress)
-		suite.Require().Equal(types.TypeMsgWithdrawValidatorCommission, msg.Type())
-		suite.Require().Equal(types.ModuleName, msg.Route())
+		suite.Require().Equal(lsdistrtypes.TypeMsgWithdrawValidatorCommission, msg.Type())
+		suite.Require().Equal(lsdistrtypes.ModuleName, msg.Route())
 		suite.Require().Len(futureOperations, 0)
 	}
 }
@@ -203,14 +205,15 @@ func (suite *SimTestSuite) TestSimulateMsgFundCommunityPool() {
 	operationMsg, futureOperations, err := op(r, suite.app.BaseApp, suite.ctx, accounts, "")
 	suite.Require().NoError(err)
 
-	var msg types.MsgFundCommunityPool
-	legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	var msg lsdistrtypes.MsgFundCommunityPool
+	err = legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	suite.Require().NoError(err)
 
 	suite.Require().True(operationMsg.OK)
 	suite.Require().Equal("4896096stake", msg.Amount.String())
 	suite.Require().Equal("cosmos1ghekyjucln7y67ntx7cf27m9dpuxxemn4c8g4r", msg.Depositor)
-	suite.Require().Equal(types.TypeMsgFundCommunityPool, msg.Type())
-	suite.Require().Equal(types.ModuleName, msg.Route())
+	suite.Require().Equal(lsdistrtypes.TypeMsgFundCommunityPool, msg.Type())
+	suite.Require().Equal(lsdistrtypes.ModuleName, msg.Route())
 	suite.Require().Len(futureOperations, 0)
 }
 
@@ -219,7 +222,7 @@ type SimTestSuite struct {
 
 	ctx         sdk.Context
 	app         *simapp.SimApp
-	genesisVals []stakingtypes.Validator
+	genesisVals []lstakingtypes.Validator
 }
 
 func (suite *SimTestSuite) SetupTest() {
@@ -232,7 +235,8 @@ func (suite *SimTestSuite) SetupTest() {
 	suite.genesisVals = genesisVals
 }
 
-func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
+// getTestingAccounts returns a slice of simtypes.Accounts with n elements.
+func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account { //nolint:unparam // currently always 3
 	accounts := simtypes.RandomAccounts(r, n)
 
 	initAmt := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 200)
@@ -248,17 +252,19 @@ func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Ac
 	return accounts
 }
 
-func (suite *SimTestSuite) getTestingValidator0(accounts []simtypes.Account) stakingtypes.Validator {
-	commission0 := stakingtypes.NewCommission(sdk.ZeroDec(), sdk.OneDec(), sdk.OneDec())
+// getTestingValidator0 returns a validator with commission rate 0.
+func (suite *SimTestSuite) getTestingValidator0(accounts []simtypes.Account) lstakingtypes.Validator {
+	commission0 := lstakingtypes.NewCommission(sdk.ZeroDec(), sdk.OneDec(), sdk.OneDec())
 	return suite.getTestingValidator(accounts, commission0, 0)
 }
 
-func (suite *SimTestSuite) getTestingValidator(accounts []simtypes.Account, commission stakingtypes.Commission, n int) stakingtypes.Validator {
+// getTestingValidator returns a validator with commission rate 0.1.
+func (suite *SimTestSuite) getTestingValidator(accounts []simtypes.Account, commission lstakingtypes.Commission, n int) lstakingtypes.Validator {
 	require := suite.Require()
 	account := accounts[n]
 	valPubKey := account.PubKey
 	valAddr := sdk.ValAddress(account.PubKey.Address().Bytes())
-	validator, err := stakingtypes.NewValidator(valAddr, valPubKey, stakingtypes.
+	validator, err := lstakingtypes.NewValidator(valAddr, valPubKey, lstakingtypes.
 		Description{})
 	require.NoError(err)
 	validator, err = validator.SetInitialCommission(commission)
@@ -273,10 +279,10 @@ func (suite *SimTestSuite) getTestingValidator(accounts []simtypes.Account, comm
 
 func (suite *SimTestSuite) setupValidatorRewards(valAddress sdk.ValAddress) {
 	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.OneDec())}
-	historicalRewards := distrtypes.NewValidatorHistoricalRewards(decCoins, 2)
+	historicalRewards := lsdistrtypes.NewValidatorHistoricalRewards(decCoins, 2)
 	suite.app.DistrKeeper.SetValidatorHistoricalRewards(suite.ctx, valAddress, 2, historicalRewards)
 	// setup current revards
-	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)
+	currentRewards := lsdistrtypes.NewValidatorCurrentRewards(decCoins, 3)
 	suite.app.DistrKeeper.SetValidatorCurrentRewards(suite.ctx, valAddress, currentRewards)
 }
 

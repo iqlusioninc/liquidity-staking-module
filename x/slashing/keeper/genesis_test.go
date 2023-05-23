@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
@@ -52,6 +52,8 @@ func TestExportAndInitGenesis(t *testing.T) {
 	require.False(t, ok)
 
 	newInfo1, ok = app.SlashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]))
+	require.True(t, ok)
+
 	newInfo2, ok := app.SlashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[1]))
 	require.True(t, ok)
 	require.Equal(t, info1, newInfo1)

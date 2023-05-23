@@ -6,7 +6,7 @@ import (
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -58,13 +58,13 @@ func TestParams(t *testing.T) {
 	expParams := types.DefaultParams()
 
 	// check that the empty keeper loads the default
-	resParams := app.StakingKeeper.GetParams(ctx)
+	resParams := app.StakingKeeper.GetAllParams(ctx)
 	require.True(t, expParams.Equal(resParams))
 
 	// modify a params, save, and retrieve
 	expParams.MaxValidators = 777
 	app.StakingKeeper.SetParams(ctx, expParams)
-	resParams = app.StakingKeeper.GetParams(ctx)
+	resParams = app.StakingKeeper.GetAllParams(ctx)
 	require.True(t, expParams.Equal(resParams))
 }
 

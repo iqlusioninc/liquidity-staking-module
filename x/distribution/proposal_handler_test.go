@@ -3,8 +3,8 @@ package distribution_test
 import (
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -33,7 +33,6 @@ func TestProposalHandlerPassed(t *testing.T) {
 
 	// add coins to the module account
 	macc := app.DistrKeeper.GetDistributionAccount(ctx)
-	balances := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
 	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, macc.GetName(), amount))
 
 	app.AccountKeeper.SetModuleAccount(ctx, macc)
@@ -50,7 +49,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 	hdlr := distribution.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)
 	require.NoError(t, hdlr(ctx, tp))
 
-	balances = app.BankKeeper.GetAllBalances(ctx, recipient)
+	balances := app.BankKeeper.GetAllBalances(ctx, recipient)
 	require.Equal(t, balances, amount)
 }
 

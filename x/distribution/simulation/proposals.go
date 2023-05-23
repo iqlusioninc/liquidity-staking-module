@@ -3,9 +3,9 @@ package simulation
 import (
 	"math/rand"
 
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+	"github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/keeper"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
@@ -15,14 +15,26 @@ import (
 const OpWeightSubmitCommunitySpendProposal = "op_weight_submit_community_spend_proposal"
 
 // ProposalContents defines the module weighted proposals' contents
-func ProposalContents(k keeper.Keeper) []simtypes.WeightedProposalContent {
+//
+
+func ProposalContents() []simtypes.WeightedProposalContent {
 	return []simtypes.WeightedProposalContent{
 		simulation.NewWeightedProposalContent(
-			OpWeightSubmitCommunitySpendProposal,
-			simappparams.DefaultWeightCommunitySpendProposal,
-			SimulateCommunityPoolSpendProposalContent(k),
+			OpWeightMsgDeposit,
+			DefaultWeightTextProposal,
+			SimulateLegacyTextProposalContent,
 		),
 	}
+}
+
+// SimulateTextProposalContent returns a random text proposal content.
+//
+
+func SimulateLegacyTextProposalContent(r *rand.Rand, _ sdk.Context, _ []simtypes.Account) simtypes.Content {
+	return v1beta1.NewTextProposal(
+		simtypes.RandStringOfLength(r, 10),
+		simtypes.RandStringOfLength(r, 100),
+	)
 }
 
 // SimulateCommunityPoolSpendProposalContent generates random community-pool-spend proposal content

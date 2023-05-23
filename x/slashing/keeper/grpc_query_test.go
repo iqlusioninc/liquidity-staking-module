@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -31,8 +31,10 @@ func (suite *SlashingTestSuite) SetupTest() {
 	app := simapp.Setup(suite.T(), false)
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 
-	app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
-	app.BankKeeper.SetParams(ctx, banktypes.DefaultParams())
+	err := app.AccountKeeper.SetParams(ctx, authtypes.DefaultParams())
+	suite.Require().NoError(err)
+	err = app.BankKeeper.SetParams(ctx, banktypes.DefaultParams())
+	suite.Require().NoError(err)
 	app.SlashingKeeper.SetParams(ctx, testslashing.TestParams())
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 200))

@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
@@ -17,7 +17,7 @@ func TestGetSetValidatorSigningInfo(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 1, app.StakingKeeper.TokensFromConsensusPower(ctx, 200))
 
-	info, found := app.SlashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]))
+	_, found := app.SlashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]))
 	require.False(t, found)
 	newInfo := types.NewValidatorSigningInfo(
 		sdk.ConsAddress(addrDels[0]),
@@ -28,7 +28,7 @@ func TestGetSetValidatorSigningInfo(t *testing.T) {
 		int64(10),
 	)
 	app.SlashingKeeper.SetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]), newInfo)
-	info, found = app.SlashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]))
+	info, found := app.SlashingKeeper.GetValidatorSigningInfo(ctx, sdk.ConsAddress(addrDels[0]))
 	require.True(t, found)
 	require.Equal(t, info.StartHeight, int64(4))
 	require.Equal(t, info.IndexOffset, int64(3))

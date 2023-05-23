@@ -4,32 +4,37 @@ import (
 	"errors"
 	"math/rand"
 
+	simappparams "cosmossdk.io/simapp/params"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp/helpers"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
+	helpers "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	slashingsimulation "github.com/cosmos/cosmos-sdk/x/slashing/simulation"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/keeper"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
 	stakingkeeper "github.com/iqlusioninc/liquidity-staking-module/x/staking/keeper"
 )
 
 // Simulation operation weights constants
+//
+//nolint:gosec
 const (
 	OpWeightMsgUnjail = "op_weight_msg_unjail"
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
 func WeightedOperations(
-	appParams simtypes.AppParams, cdc codec.JSONCodec, ak types.AccountKeeper,
+	appParams simtypes.AppParams,
+	cdc codec.JSONCodec,
+	ak types.AccountKeeper,
 	bk types.BankKeeper, k keeper.Keeper, sk types.StakingKeeper,
 ) simulation.WeightedOperations {
 	var weightMsgUnjail int
 	appParams.GetOrGenerate(cdc, OpWeightMsgUnjail, &weightMsgUnjail, nil,
 		func(_ *rand.Rand) {
-			weightMsgUnjail = simappparams.DefaultWeightMsgUnjail
+			weightMsgUnjail = slashingsimulation.DefaultWeightMsgUnjail
 		},
 	)
 

@@ -5,6 +5,7 @@ import (
 
 	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkstakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
@@ -44,7 +45,7 @@ func (k Keeper) BondDenom(ctx sdk.Context) (res string) {
 // Currently, this returns a global variable that the app developer can tweak.
 // TODO: we might turn this into an on-chain param:
 // https://github.com/cosmos/cosmos-sdk/issues/8365
-func (k Keeper) PowerReduction(ctx sdk.Context) math.Int {
+func (k Keeper) PowerReduction(_ sdk.Context) math.Int {
 	return sdk.DefaultPowerReduction
 }
 
@@ -54,14 +55,14 @@ func (k Keeper) MinCommissionRate(ctx sdk.Context) (res sdk.Dec) {
 	return
 }
 
-//  - validator bond factor for all validators
+// - validator bond factor for all validators
 func (k Keeper) ValidatorBondFactor(ctx sdk.Context) (res sdk.Dec) {
 	k.paramstore.Get(ctx, types.KeyValidatorBondFactor, &res)
 	return
 }
 
 // Get all parameters as types.Params
-func (k Keeper) GetParams(ctx sdk.Context) types.Params {
+func (k Keeper) GetAllParams(ctx sdk.Context) types.Params {
 	return types.NewParams(
 		k.UnbondingTime(ctx),
 		k.MaxValidators(ctx),
@@ -70,6 +71,17 @@ func (k Keeper) GetParams(ctx sdk.Context) types.Params {
 		k.BondDenom(ctx),
 		k.MinCommissionRate(ctx),
 		k.ValidatorBondFactor(ctx),
+	)
+}
+
+func (k Keeper) GetParams(ctx sdk.Context) sdkstakingtypes.Params {
+	return sdkstakingtypes.NewParams(
+		k.UnbondingTime(ctx),
+		k.MaxValidators(ctx),
+		k.MaxEntries(ctx),
+		k.HistoricalEntries(ctx),
+		k.BondDenom(ctx),
+		k.MinCommissionRate(ctx),
 	)
 }
 

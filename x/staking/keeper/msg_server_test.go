@@ -9,7 +9,6 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	vesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/exported"
 	vestingtypes "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/keeper"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/teststaking"
@@ -18,7 +17,7 @@ import (
 )
 
 func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 
 	testCases := []struct {
 		name                          string
@@ -182,13 +181,13 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, app, ctx = createTestInput(t)
+			app, ctx = createTestInput(t)
 			addrs := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
 			addrAcc1, addrAcc2 := addrs[0], addrs[1]
 			addrVal1, addrVal2 := sdk.ValAddress(addrAcc1), sdk.ValAddress(addrAcc2)
 
 			// set validator bond factor
-			params := app.StakingKeeper.GetParams(ctx)
+			params := app.StakingKeeper.GetAllParams(ctx)
 			params.ValidatorBondFactor = tc.validatorBondFactor
 			app.StakingKeeper.SetParams(ctx, params)
 
@@ -207,19 +206,21 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 
 			// Create Validators and Delegation
 			val1 := teststaking.NewValidator(t, addrVal1, pk1)
-			val1.Status = sdkstaking.Bonded
+			val1.Status = types.Bonded
 			app.StakingKeeper.SetValidator(ctx, val1)
 			app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
-			app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
+			err := app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
+			require.NoError(t, err)
 
 			val2 := teststaking.NewValidator(t, addrVal2, pk2)
-			val2.Status = sdkstaking.Bonded
+			val2.Status = types.Bonded
 			app.StakingKeeper.SetValidator(ctx, val2)
 			app.StakingKeeper.SetValidatorByPowerIndex(ctx, val2)
-			app.StakingKeeper.SetValidatorByConsAddr(ctx, val2)
+			err = app.StakingKeeper.SetValidatorByConsAddr(ctx, val2)
+			require.NoError(t, err)
 
 			delTokens := tc.delegationAmount
-			err := delegateCoinsFromAccount(ctx, app, addrAcc2, delTokens, val1)
+			err = delegateCoinsFromAccount(ctx, app, addrAcc2, delTokens, val1)
 			require.NoError(t, err)
 
 			// apply TM updates
@@ -228,7 +229,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			_, found := app.StakingKeeper.GetLiquidDelegation(ctx, addrAcc2, addrVal1)
 			require.True(t, found, "delegation not found after delegate")
 
-			lastRecordId := app.StakingKeeper.GetLastTokenizeShareRecordId(ctx)
+			lastRecordID := app.StakingKeeper.GetLastTokenizeShareRecordID(ctx)
 			oldValidator, found := app.StakingKeeper.GetLiquidValidator(ctx, addrVal1)
 			require.True(t, found)
 
@@ -256,7 +257,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			require.NoError(t, err)
 
 			// check last record id increase
-			require.Equal(t, lastRecordId+1, app.StakingKeeper.GetLastTokenizeShareRecordId(ctx))
+			require.Equal(t, lastRecordID+1, app.StakingKeeper.GetLastTokenizeShareRecordID(ctx))
 
 			// ensure validator's total tokens is consistent
 			newValidator, found := app.StakingKeeper.GetLiquidValidator(ctx, addrVal1)
@@ -374,7 +375,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 }
 
 func TestTransferTokenizeShareRecord(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 
 	addrs := simapp.AddTestAddrs(app, ctx, 3, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
 	addrAcc1, addrAcc2, valAcc := addrs[0], addrs[1], addrs[2]
@@ -418,7 +419,7 @@ func TestTransferTokenizeShareRecord(t *testing.T) {
 }
 
 func TestValidatorBond(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 
 	testCases := []struct {
 		name                 string
@@ -448,7 +449,7 @@ func TestValidatorBond(t *testing.T) {
 
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
-			_, app, ctx = createTestInput(t)
+			app, ctx = createTestInput(t)
 			addrs := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
 			addrAcc1 := addrs[0]
 			addrVal1 := sdk.ValAddress(addrAcc1)
@@ -458,10 +459,11 @@ func TestValidatorBond(t *testing.T) {
 
 			// Create Validators and Delegation
 			val1 := teststaking.NewValidator(t, addrVal1, pk1)
-			val1.Status = sdkstaking.Bonded
+			val1.Status = types.Bonded
 			app.StakingKeeper.SetValidator(ctx, val1)
 			app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
-			app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
+			err := app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
+			require.NoError(t, err)
 
 			delTokens := tc.delegationAmount
 			if delTokens.IsPositive() {
@@ -470,7 +472,7 @@ func TestValidatorBond(t *testing.T) {
 			}
 
 			msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
-			_, err := msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
+			_, err = msgServer.ValidatorBond(sdk.WrapSDKContext(ctx), &types.MsgValidatorBond{
 				DelegatorAddress: addrAcc1.String(),
 				ValidatorAddress: addrVal1.String(),
 			})
@@ -494,7 +496,7 @@ func TestValidatorBond(t *testing.T) {
 }
 
 func TestUnbondValidator(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 	addrs := simapp.AddTestAddrs(app, ctx, 2, app.StakingKeeper.TokensFromConsensusPower(ctx, 10000))
 	addrAcc1 := addrs[0]
 	addrVal1 := sdk.ValAddress(addrAcc1)
@@ -504,14 +506,15 @@ func TestUnbondValidator(t *testing.T) {
 
 	// Create Validators and Delegation
 	val1 := teststaking.NewValidator(t, addrVal1, pk1)
-	val1.Status = sdkstaking.Bonded
+	val1.Status = types.Bonded
 	app.StakingKeeper.SetValidator(ctx, val1)
 	app.StakingKeeper.SetValidatorByPowerIndex(ctx, val1)
-	app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
+	err := app.StakingKeeper.SetValidatorByConsAddr(ctx, val1)
+	require.NoError(t, err)
 
 	// try unbonding not available validator
 	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
-	_, err := msgServer.UnbondValidator(sdk.WrapSDKContext(ctx), &types.MsgUnbondValidator{
+	_, err = msgServer.UnbondValidator(sdk.WrapSDKContext(ctx), &types.MsgUnbondValidator{
 		ValidatorAddress: sdk.ValAddress(addrs[1]).String(),
 	})
 	require.Error(t, err)

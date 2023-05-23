@@ -176,10 +176,6 @@ $ %[1]s tx distribution withdraw-all-rewards --from mykey
 			}
 
 			chunkSize, _ := cmd.Flags().GetInt(FlagMaxMessagesPerTx)
-			if !clientCtx.GenerateOnly && clientCtx.BroadcastMode != flags.BroadcastBlock && chunkSize > 0 {
-				return fmt.Errorf("cannot use broadcast mode %[1]s with %[2]s != 0",
-					clientCtx.BroadcastMode, FlagMaxMessagesPerTx)
-			}
 
 			return newSplitAndApply(tx.GenerateOrBroadcastTxCLI, clientCtx, cmd.Flags(), msgs, chunkSize)
 		},
@@ -385,12 +381,12 @@ $ %s tx distribution withdraw-tokenize-share-rewards 1 --from mykey
 				return err
 			}
 
-			recordId, err := strconv.Atoi(args[0])
+			recordID, err := strconv.Atoi(args[0])
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgWithdrawTokenizeShareRecordReward(clientCtx.GetFromAddress(), uint64(recordId))
+			msg := types.NewMsgWithdrawTokenizeShareRecordReward(clientCtx.GetFromAddress(), uint64(recordID))
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

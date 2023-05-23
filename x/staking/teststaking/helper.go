@@ -10,7 +10,6 @@ import (
 
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/keeper"
 	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
@@ -139,9 +138,10 @@ func (sh *Helper) RedeemTokensForShares(delegator sdk.AccAddress, amount sdk.Coi
 	}
 }
 
-func (sh *Helper) TranserTokenizeShareRecord(recordId uint64, owner, newOwner sdk.AccAddress, ok bool) {
+// TransferTokenizeShareRecord calls staking module `MsgServer/TransferTokenizeShareRecord` to transfer a tokenize share record
+func (sh *Helper) TranserTokenizeShareRecord(recordID uint64, owner, newOwner sdk.AccAddress, ok bool) {
 	msg := &stakingtypes.MsgTransferTokenizeShareRecord{
-		TokenizeShareRecordId: recordId,
+		TokenizeShareRecordId: recordID,
 		Sender:                owner.String(),
 		NewOwner:              newOwner.String(),
 	}
@@ -157,7 +157,7 @@ func (sh *Helper) TranserTokenizeShareRecord(recordId uint64, owner, newOwner sd
 
 // CheckValidator asserts that a validor exists and has a given status (if status!="")
 // and if has a right jailed flag.
-func (sh *Helper) CheckValidator(addr sdk.ValAddress, status sdkstaking.BondStatus, jailed bool) stakingtypes.Validator {
+func (sh *Helper) CheckValidator(addr sdk.ValAddress, status stakingtypes.BondStatus, jailed bool) stakingtypes.Validator {
 	v, ok := sh.k.GetLiquidValidator(sh.Ctx, addr)
 	require.True(sh.t, ok)
 	require.Equal(sh.t, jailed, v.Jailed, "wrong Jalied status")

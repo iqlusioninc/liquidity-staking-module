@@ -3,7 +3,7 @@ package keeper
 import (
 	"fmt"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -194,7 +194,7 @@ func (k Keeper) ExportGenesis(ctx sdk.Context) *types.GenesisState {
 	})
 
 	return &types.GenesisState{
-		Params:               k.GetParams(ctx),
+		Params:               k.GetAllParams(ctx),
 		LastTotalPower:       k.GetLastTotalPower(ctx),
 		LastValidatorPowers:  lastValidatorPowers,
 		Validators:           k.GetAllValidators(ctx),

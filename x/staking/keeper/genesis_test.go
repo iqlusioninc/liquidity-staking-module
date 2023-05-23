@@ -4,14 +4,13 @@ import (
 	"fmt"
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
@@ -30,7 +29,7 @@ func TestInitGenesis(t *testing.T) {
 
 	valTokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 1)
 
-	params := app.StakingKeeper.GetParams(ctx)
+	params := app.StakingKeeper.GetAllParams(ctx)
 	validators := app.StakingKeeper.GetAllValidators(ctx)
 	require.Len(t, validators, 1)
 	var delegations []types.Delegation
@@ -45,7 +44,7 @@ func TestInitGenesis(t *testing.T) {
 	bondedVal1 := types.Validator{
 		OperatorAddress: sdk.ValAddress(addrs[0]).String(),
 		ConsensusPubkey: pk0,
-		Status:          sdkstaking.Bonded,
+		Status:          types.Bonded,
 		Tokens:          valTokens,
 		DelegatorShares: sdk.NewDecFromInt(valTokens),
 		Description:     types.NewDescription("hoop", "", "", "", ""),
@@ -53,7 +52,7 @@ func TestInitGenesis(t *testing.T) {
 	bondedVal2 := types.Validator{
 		OperatorAddress: sdk.ValAddress(addrs[1]).String(),
 		ConsensusPubkey: pk1,
-		Status:          sdkstaking.Bonded,
+		Status:          types.Bonded,
 		Tokens:          valTokens,
 		DelegatorShares: sdk.NewDecFromInt(valTokens),
 		Description:     types.NewDescription("bloop", "", "", "", ""),
@@ -97,11 +96,11 @@ func TestInitGenesis(t *testing.T) {
 	// now make sure the validators are bonded and intra-tx counters are correct
 	resVal, found := app.StakingKeeper.GetLiquidValidator(ctx, sdk.ValAddress(addrs[0]))
 	require.True(t, found)
-	require.Equal(t, sdkstaking.Bonded, resVal.Status)
+	require.Equal(t, types.Bonded, resVal.Status)
 
 	resVal, found = app.StakingKeeper.GetLiquidValidator(ctx, sdk.ValAddress(addrs[1]))
 	require.True(t, found)
-	require.Equal(t, sdkstaking.Bonded, resVal.Status)
+	require.Equal(t, types.Bonded, resVal.Status)
 
 	abcivals := make([]abci.ValidatorUpdate, len(vals))
 
@@ -138,7 +137,7 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 
 	require.Panics(t, func() {
 		// setting validator status to bonded so the balance counts towards bonded pool
-		validator.Status = sdkstaking.Bonded
+		validator.Status = types.Bonded
 		app.StakingKeeper.InitGenesis(ctx, &types.GenesisState{
 			Params:     params,
 			Validators: []types.Validator{validator},
@@ -149,7 +148,7 @@ func TestInitGenesis_PoolsBalanceMismatch(t *testing.T) {
 
 	require.Panics(t, func() {
 		// setting validator status to unbonded so the balance counts towards not bonded pool
-		validator.Status = sdkstaking.Unbonded
+		validator.Status = types.Unbonded
 		app.StakingKeeper.InitGenesis(ctx, &types.GenesisState{
 			Params:     params,
 			Validators: []types.Validator{validator},
@@ -166,7 +165,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 	app, ctx, addrs := bootstrapGenesisTest(t, 200)
 	genesisValidators := app.StakingKeeper.GetAllValidators(ctx)
 
-	params := app.StakingKeeper.GetParams(ctx)
+	params := app.StakingKeeper.GetAllParams(ctx)
 	delegations := []types.Delegation{}
 	validators := make([]types.Validator, size)
 
@@ -180,7 +179,7 @@ func TestInitGenesisLargeValidatorSet(t *testing.T) {
 			types.NewDescription(fmt.Sprintf("#%d", i), "", "", "", ""),
 		)
 		require.NoError(t, err)
-		validators[i].Status = sdkstaking.Bonded
+		validators[i].Status = types.Bonded
 
 		tokens := app.StakingKeeper.TokensFromConsensusPower(ctx, 1)
 		if i < 100 {

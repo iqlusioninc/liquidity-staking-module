@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"math/rand"
 
+	simappparams "cosmossdk.io/simapp/params"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -19,11 +19,18 @@ const DefaultWeightMsgWithdrawAllTokenizeShareRecordReward int = 50
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgSetWithdrawAddress                = "op_weight_msg_set_withdraw_address"
-	OpWeightMsgWithdrawDelegationReward          = "op_weight_msg_withdraw_delegation_reward"
-	OpWeightMsgWithdrawValidatorCommission       = "op_weight_msg_withdraw_validator_commission"
-	OpWeightMsgFundCommunityPool                 = "op_weight_msg_fund_community_pool"
-	OpWeightMsgWithdrawTokenizeShareRecordReward = "op_weight_msg_withdraw_tokenize_share_record_reward"
+	OpWeightMsgSetWithdrawAddress          = "op_weight_msg_set_withdraw_address"          //nolint:gosec
+	OpWeightMsgWithdrawDelegationReward    = "op_weight_msg_withdraw_delegation_reward"    //nolint:gosec
+	OpWeightMsgWithdrawValidatorCommission = "op_weight_msg_withdraw_validator_commission" //nolint:gosec
+	OpWeightMsgFundCommunityPool           = "op_weight_msg_fund_community_pool"           //nolint:gosec
+	OpWeightMsgDeposit                     = "op_weight_msg_deposit"                       //nolint:gosec
+
+	DefaultWeightMsgSetWithdrawAddress          int = 50
+	DefaultWeightMsgWithdrawDelegationReward    int = 50
+	DefaultWeightMsgWithdrawValidatorCommission int = 50
+	DefaultWeightMsgFundCommunityPool           int = 50
+
+	DefaultWeightTextProposal = 5
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
@@ -31,35 +38,28 @@ func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak ty
 	var weightMsgSetWithdrawAddress int
 	appParams.GetOrGenerate(cdc, OpWeightMsgSetWithdrawAddress, &weightMsgSetWithdrawAddress, nil,
 		func(_ *rand.Rand) {
-			weightMsgSetWithdrawAddress = simappparams.DefaultWeightMsgSetWithdrawAddress
+			weightMsgSetWithdrawAddress = DefaultWeightMsgSetWithdrawAddress
 		},
 	)
 
 	var weightMsgWithdrawDelegationReward int
 	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawDelegationReward, &weightMsgWithdrawDelegationReward, nil,
 		func(_ *rand.Rand) {
-			weightMsgWithdrawDelegationReward = simappparams.DefaultWeightMsgWithdrawDelegationReward
+			weightMsgWithdrawDelegationReward = DefaultWeightMsgWithdrawDelegationReward
 		},
 	)
 
 	var weightMsgWithdrawValidatorCommission int
 	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawValidatorCommission, &weightMsgWithdrawValidatorCommission, nil,
 		func(_ *rand.Rand) {
-			weightMsgWithdrawValidatorCommission = simappparams.DefaultWeightMsgWithdrawValidatorCommission
+			weightMsgWithdrawValidatorCommission = DefaultWeightMsgWithdrawValidatorCommission
 		},
 	)
 
 	var weightMsgFundCommunityPool int
 	appParams.GetOrGenerate(cdc, OpWeightMsgFundCommunityPool, &weightMsgFundCommunityPool, nil,
 		func(_ *rand.Rand) {
-			weightMsgFundCommunityPool = simappparams.DefaultWeightMsgFundCommunityPool
-		},
-	)
-
-	var weightMsgWithdrawTokenizeShareRecordReward int
-	appParams.GetOrGenerate(cdc, OpWeightMsgWithdrawTokenizeShareRecordReward, &weightMsgWithdrawTokenizeShareRecordReward, nil,
-		func(_ *rand.Rand) {
-			weightMsgWithdrawTokenizeShareRecordReward = DefaultWeightMsgWithdrawAllTokenizeShareRecordReward
+			weightMsgFundCommunityPool = DefaultWeightMsgFundCommunityPool
 		},
 	)
 
@@ -81,10 +81,6 @@ func WeightedOperations(appParams simtypes.AppParams, cdc codec.JSONCodec, ak ty
 		simulation.NewWeightedOperation(
 			weightMsgFundCommunityPool,
 			SimulateMsgFundCommunityPool(ak, bk, k, stakeKeeper),
-		),
-		simulation.NewWeightedOperation(
-			weightMsgWithdrawTokenizeShareRecordReward,
-			SimulateMsgWithdrawTokenizeShareRecordReward(ak, bk, k, stakeKeeper),
 		),
 	}
 }
@@ -126,7 +122,7 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, 
 }
 
 // SimulateMsgWithdrawDelegatorReward generates a MsgWithdrawDelegatorReward with random values.
-func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simtypes.Operation {
+func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKeeper, _ keeper.Keeper, sk stakingkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -213,7 +209,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 
 // SimulateMsgFundCommunityPool simulates MsgFundCommunityPool execution where
 // a random account sends a random amount of its funds to the community pool.
-func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simtypes.Operation {
+func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, _ keeper.Keeper, _ stakingkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -261,7 +257,7 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 
 // SimulateMsgWithdrawTokenizeShareRecordReward simulates MsgWithdrawTokenizeShareRecordReward execution where
 // a random account claim tokenize share record rewards.
-func SimulateMsgWithdrawTokenizeShareRecordReward(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simtypes.Operation {
+func SimulateMsgWithdrawTokenizeShareRecordReward(ak types.AccountKeeper, bk types.BankKeeper, _ keeper.Keeper, sk stakingkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {

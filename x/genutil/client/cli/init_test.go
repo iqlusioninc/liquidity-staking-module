@@ -9,11 +9,11 @@ import (
 	"testing"
 	"time"
 
+	abci_server "github.com/cometbft/cometbft/abci/server"
+	"github.com/cometbft/cometbft/libs/cli"
+	"github.com/cometbft/cometbft/libs/log"
 	"github.com/spf13/viper"
 	"github.com/stretchr/testify/require"
-	abci_server "github.com/tendermint/tendermint/abci/server"
-	"github.com/tendermint/tendermint/libs/cli"
-	"github.com/tendermint/tendermint/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -182,7 +182,8 @@ func TestEmptyState(t *testing.T) {
 	outC := make(chan string)
 	go func() {
 		var buf bytes.Buffer
-		io.Copy(&buf, r)
+		_, err := io.Copy(&buf, r)
+		require.NoError(t, err)
 		outC <- buf.String()
 	}()
 
@@ -272,7 +273,8 @@ func TestInitConfig(t *testing.T) {
 	outC := make(chan string)
 	go func() {
 		var buf bytes.Buffer
-		io.Copy(&buf, r)
+		_, err = io.Copy(&buf, r)
+		require.NoError(t, err)
 		outC <- buf.String()
 	}()
 

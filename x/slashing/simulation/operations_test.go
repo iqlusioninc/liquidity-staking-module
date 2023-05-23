@@ -7,14 +7,13 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/codec/legacy"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmtypes "github.com/cometbft/cometbft/types"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
 
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
@@ -22,6 +21,7 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
+	simappparams "github.com/iqlusioninc/liquidity-staking-module/app/params"
 	distrtypes "github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/simulation"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
@@ -73,7 +73,8 @@ func TestSimulateMsgUnjail(t *testing.T) {
 	validator0 := getTestingValidator0(t, app, ctx, accounts)
 
 	// setup validator0 by consensus address
-	app.StakingKeeper.SetValidatorByConsAddr(ctx, validator0)
+	err := app.StakingKeeper.SetValidatorByConsAddr(ctx, validator0)
+	require.NoError(t, err)
 	val0ConsAddress, err := validator0.GetConsAddr()
 	require.NoError(t, err)
 	info := types.NewValidatorSigningInfo(val0ConsAddress, int64(4), int64(3),
@@ -101,7 +102,8 @@ func TestSimulateMsgUnjail(t *testing.T) {
 	require.NoError(t, err)
 
 	var msg types.MsgUnjail
-	legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	err = legacy.Cdc.UnmarshalJSON(operationMsg.Msg, &msg)
+	require.NoError(t, err)
 
 	require.True(t, operationMsg.OK)
 	require.Equal(t, types.TypeMsgUnjail, msg.Type())
@@ -144,7 +146,8 @@ func createTestApp(t *testing.T, isCheckTx bool, r *rand.Rand, n int) (*simapp.S
 		require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, account.Address, initCoins))
 	}
 
-	app.MintKeeper.SetParams(ctx, minttypes.DefaultParams())
+	err = app.MintKeeper.SetParams(ctx, minttypes.DefaultParams())
+	require.NoError(t, err)
 	app.MintKeeper.SetMinter(ctx, minttypes.DefaultInitialMinter())
 
 	return app, ctx, accounts

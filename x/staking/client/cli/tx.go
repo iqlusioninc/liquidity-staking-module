@@ -63,8 +63,11 @@ func NewCreateValidatorCmd() *cobra.Command {
 				return err
 			}
 
-			txf := tx.NewFactoryCLI(clientCtx, cmd.Flags()).
-				WithTxConfig(clientCtx.TxConfig).WithAccountRetriever(clientCtx.AccountRetriever)
+			txf, err := tx.NewFactoryCLI(clientCtx, cmd.Flags())
+			if err != nil {
+				return err
+			}
+
 			txf, msg, err := newBuildCreateValidatorMsg(clientCtx, txf, cmd.Flags())
 			if err != nil {
 				return err
@@ -655,7 +658,7 @@ $ %s tx staking transfer-tokenize-share-record 1 %s1gghjut3ccd8ay0zduzj64hwre2fx
 				return err
 			}
 
-			recordId, err := strconv.Atoi(args[0])
+			recordID, err := strconv.Atoi(args[0])
 			if err != nil {
 				return err
 			}
@@ -667,7 +670,7 @@ $ %s tx staking transfer-tokenize-share-record 1 %s1gghjut3ccd8ay0zduzj64hwre2fx
 
 			msg := &types.MsgTransferTokenizeShareRecord{
 				Sender:                clientCtx.GetFromAddress().String(),
-				TokenizeShareRecordId: uint64(recordId),
+				TokenizeShareRecordId: uint64(recordID),
 				NewOwner:              ownerAddr.String(),
 			}
 

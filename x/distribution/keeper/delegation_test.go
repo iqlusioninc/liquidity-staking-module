@@ -3,8 +3,8 @@ package keeper_test
 import (
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
@@ -138,6 +138,7 @@ func TestWithdrawTokenizeShareRecordReward(t *testing.T) {
 		TokenizedShareOwner: sdk.AccAddress(valAddrs[1]).String(),
 		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, delTokens),
 	})
+	require.NoError(t, err)
 
 	// try withdrawing rewards before no reward is allocated
 	coins, err = app.DistrKeeper.WithdrawAllTokenizeShareRecordReward(ctx, sdk.AccAddress(valAddrs[1]))
@@ -815,7 +816,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 	lastEvent := events[len(events)-1]
 	hasValue := false
 	for _, attr := range lastEvent.Attributes {
-		if string(attr.Key) == "amount" && string(attr.Value) == "0" {
+		if attr.Key == "amount" && attr.Value == "0" {
 			hasValue = true
 		}
 	}

@@ -4,10 +4,9 @@ import (
 	"math/rand"
 	"testing"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
-	simappparams "github.com/cosmos/cosmos-sdk/simapp/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
@@ -25,14 +24,14 @@ func TestProposalContents(t *testing.T) {
 	accounts := simtypes.RandomAccounts(r, 3)
 
 	// execute ProposalContents function
-	weightedProposalContent := simulation.ProposalContents(app.DistrKeeper)
+	weightedProposalContent := simulation.ProposalContents()
 	require.Len(t, weightedProposalContent, 1)
 
 	w0 := weightedProposalContent[0]
 
 	// tests w0 interface:
-	require.Equal(t, simulation.OpWeightSubmitCommunitySpendProposal, w0.AppParamsKey())
-	require.Equal(t, simappparams.DefaultWeightTextProposal, w0.DefaultWeight())
+	require.Equal(t, simulation.OpWeightMsgDeposit, w0.AppParamsKey())
+	require.Equal(t, simulation.DefaultWeightTextProposal, w0.DefaultWeight())
 
 	amount := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1)), sdk.NewCoin("atoken", sdk.NewInt(2)))
 
@@ -42,8 +41,8 @@ func TestProposalContents(t *testing.T) {
 
 	content := w0.ContentSimulatorFn()(r, ctx, accounts)
 
-	require.Equal(t, "sTxPjfweXhSUkMhPjMaxKlMIJMOXcnQfyzeOcbWwNbeHVIkPZBSpYuLyYggwexjxusrBqDOTtGTOWeLrQKjLxzIivHSlcxgdXhhu", content.GetDescription())
-	require.Equal(t, "xKGLwQvuyN", content.GetTitle())
-	require.Equal(t, "distribution", content.ProposalRoute())
-	require.Equal(t, "CommunityPoolSpend", content.ProposalType())
+	require.Equal(t, "fyzeOcbWwNbeHVIkPZBSpYuLyYggwexjxusrBqDOTtGTOWeLrQKjLxzIivHSlcxgdXhhuTSkuxKGLwQvuyNhYFmBZHeAerqyNEUz", content.GetDescription())
+	require.Equal(t, "GqiQWIXnku", content.GetTitle())
+	require.Equal(t, "gov", content.ProposalRoute())
+	require.Equal(t, "Text", content.ProposalType())
 }

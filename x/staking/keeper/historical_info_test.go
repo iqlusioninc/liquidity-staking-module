@@ -4,11 +4,10 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/teststaking"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
@@ -26,7 +25,7 @@ func IsValSetSorted(data []types.Validator, powerReduction math.Int) bool {
 }
 
 func TestHistoricalInfo(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
@@ -53,7 +52,7 @@ func TestHistoricalInfo(t *testing.T) {
 }
 
 func TestTrackHistoricalInfo(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, 50, sdk.NewInt(0))
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
@@ -94,12 +93,12 @@ func TestTrackHistoricalInfo(t *testing.T) {
 
 	// Set bonded validators in keeper
 	val1 := teststaking.NewValidator(t, addrVals[2], PKs[2])
-	val1.Status = sdkstaking.Bonded // when not bonded, consensus power is Zero
+	val1.Status = types.Bonded // when not bonded, consensus power is Zero
 	val1.Tokens = app.StakingKeeper.TokensFromConsensusPower(ctx, 10)
 	app.StakingKeeper.SetValidator(ctx, val1)
 	app.StakingKeeper.SetLastValidatorPower(ctx, val1.GetOperator(), 10)
 	val2 := teststaking.NewValidator(t, addrVals[3], PKs[3])
-	val1.Status = sdkstaking.Bonded
+	val1.Status = types.Bonded
 	val2.Tokens = app.StakingKeeper.TokensFromConsensusPower(ctx, 80)
 	app.StakingKeeper.SetValidator(ctx, val2)
 	app.StakingKeeper.SetLastValidatorPower(ctx, val2.GetOperator(), 80)
@@ -135,7 +134,7 @@ func TestTrackHistoricalInfo(t *testing.T) {
 }
 
 func TestGetAllHistoricalInfo(t *testing.T) {
-	_, app, ctx := createTestInput(t)
+	app, ctx := createTestInput(t)
 	// clear historical info
 	infos := app.StakingKeeper.GetAllHistoricalInfo(ctx)
 	require.Len(t, infos, 1)
@@ -160,6 +159,7 @@ func TestGetAllHistoricalInfo(t *testing.T) {
 	expHistInfos := []types.HistoricalInfo{hist1, hist2, hist3}
 
 	for i, hi := range expHistInfos {
+		hi := hi
 		app.StakingKeeper.SetHistoricalInfo(ctx, int64(10+i), &hi)
 	}
 

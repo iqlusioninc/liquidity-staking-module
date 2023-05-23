@@ -4,8 +4,8 @@ import (
 	"testing"
 	"time"
 
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -13,6 +13,7 @@ import (
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/testslashing"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/teststaking"
+	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 // Test a new validator entering the validator set
@@ -122,7 +123,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	ctx := app.BaseApp.NewContext(false, tmproto.Header{})
 	app.SlashingKeeper.SetParams(ctx, testslashing.TestParams())
 
-	params := app.StakingKeeper.GetParams(ctx)
+	params := app.StakingKeeper.GetAllParams(ctx)
 	params.MaxValidators = 1
 	app.StakingKeeper.SetParams(ctx, params)
 	power := int64(100)
@@ -138,7 +139,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	tstaking.CreateValidatorWithValPower(valAddr, val, power, true)
 	validatorUpdates := staking.EndBlocker(ctx, app.StakingKeeper)
 	require.Equal(t, 2, len(validatorUpdates))
-	tstaking.CheckValidator(valAddr, sdkstaking.Bonded, false)
+	tstaking.CheckValidator(valAddr, stakingtypes.Bonded, false)
 
 	// 100 first blocks OK
 	height := int64(0)
@@ -151,11 +152,11 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	tstaking.CreateValidatorWithValPower(sdk.ValAddress(pks[1].Address()), pks[1], power+1, true)
 	validatorUpdates = staking.EndBlocker(ctx, app.StakingKeeper)
 	require.Equal(t, 2, len(validatorUpdates))
-	tstaking.CheckValidator(sdk.ValAddress(pks[1].Address()), sdkstaking.Bonded, false)
-	tstaking.CheckValidator(valAddr, sdkstaking.Unbonding, false)
+	tstaking.CheckValidator(sdk.ValAddress(pks[1].Address()), stakingtypes.Bonded, false)
+	tstaking.CheckValidator(valAddr, stakingtypes.Unbonding, false)
 
 	// 600 more blocks happened
-	height = height + 600
+	height += 600
 	ctx = ctx.WithBlockHeight(height)
 
 	// validator added back in
@@ -163,7 +164,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	validatorUpdates = staking.EndBlocker(ctx, app.StakingKeeper)
 	require.Equal(t, 2, len(validatorUpdates))
-	tstaking.CheckValidator(valAddr, sdkstaking.Bonded, false)
+	tstaking.CheckValidator(valAddr, stakingtypes.Bonded, false)
 	newPower := power + 50
 
 	// validator misses a block
@@ -171,7 +172,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 	height++
 
 	// shouldn't be jailed/kicked yet
-	tstaking.CheckValidator(valAddr, sdkstaking.Bonded, false)
+	tstaking.CheckValidator(valAddr, stakingtypes.Bonded, false)
 
 	// validator misses an additional 500 more blocks, after the cooling off period of SignedBlockWindow (here 1000 blocks).
 	latest := app.SlashingKeeper.SignedBlocksWindow(ctx) + height
@@ -182,7 +183,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// should now be jailed & kicked
 	staking.EndBlocker(ctx, app.StakingKeeper)
-	tstaking.CheckValidator(valAddr, sdkstaking.Unbonding, true)
+	tstaking.CheckValidator(valAddr, stakingtypes.Unbonding, true)
 
 	// check all the signing information
 	signInfo, found := app.SlashingKeeper.GetValidatorSigningInfo(ctx, consAddr)
@@ -202,7 +203,7 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// validator should not be kicked since we reset counter/array when it was jailed
 	staking.EndBlocker(ctx, app.StakingKeeper)
-	tstaking.CheckValidator(valAddr, sdkstaking.Bonded, false)
+	tstaking.CheckValidator(valAddr, stakingtypes.Bonded, false)
 
 	// check start height is correctly set
 	signInfo, found = app.SlashingKeeper.GetValidatorSigningInfo(ctx, consAddr)
@@ -218,5 +219,5 @@ func TestValidatorDippingInAndOut(t *testing.T) {
 
 	// validator should now be jailed & kicked
 	staking.EndBlocker(ctx, app.StakingKeeper)
-	tstaking.CheckValidator(valAddr, sdkstaking.Unbonding, true)
+	tstaking.CheckValidator(valAddr, stakingtypes.Unbonding, true)
 }

@@ -4,14 +4,13 @@ import (
 	"testing"
 
 	"cosmossdk.io/math"
+	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
-	abci "github.com/tendermint/tendermint/abci/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
@@ -82,7 +81,7 @@ func TestStakingMsgs(t *testing.T) {
 
 	validator := checkValidator(t, app, sdk.ValAddress(addr1), true)
 	require.Equal(t, sdk.ValAddress(addr1).String(), validator.OperatorAddress)
-	require.Equal(t, sdkstaking.Bonded, validator.Status)
+	require.Equal(t, types.Bonded, validator.Status)
 	require.True(math.IntEq(t, bondTokens, validator.BondedTokens()))
 
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}

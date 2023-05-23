@@ -3,7 +3,7 @@ package keeper
 import (
 	"time"
 
-	"github.com/tendermint/tendermint/crypto"
+	"github.com/cometbft/cometbft/crypto"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
@@ -75,7 +75,7 @@ func (h Hooks) AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) er
 }
 
 // Implements sdk.ValidatorHooks - just addition to fulfill the staking hook interface
-func (h Hooks) BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordId uint64) error {
+func (h Hooks) BeforeTokenizeShareRecordRemoved(_ sdk.Context, _ uint64) error {
 	return nil
 }
 
