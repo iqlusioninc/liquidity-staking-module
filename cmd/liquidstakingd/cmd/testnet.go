@@ -6,13 +6,13 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
 	tmconfig "github.com/tendermint/tendermint/config"
+
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"
@@ -473,7 +473,7 @@ func writeFile(name string, dir string, contents []byte) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(file, contents, 0o644) //nolint: gosec
+	err = os.WriteFile(file, contents, 0o644) //nolint: gosec
 	if err != nil {
 		return err
 	}

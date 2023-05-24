@@ -18,9 +18,6 @@ import (
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
-	distrtypes "github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
-	"github.com/iqlusioninc/liquidity-staking-module/x/staking/teststaking"
-	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
 // // TestWeightedOperations tests the weights of the operations.
@@ -293,39 +290,4 @@ func createTestApp(t *testing.T, isCheckTx bool, r *rand.Rand, n int) (*simapp.S
 	}
 
 	return app, ctx, accounts
-}
-
-func getTestingValidator0(t *testing.T, app *simapp.SimApp, ctx sdk.Context, accounts []simtypes.Account) types.Validator {
-	commission0 := types.NewCommission(sdk.ZeroDec(), sdk.OneDec(), sdk.OneDec())
-	return getTestingValidator(t, app, ctx, accounts, commission0, 0)
-}
-
-func getTestingValidator1(t *testing.T, app *simapp.SimApp, ctx sdk.Context, accounts []simtypes.Account) types.Validator {
-	commission1 := types.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec())
-	return getTestingValidator(t, app, ctx, accounts, commission1, 1)
-}
-
-func getTestingValidator(t *testing.T, app *simapp.SimApp, ctx sdk.Context, accounts []simtypes.Account, commission types.Commission, n int) types.Validator {
-	account := accounts[n]
-	valPubKey := account.PubKey
-	valAddr := sdk.ValAddress(account.PubKey.Address().Bytes())
-	validator := teststaking.NewValidator(t, valAddr, valPubKey)
-	validator, err := validator.SetInitialCommission(commission)
-	require.NoError(t, err)
-
-	validator.DelegatorShares = sdk.NewDec(100)
-	validator.Tokens = app.StakingKeeper.TokensFromConsensusPower(ctx, 100)
-
-	app.StakingKeeper.SetValidator(ctx, validator)
-
-	return validator
-}
-
-func setupValidatorRewards(app *simapp.SimApp, ctx sdk.Context, valAddress sdk.ValAddress) {
-	decCoins := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.OneDec())}
-	historicalRewards := distrtypes.NewValidatorHistoricalRewards(decCoins, 2)
-	app.DistrKeeper.SetValidatorHistoricalRewards(ctx, valAddress, 2, historicalRewards)
-	// setup current revards
-	currentRewards := distrtypes.NewValidatorCurrentRewards(decCoins, 3)
-	app.DistrKeeper.SetValidatorCurrentRewards(ctx, valAddress, currentRewards)
 }
