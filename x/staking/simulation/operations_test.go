@@ -1,25 +1,5 @@
 package simulation_test
 
-import (
-	"math/big"
-	"math/rand"
-	"testing"
-
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
-	"github.com/stretchr/testify/require"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtypes "github.com/tendermint/tendermint/types"
-
-	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
-	simapp_test "github.com/cosmos/cosmos-sdk/simapp"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
-	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
-)
-
 // // TestWeightedOperations tests the weights of the operations.
 // func TestWeightedOperations(t *testing.T) {
 // 	s := rand.NewSource(1)
@@ -250,44 +230,3 @@ import (
 // }
 
 // returns context and an app with updated mint keeper
-func createTestApp(t *testing.T, isCheckTx bool, r *rand.Rand, n int) (*simapp.SimApp, sdk.Context, []simtypes.Account) {
-	sdk.DefaultPowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
-
-	accounts := simtypes.RandomAccounts(r, n)
-	// create validator set with single validator
-	account := accounts[0]
-	tmPk, err := cryptocodec.ToTmPubKeyInterface(account.PubKey)
-	require.NoError(t, err)
-	validator := tmtypes.NewValidator(tmPk, 1)
-
-	valSet := tmtypes.NewValidatorSet([]*tmtypes.Validator{validator})
-
-	// generate genesis account
-	senderPrivKey := secp256k1.GenPrivKey()
-	acc := authtypes.NewBaseAccount(senderPrivKey.PubKey().Address().Bytes(), senderPrivKey.PubKey(), 0, 0)
-	balance := banktypes.Balance{
-		Address: acc.GetAddress().String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100000000000000))),
-	}
-
-	app := simapp.SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{acc}, balance)
-
-	ctx := app.BaseApp.NewContext(isCheckTx, tmproto.Header{})
-	app.MintKeeper.SetParams(ctx, minttypes.DefaultParams())
-	app.MintKeeper.SetMinter(ctx, minttypes.DefaultInitialMinter())
-
-	initAmt := app.StakingKeeper.TokensFromConsensusPower(ctx, 200)
-	initCoins := sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, initAmt))
-
-	// remove genesis validator account
-	accs := accounts[1:]
-
-	// add coins to the accounts
-	for _, account := range accs {
-		acc := app.AccountKeeper.NewAccountWithAddress(ctx, account.Address)
-		app.AccountKeeper.SetAccount(ctx, acc)
-		require.NoError(t, simapp_test.FundAccount(app.BankKeeper, ctx, account.Address, initCoins))
-	}
-
-	return app, ctx, accounts
-}
