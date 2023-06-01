@@ -113,6 +113,9 @@ service Query {
 
   // Query for total liquid staked (including tokenized shares or owned by an liquid staking provider)
   rpc TotalLiquidStaked(QueryTotalLiquidStaked) returns (QueryTotalLiquidStakedResponse) {}
+
+  // Query tokenize share locks
+  rpc TokenizeShareLockInfo(QueryTokenizeShareLockInfo) returns (QueryTokenizeShareLockInfoResponse) {}
 }
 
 // QueryValidatorsRequest is request type for Query/Validators RPC method.
@@ -448,4 +451,22 @@ message QueryTotalLiquidStakedResponse {
     (gogoproto.customtype) = "github.com/cosmos/cosmos-sdk/types.Int",
     (gogoproto.nullable)   = false
   ];
+}
+
+// QueryTokenizeShareLockInfo queries the tokenize share lock information
+// associated with given account
+message QueryTokenizeShareLockInfo {
+  string address = 1;
+}
+// QueryTokenizeShareLockInfoResponse is the response from the 
+// QueryTokenizeShareLockInfo query
+message QueryTokenizeShareLockInfoResponse{
+  string status = 1;
+  string expiration_time = 2;
+}
+
+enum TokenizeShareLockStatus {
+  LOCKED = 0;
+  UNLOCKED = 1;
+  LOCK_EXPIRING = 2;
 }

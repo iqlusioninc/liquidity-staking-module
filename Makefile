@@ -71,6 +71,7 @@ BUILD_FLAGS := -ldflags '$(ldflags)' -gcflags="all=-N -l"
 install: go.sum
 		go install $(BUILD_FLAGS) ./cmd/liquidstakingd
 
+.PHONY: build
 build:
 	go build -o build/liquidstakingd $(BUILD_FLAGS) ./cmd/liquidstakingd/main.go
 

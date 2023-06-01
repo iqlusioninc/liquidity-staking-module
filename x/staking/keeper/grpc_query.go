@@ -663,3 +663,24 @@ func (k Querier) TotalLiquidStaked(c context.Context, req *types.QueryTotalLiqui
 		Tokens: totalLiquidStaked,
 	}, nil
 }
+
+// Query status of an account's tokenize share lock
+func (k Querier) TokenizeShareLockInfo(c context.Context, req *types.QueryTokenizeShareLockInfo) (*types.QueryTokenizeShareLockInfoResponse, error) {
+	if req == nil {
+		return nil, status.Error(codes.InvalidArgument, "empty request")
+	}
+	ctx := sdk.UnwrapSDKContext(c)
+
+	address := sdk.MustAccAddressFromBech32(req.Address)
+	status, completionTime := k.GetTokenizeSharesLock(ctx, address)
+
+	timeString := ""
+	if !completionTime.IsZero() {
+		timeString = completionTime.String()
+	}
+
+	return &types.QueryTokenizeShareLockInfoResponse{
+		Status:         status.String(),
+		ExpirationTime: timeString,
+	}, nil
+}

@@ -20,6 +20,8 @@ func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
 	cdc.RegisterConcrete(&MsgTokenizeShares{}, "cosmos-sdk/MsgTokenizeShares", nil)
 	cdc.RegisterConcrete(&MsgRedeemTokensforShares{}, "cosmos-sdk/MsgRedeemTokensforShares", nil)
 	cdc.RegisterConcrete(&MsgTransferTokenizeShareRecord{}, "cosmos-sdk/MsgTransferTokenizeShareRecord", nil)
+	cdc.RegisterConcrete(&MsgDisableTokenizeShares{}, "cosmos-sdk/MsgDisableTokenizeShares", nil)
+	cdc.RegisterConcrete(&MsgEnableTokenizeShares{}, "cosmos-sdk/MsgEnableTokenizeShares", nil)
 
 	// cdc.RegisterInterface((*isStakeAuthorization_Validators)(nil), nil)
 	// cdc.RegisterConcrete(&StakeAuthorization_AllowList{}, "cosmos-sdk/StakeAuthorization/AllowList", nil)
@@ -39,6 +41,8 @@ func RegisterInterfaces(registry types.InterfaceRegistry) {
 		&MsgTokenizeShares{},
 		&MsgRedeemTokensforShares{},
 		&MsgTransferTokenizeShareRecord{},
+		&MsgDisableTokenizeShares{},
+		&MsgEnableTokenizeShares{},
 	)
 	registry.RegisterImplementations(
 		(*authz.Authorization)(nil),

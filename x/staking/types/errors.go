@@ -62,4 +62,8 @@ var (
 	ErrValidatorBondNotAllowedFromModuleAccount = sdkerrors.Register(ModuleName, 50, "validator bond is not allowed from a module account")
 	ErrGlobalLiquidStakingCapExceeded           = sdkerrors.Register(ModuleName, 51, "delegation from liquid staking provider exceeds the global cap")
 	ErrValidatorLiquidStakingCapExceeded        = sdkerrors.Register(ModuleName, 52, "delegation from liquid staking provider exceeds the validator cap")
+	ErrTokenizeSharesDisabledForAccount         = sdkerrors.Register(ModuleName, 53, "tokenize shares currently disabled for account")
+	ErrUnableToDisableTokenizeShares            = sdkerrors.Register(ModuleName, 54, "unable to disable tokenize shares for account")
+	ErrTokenizeSharesAlreadyEnabledForAccount   = sdkerrors.Register(ModuleName, 55, "tokenize shares is already enabled for this account")
+	ErrTokenizeSharesAlreadyDisabledForAccount  = sdkerrors.Register(ModuleName, 56, "tokenize shares is already disabled for this account")
 )

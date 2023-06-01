@@ -1,7 +1,9 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
+	"time"
 
 	"cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -763,6 +765,108 @@ func TestValidatorBond(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestEnableDisableTokenizeShares(t *testing.T) {
+	_, app, ctx := createTestInput(t)
+	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
+
+	// Create a delegator and validator
+	stakeAmount := sdk.NewInt(1000)
+	stakeToken := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), stakeAmount)
+
+	addresses := simapp.AddTestAddrs(app, ctx, 2, stakeAmount)
+	delegatorAddress := addresses[0]
+
+	pubKeys := simapp.CreateTestPubKeys(1)
+	validatorAddress := sdk.ValAddress(addresses[1])
+	validator := teststaking.NewValidator(t, validatorAddress, pubKeys[0])
+
+	validator.DelegatorShares = sdk.NewDec(1_000_000)
+	validator.Tokens = sdk.NewInt(1_000_000)
+	app.StakingKeeper.SetValidator(ctx, validator)
+
+	// Fix block time and set unbonding period to 1 day
+	blockTime := time.Date(2023, 1, 1, 0, 0, 0, 0, time.UTC)
+	ctx = ctx.WithBlockTime(blockTime)
+
+	unbondingPeriod := time.Hour * 24
+	params := app.StakingKeeper.GetParams(ctx)
+	params.UnbondingTime = unbondingPeriod
+	app.StakingKeeper.SetParams(ctx, params)
+
+	// Build test messages (some of which will be reused)
+	delegateMsg := types.MsgDelegate{
+		DelegatorAddress: delegatorAddress.String(),
+		ValidatorAddress: validatorAddress.String(),
+		Amount:           stakeToken,
+	}
+	tokenizeMsg := types.MsgTokenizeShares{
+		DelegatorAddress:    delegatorAddress.String(),
+		ValidatorAddress:    validatorAddress.String(),
+		Amount:              stakeToken,
+		TokenizedShareOwner: delegatorAddress.String(),
+	}
+	redeemMsg := types.MsgRedeemTokensforShares{
+		DelegatorAddress: delegatorAddress.String(),
+	}
+	disableMsg := types.MsgDisableTokenizeShares{
+		DelegatorAddress: delegatorAddress.String(),
+	}
+	enableMsg := types.MsgEnableTokenizeShares{
+		DelegatorAddress: delegatorAddress.String(),
+	}
+
+	// Delegate normally
+	_, err := msgServer.Delegate(sdk.WrapSDKContext(ctx), &delegateMsg)
+	require.NoError(t, err, "no error expected when delegating")
+
+	// Tokenize shares - it should succeed
+	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &tokenizeMsg)
+	require.NoError(t, err, "no error expected when tokenizing shares for the first time")
+
+	liquidToken := app.BankKeeper.GetBalance(ctx, delegatorAddress, validatorAddress.String()+"/1")
+	require.Equal(t, stakeAmount.Int64(), liquidToken.Amount.Int64(), "user received token after tokenizing share")
+
+	// Redeem to remove all tokenized shares
+	redeemMsg.Amount = liquidToken
+	_, err = msgServer.RedeemTokens(sdk.WrapSDKContext(ctx), &redeemMsg)
+	require.NoError(t, err, "no error expected when redeeming")
+
+	// Attempt to enable tokenizing shares when there is no lock in place, it should error
+	_, err = msgServer.EnableTokenizeShares(sdk.WrapSDKContext(ctx), &enableMsg)
+	require.ErrorIs(t, err, types.ErrTokenizeSharesAlreadyEnabledForAccount)
+
+	// Attempt to disable when no lock is in place, it should succeed
+	_, err = msgServer.DisableTokenizeShares(sdk.WrapSDKContext(ctx), &disableMsg)
+	require.NoError(t, err, "no error expected when disabling tokenization")
+
+	// Disabling again while the lock is already in place, should error
+	_, err = msgServer.DisableTokenizeShares(sdk.WrapSDKContext(ctx), &disableMsg)
+	require.ErrorIs(t, err, types.ErrTokenizeSharesAlreadyDisabledForAccount)
+
+	// Attempt to tokenize, it should fail since tokenization is disabled
+	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &tokenizeMsg)
+	require.ErrorIs(t, err, types.ErrTokenizeSharesDisabledForAccount)
+
+	// Now enable tokenization
+	_, err = msgServer.EnableTokenizeShares(sdk.WrapSDKContext(ctx), &enableMsg)
+	require.NoError(t, err, "no error expected when enabling tokenization")
+
+	// Attempt to tokenize again, it should still fail since the unboning period has
+	// not passed and the lock is still active
+	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &tokenizeMsg)
+	require.ErrorIs(t, err, types.ErrTokenizeSharesDisabledForAccount)
+	require.ErrorContains(t, err, fmt.Sprintf("tokenization will be allowed at %s",
+		blockTime.Add(unbondingPeriod)))
+
+	// Increment the block time by the unbonding period and remove the expired locks
+	ctx = ctx.WithBlockTime(ctx.BlockTime().Add(unbondingPeriod))
+	app.StakingKeeper.RemoveExpiredTokenizeShareLocks(ctx, ctx.BlockTime())
+
+	// Attempt to tokenize again, it should succeed this time since the lock has expired
+	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &tokenizeMsg)
+	require.NoError(t, err, "no error expected when tokenizing after lock has expired")
 }
 
 func TestUnbondValidator(t *testing.T) {

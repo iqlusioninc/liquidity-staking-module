@@ -399,3 +399,9 @@ message TokenizeShareRecord {
   string module_account = 3; // module account take the role of delegator
   string validator = 4; // validator delegated to for tokenize share record creation
 }
+
+// PendingTokenizeShareAuthorizations stores a list of addresses that have their 
+// tokenize share enablement in progress
+message PendingTokenizeShareAuthorizations {
+  repeated string addresses = 1 [(cosmos_proto.scalar) = "cosmos.AddressString"];
+}

@@ -610,6 +610,15 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		return nil, err
 	}
 
+	// Check if the delegator has disabled tokenization
+	lockStatus, unlockTime := k.GetTokenizeSharesLock(ctx, delegatorAddress)
+	if lockStatus == types.TokenizeShareLockStatus_LOCKED {
+		return nil, types.ErrTokenizeSharesDisabledForAccount
+	}
+	if lockStatus == types.TokenizeShareLockStatus_LOCK_EXPIRING {
+		return nil, types.ErrTokenizeSharesDisabledForAccount.Wrapf("tokenization will be allowed at %s", unlockTime)
+	}
+
 	delegation, found := k.GetLiquidDelegation(ctx, delegatorAddress, valAddr)
 	if !found {
 		return nil, sdkstaking.ErrNoDelegatorForAddress
@@ -885,6 +894,48 @@ func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types
 	)
 
 	return &types.MsgTransferTokenizeShareRecordResponse{}, nil
+}
+
+// DisableTokenizeShares prevents an address from tokenizing any of their delegations
+func (k msgServer) DisableTokenizeShares(goCtx context.Context, msg *types.MsgDisableTokenizeShares) (*types.MsgDisableTokenizeSharesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	delegator := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
+
+	// If tokenized shares is already disabled, alert the user
+	lockStatus, _ := k.GetTokenizeSharesLock(ctx, delegator)
+	if lockStatus == types.TokenizeShareLockStatus_LOCKED {
+		return nil, types.ErrTokenizeSharesAlreadyDisabledForAccount
+	}
+
+	// Otherwise, create a new tokenization lock for the user
+	// Note: if there is a lock expiration in progress, this will override the expiration
+	k.AddTokenizeSharesLock(ctx, delegator)
+
+	return &types.MsgDisableTokenizeSharesResponse{}, nil
+}
+
+// EnableTokenizeShares begins the countdown after which tokenizing shares by the
+// sender address is re-allowed, which will complete after the unbonding period
+func (k msgServer) EnableTokenizeShares(goCtx context.Context, msg *types.MsgEnableTokenizeShares) (*types.MsgEnableTokenizeSharesResponse, error) {
+	ctx := sdk.UnwrapSDKContext(goCtx)
+
+	delegator := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
+
+	// If tokenized shares aren't current disabled, alert the user
+	lockStatus, unlockTime := k.GetTokenizeSharesLock(ctx, delegator)
+	if lockStatus == types.TokenizeShareLockStatus_UNLOCKED {
+		return nil, types.ErrTokenizeSharesAlreadyEnabledForAccount
+	}
+	if lockStatus == types.TokenizeShareLockStatus_LOCK_EXPIRING {
+		return nil, types.ErrTokenizeSharesAlreadyEnabledForAccount.Wrapf(
+			"tokenize shares re-enablement already in progress, ending at %s", unlockTime)
+	}
+
+	// Otherwise queue the unlock
+	completionTime := k.QueueTokenizeSharesAuthorization(ctx, delegator)
+
+	return &types.MsgEnableTokenizeSharesResponse{CompletionTime: completionTime}, nil
 }
 
 func (k msgServer) ValidatorBond(goCtx context.Context, msg *types.MsgValidatorBond) (*types.MsgValidatorBondResponse, error) {
