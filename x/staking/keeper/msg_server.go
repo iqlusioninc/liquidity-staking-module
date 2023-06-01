@@ -770,12 +770,13 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 	delegation, found := k.GetLiquidDelegation(ctx, record.GetModuleAddress(), valAddr)
 	shareDenomSupply := k.bankKeeper.GetSupply(ctx, msg.Amount.Denom)
 	shares := delegation.Shares.Mul(sdk.NewDecFromInt(msg.Amount.Amount)).QuoInt(shareDenomSupply.Amount)
+	tokens := validator.TokensFromShares(shares).TruncateInt()
 
 	// If this redemption is NOT from a liquid staking provider, decrement the total liquid staked
 	// If the redemption was from a liquid staking provider, the shares are still considered
 	// liquid, even in their non-tokenized form (since they are owned by a liquid staking provider)
 	if !k.AccountIsLiquidStakingProvider(ctx, delegatorAddress) {
-		k.DecreaseTotalLiquidStakedTokens(ctx, msg.Amount.Amount)
+		k.DecreaseTotalLiquidStakedTokens(ctx, tokens)
 		k.DecreaseValidatorTotalLiquidShares(ctx, validator, shares)
 	}
 
