@@ -40,17 +40,20 @@ var (
 	DefaultValidatorBondFactor = sdk.NewDecFromInt(sdk.NewInt(-1))
 	// DefaultGlobalLiquidStakingCap is set to 100%
 	DefaultGlobalLiquidStakingCap = sdk.OneDec()
+	// DefaultValidatorLiquidStakingCap is set to 100%
+	DefaultValidatorLiquidStakingCap = sdk.OneDec()
 )
 
 var (
-	KeyUnbondingTime          = []byte("UnbondingTime")
-	KeyMaxValidators          = []byte("MaxValidators")
-	KeyMaxEntries             = []byte("MaxEntries")
-	KeyBondDenom              = []byte("BondDenom")
-	KeyHistoricalEntries      = []byte("HistoricalEntries")
-	KeyMinCommissionRate      = []byte("MinCommissionRate")
-	KeyValidatorBondFactor    = []byte("ValidatorBondFactor")
-	KeyGlobalLiquidStakingCap = []byte("GlobalLiquidStakingCap")
+	KeyUnbondingTime             = []byte("UnbondingTime")
+	KeyMaxValidators             = []byte("MaxValidators")
+	KeyMaxEntries                = []byte("MaxEntries")
+	KeyBondDenom                 = []byte("BondDenom")
+	KeyHistoricalEntries         = []byte("HistoricalEntries")
+	KeyMinCommissionRate         = []byte("MinCommissionRate")
+	KeyValidatorBondFactor       = []byte("ValidatorBondFactor")
+	KeyGlobalLiquidStakingCap    = []byte("GlobalLiquidStakingCap")
+	KeyValidatorLiquidStakingCap = []byte("ValidatorLiquidStakingCap")
 )
 
 var _ paramtypes.ParamSet = (*Params)(nil)
@@ -70,16 +73,18 @@ func NewParams(
 	minCommissionRate sdk.Dec,
 	validatorBondFactor sdk.Dec,
 	globalLiquidStakingCap sdk.Dec,
+	validatorLiquidStakingCap sdk.Dec,
 ) Params {
 	return Params{
-		UnbondingTime:          unbondingTime,
-		MaxValidators:          maxValidators,
-		MaxEntries:             maxEntries,
-		HistoricalEntries:      historicalEntries,
-		BondDenom:              bondDenom,
-		MinCommissionRate:      minCommissionRate,
-		ValidatorBondFactor:    validatorBondFactor,
-		GlobalLiquidStakingCap: globalLiquidStakingCap,
+		UnbondingTime:             unbondingTime,
+		MaxValidators:             maxValidators,
+		MaxEntries:                maxEntries,
+		HistoricalEntries:         historicalEntries,
+		BondDenom:                 bondDenom,
+		MinCommissionRate:         minCommissionRate,
+		ValidatorBondFactor:       validatorBondFactor,
+		GlobalLiquidStakingCap:    globalLiquidStakingCap,
+		ValidatorLiquidStakingCap: validatorLiquidStakingCap,
 	}
 }
 
@@ -94,6 +99,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 		paramtypes.NewParamSetPair(KeyMinCommissionRate, &p.MinCommissionRate, validateMinCommissionRate),
 		paramtypes.NewParamSetPair(KeyValidatorBondFactor, &p.ValidatorBondFactor, validateValidatorBondFactor),
 		paramtypes.NewParamSetPair(KeyGlobalLiquidStakingCap, &p.GlobalLiquidStakingCap, validateGlobalLiquidStakingCap),
+		paramtypes.NewParamSetPair(KeyValidatorLiquidStakingCap, &p.ValidatorLiquidStakingCap, validateValidatorLiquidStakingCap),
 	}
 }
 
@@ -108,6 +114,7 @@ func DefaultParams() Params {
 		DefaultMinCommissionRate,
 		DefaultValidatorBondFactor,
 		DefaultGlobalLiquidStakingCap,
+		DefaultValidatorLiquidStakingCap,
 	)
 }
 
@@ -284,6 +291,22 @@ func validateGlobalLiquidStakingCap(i interface{}) error {
 	}
 	if v.GT(sdk.OneDec()) {
 		return fmt.Errorf("global liquid staking cap cannot be greater than 100%%: %s", v)
+	}
+
+	return nil
+}
+
+func validateValidatorLiquidStakingCap(i interface{}) error {
+	v, ok := i.(sdk.Dec)
+	if !ok {
+		return fmt.Errorf("invalid parameter type: %T", i)
+	}
+
+	if v.IsNegative() {
+		return fmt.Errorf("validator liquid staking cap cannot be negative: %s", v)
+	}
+	if v.GT(sdk.OneDec()) {
+		return fmt.Errorf("validator liquid staking cap cannot be greater than 100%%: %s", v)
 	}
 
 	return nil
