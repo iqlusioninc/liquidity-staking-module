@@ -235,7 +235,7 @@ func (suite *SimTestSuite) SetupTest() {
 	suite.genesisVals = genesisVals
 }
 
-func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account {
+func (suite *SimTestSuite) getTestingAccounts(r *rand.Rand, n int) []simtypes.Account { //nolint:unparam // n always receives 3, but it might be used differently in the future.
 	accounts := simtypes.RandomAccounts(r, n)
 
 	initAmt := suite.app.StakingKeeper.TokensFromConsensusPower(suite.ctx, 200)
