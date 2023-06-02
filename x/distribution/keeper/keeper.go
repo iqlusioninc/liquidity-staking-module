@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"fmt"
+
 	errorsmod "cosmossdk.io/errors"
 
 	"github.com/tendermint/tendermint/libs/log"
