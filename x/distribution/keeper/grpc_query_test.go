@@ -714,6 +714,7 @@ func (suite *KeeperTestSuite) TestGRPCTokenizeShareRecordReward() {
 		TokenizedShareOwner: sdk.AccAddress(valAddrs[0]).String(),
 		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, delTokens),
 	})
+	suite.Require().NoError(err)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)

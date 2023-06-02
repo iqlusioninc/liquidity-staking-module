@@ -138,6 +138,7 @@ func TestWithdrawTokenizeShareRecordReward(t *testing.T) {
 		TokenizedShareOwner: sdk.AccAddress(valAddrs[1]).String(),
 		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, delTokens),
 	})
+	require.NoError(t, err)
 
 	// try withdrawing rewards before no reward is allocated
 	coins, err = app.DistrKeeper.WithdrawAllTokenizeShareRecordReward(ctx, sdk.AccAddress(valAddrs[1]))

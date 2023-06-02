@@ -112,7 +112,8 @@ func (k Keeper) DecreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sdk.Int)
 }
 
 // SafelyIncreaseValidatorTotalLiquidShares increments the total liquid shares on a validator, if:
-//  the validator bond factor and validator liquid staking cap will not be exceeded by this delegation
+//
+//	the validator bond factor and validator liquid staking cap will not be exceeded by this delegation
 func (k Keeper) SafelyIncreaseValidatorTotalLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error {
 	// Confirm the validator bond factor and validator liquid staking cap will be not exceeded
 	if k.CheckExceedsValidatorBondCap(ctx, validator, shares) {
@@ -262,8 +263,8 @@ func (k Keeper) RemoveExpiredTokenizeShareLocks(ctx sdk.Context, blockTime time.
 
 	return unlockedAddresses
 }
-  
- // Calculates and sets the global liquid staked tokens and total liquid shares by validator
+
+// Calculates and sets the global liquid staked tokens and total liquid shares by validator
 // The totals are determined by looping each delegation record and summing the stake
 // if the delegator is a module account. Checking for a module account will capture
 // ICA accounts, as well as tokenized delegationswhich are owned by module accounts

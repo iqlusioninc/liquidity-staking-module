@@ -138,9 +138,9 @@ func (sh *Helper) RedeemTokensForShares(delegator sdk.AccAddress, amount sdk.Coi
 	}
 }
 
-func (sh *Helper) TranserTokenizeShareRecord(recordId uint64, owner, newOwner sdk.AccAddress, ok bool) {
+func (sh *Helper) TranserTokenizeShareRecord(recordID uint64, owner, newOwner sdk.AccAddress, ok bool) {
 	msg := &stakingtypes.MsgTransferTokenizeShareRecord{
-		TokenizeShareRecordId: recordId,
+		TokenizeShareRecordId: recordID,
 		Sender:                owner.String(),
 		NewOwner:              newOwner.String(),
 	}

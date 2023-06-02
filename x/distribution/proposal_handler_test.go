@@ -33,7 +33,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 
 	// add coins to the module account
 	macc := app.DistrKeeper.GetDistributionAccount(ctx)
-	balances := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
+	_ = app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
 	require.NoError(t, simapp_test.FundModuleAccount(app.BankKeeper, ctx, macc.GetName(), amount))
 
 	app.AccountKeeper.SetModuleAccount(ctx, macc)
@@ -50,7 +50,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 	hdlr := distribution.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)
 	require.NoError(t, hdlr(ctx, tp))
 
-	balances = app.BankKeeper.GetAllBalances(ctx, recipient)
+	balances := app.BankKeeper.GetAllBalances(ctx, recipient)
 	require.Equal(t, balances, amount)
 }
 
