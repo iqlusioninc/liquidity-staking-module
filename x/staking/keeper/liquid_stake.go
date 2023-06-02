@@ -51,8 +51,11 @@ func (k Keeper) AccountIsLiquidStakingProvider(ctx sdk.Context, address sdk.AccA
 // global liquid staking cap to be exceeded
 // A liquid delegation is defined as either tokenized shares, or a delegation from an ICA Account
 // The total stake is determined by the balance of the bonded pool
+// If the delegation is for a tokenized share, the tokens are already included in the bonded pool
+// If the delegation is from an ICA account, we need to add the tokens to the current bonded pool
+// balance to get the total staked
 // Returns true if the cap is exceeded
-func (k Keeper) CheckExceedsGlobalLiquidStakingCap(ctx sdk.Context, tokens sdk.Int) bool {
+func (k Keeper) CheckExceedsGlobalLiquidStakingCap(ctx sdk.Context, tokens sdk.Int, tokenizingShares bool) bool {
 	liquidStakingCap := k.GlobalLiquidStakingCap(ctx)
 	liquidStakedAmount := k.GetTotalLiquidStakedTokens(ctx)
 
@@ -60,10 +63,17 @@ func (k Keeper) CheckExceedsGlobalLiquidStakingCap(ctx sdk.Context, tokens sdk.I
 	bondedPoolAddress := k.authKeeper.GetModuleAddress(types.BondedPoolName)
 	totalStakedAmount := k.bankKeeper.GetBalance(ctx, bondedPoolAddress, k.BondDenom(ctx)).Amount
 
+	// If this is not a tokenized delegation, we need to add the tokens to the pool balance since
+	// they would not have been counted yet
+	// If this is for a tokenized delegation, the tokens are already included in the pool balance
+	updatedTotalStaked := totalStakedAmount
+	if !tokenizingShares {
+		updatedTotalStaked = updatedTotalStaked.Add(tokens)
+	}
+
 	// Calculate the percentage of stake that is liquid
-	updatedTotalStaked := sdk.NewDecFromInt(totalStakedAmount.Add(tokens))
-	updatedLiquidStaked := sdk.NewDecFromInt(liquidStakedAmount.Add(tokens))
-	liquidStakePercent := updatedLiquidStaked.Quo(updatedTotalStaked)
+	updatedLiquidStaked := liquidStakedAmount.Add(tokens).ToDec()
+	liquidStakePercent := updatedLiquidStaked.Quo(updatedTotalStaked.ToDec())
 
 	return liquidStakePercent.GT(liquidStakingCap)
 }
@@ -97,8 +107,8 @@ func (k Keeper) CheckExceedsValidatorLiquidStakingCap(ctx sdk.Context, validator
 
 // SafelyIncreaseTotalLiquidStakedTokens increments the total liquid staked tokens
 // if the global cap is not surpassed by this delegation
-func (k Keeper) SafelyIncreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sdk.Int) error {
-	if k.CheckExceedsGlobalLiquidStakingCap(ctx, amount) {
+func (k Keeper) SafelyIncreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sdk.Int, tokenizingShares bool) error {
+	if k.CheckExceedsGlobalLiquidStakingCap(ctx, amount, tokenizingShares) {
 		return types.ErrGlobalLiquidStakingCapExceeded
 	}
 
@@ -112,8 +122,7 @@ func (k Keeper) DecreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sdk.Int)
 }
 
 // SafelyIncreaseValidatorTotalLiquidShares increments the total liquid shares on a validator, if:
-//
-//	the validator bond factor and validator liquid staking cap will not be exceeded by this delegation
+// the validator bond factor and validator liquid staking cap will not be exceeded by this delegation
 func (k Keeper) SafelyIncreaseValidatorTotalLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error {
 	// Confirm the validator bond factor and validator liquid staking cap will be not exceeded
 	if k.CheckExceedsValidatorBondCap(ctx, validator, shares) {
