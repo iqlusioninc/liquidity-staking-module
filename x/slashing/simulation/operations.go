@@ -18,7 +18,7 @@ import (
 
 // Simulation operation weights constants
 const (
-	OpWeightMsgUnjail = "op_weight_msg_unjail"
+	OpWeightMsgUnjail = "op_weight_msg_unjail" //nolint:gosec // this is just the weight for MsgUnjail, not a hard coded credential
 )
 
 // WeightedOperations returns all the operations from the module with their respective weights
