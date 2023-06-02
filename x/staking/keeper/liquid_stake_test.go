@@ -109,72 +109,127 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 		totalLiquidStake sdk.Int
 		totalStake       sdk.Int
 		newLiquidStake   sdk.Int
+		tokenizingShares bool
 		expectedExceeds  bool
 	}{
 		{
-			// Cap: 10% - Delegation Below Threshold
+			// Cap: 10% - Native Delegation - Delegation Below Threshold
 			// Total Liquid Stake: 5, Total Stake: 95, New Liquid Stake: 1
 			// => Total Liquid Stake: 5+1=6, Total Stake: 95+1=96 => 6/96 = 6% < 10% cap
-			name:             "10 percent cap _ delegation below cap",
+			name:             "10 percent cap _ native delegation _ delegation below cap",
 			globalLiquidCap:  sdk.MustNewDecFromStr("0.1"),
 			totalLiquidStake: sdk.NewInt(5),
 			totalStake:       sdk.NewInt(95),
 			newLiquidStake:   sdk.NewInt(1),
+			tokenizingShares: false,
 			expectedExceeds:  false,
 		},
 		{
-			// Cap: 10% - Delegation At Threshold
+			// Cap: 10% - Native Delegation - Delegation At Threshold
 			// Total Liquid Stake: 5, Total Stake: 95, New Liquid Stake: 5
 			// => Total Liquid Stake: 5+5=10, Total Stake: 95+5=100 => 10/100 = 10% == 10% cap
-			name:             "10 percent cap _ delegation equals cap",
+			name:             "10 percent cap _ native delegation _ delegation equals cap",
 			globalLiquidCap:  sdk.MustNewDecFromStr("0.1"),
 			totalLiquidStake: sdk.NewInt(5),
 			totalStake:       sdk.NewInt(95),
 			newLiquidStake:   sdk.NewInt(5),
+			tokenizingShares: false,
 			expectedExceeds:  false,
 		},
 		{
-			// Cap: 10% - Delegation Exceeds Threshold
+			// Cap: 10% - Native Delegation - Delegation Exceeds Threshold
 			// Total Liquid Stake: 5, Total Stake: 95, New Liquid Stake: 6
 			// => Total Liquid Stake: 5+6=11, Total Stake: 95+6=101 => 11/101 = 11% > 10% cap
-			name:             "10 percent cap _ delegation exceeds cap",
+			name:             "10 percent cap _ native delegation _ delegation exceeds cap",
 			globalLiquidCap:  sdk.MustNewDecFromStr("0.1"),
 			totalLiquidStake: sdk.NewInt(5),
 			totalStake:       sdk.NewInt(95),
 			newLiquidStake:   sdk.NewInt(6),
+			tokenizingShares: false,
 			expectedExceeds:  true,
 		},
 		{
-			// Cap: 20% - Delegation Below Threshold
+			// Cap: 20% - Native Delegation - Delegation Below Threshold
 			// Total Liquid Stake: 20, Total Stake: 220, New Liquid Stake: 29
 			// => Total Liquid Stake: 20+29=49, Total Stake: 220+29=249 => 49/249 = 19% < 20% cap
-			name:             "20 percent cap _ delegation below cap",
+			name:             "20 percent cap _ native delegation _ delegation below cap",
 			globalLiquidCap:  sdk.MustNewDecFromStr("0.20"),
 			totalLiquidStake: sdk.NewInt(20),
 			totalStake:       sdk.NewInt(220),
 			newLiquidStake:   sdk.NewInt(29),
+			tokenizingShares: false,
 			expectedExceeds:  false,
 		},
 		{
-			// Cap: 20% - Delegation At Threshold
+			// Cap: 20% - Native Delegation - Delegation At Threshold
 			// Total Liquid Stake: 20, Total Stake: 220, New Liquid Stake: 30
 			// => Total Liquid Stake: 20+30=50, Total Stake: 220+30=250 => 50/250 = 20% == 20% cap
-			name:             "20 percent cap _ delegation equals cap",
+			name:             "20 percent cap _ native delegation _ delegation equals cap",
 			globalLiquidCap:  sdk.MustNewDecFromStr("0.20"),
 			totalLiquidStake: sdk.NewInt(20),
 			totalStake:       sdk.NewInt(220),
 			newLiquidStake:   sdk.NewInt(30),
+			tokenizingShares: false,
 			expectedExceeds:  false,
 		},
 		{
-			// Cap: 20% - Delegation Exceeds Threshold
+			// Cap: 20% - Native Delegation - Delegation Exceeds Threshold
 			// Total Liquid Stake: 20, Total Stake: 220, New Liquid Stake: 31
 			// => Total Liquid Stake: 20+31=51, Total Stake: 220+31=251 => 51/251 = 21% > 20% cap
-			name:             "20 percent cap _ delegation exceeds cap",
+			name:             "20 percent cap _ native delegation _ delegation exceeds cap",
 			globalLiquidCap:  sdk.MustNewDecFromStr("0.20"),
 			totalLiquidStake: sdk.NewInt(20),
 			totalStake:       sdk.NewInt(220),
 			newLiquidStake:   sdk.NewInt(31),
+			tokenizingShares: false,
+			expectedExceeds:  true,
+		},
+		{
+			// Cap: 50% - Native Delegation - Delegation Below Threshold
+			// Total Liquid Stake: 0, Total Stake: 100, New Liquid Stake: 50
+			// => Total Liquid Stake: 0+50=50, Total Stake: 100+50=150 => 50/150 = 33% < 50% cap
+			name:             "50 percent cap _ native delegation _ delegation below cap",
+			globalLiquidCap:  sdk.MustNewDecFromStr("0.5"),
+			totalLiquidStake: sdk.NewInt(0),
+			totalStake:       sdk.NewInt(100),
+			newLiquidStake:   sdk.NewInt(50),
+			tokenizingShares: false,
+			expectedExceeds:  false,
+		},
+		{
+			// Cap: 50% - Tokenized Delegation - Delegation At Threshold
+			// Total Liquid Stake: 0, Total Stake: 100, New Liquid Stake: 50
+			// => 50 / 100 = 50% == 50% cap
+			name:             "50 percent cap _ tokenized delegation _ delegation equals cap",
+			globalLiquidCap:  sdk.MustNewDecFromStr("0.5"),
+			totalLiquidStake: sdk.NewInt(0),
+			totalStake:       sdk.NewInt(100),
+			newLiquidStake:   sdk.NewInt(50),
+			tokenizingShares: true,
+			expectedExceeds:  false,
+		},
+		{
+			// Cap: 50% - Native Delegation - Delegation Below Threshold
+			// Total Liquid Stake: 0, Total Stake: 100, New Liquid Stake: 51
+			// => Total Liquid Stake: 0+51=51, Total Stake: 100+51=151 => 51/151 = 33% < 50% cap
+			name:             "50 percent cap _ native delegation _ delegation below cap",
+			globalLiquidCap:  sdk.MustNewDecFromStr("0.5"),
+			totalLiquidStake: sdk.NewInt(0),
+			totalStake:       sdk.NewInt(100),
+			newLiquidStake:   sdk.NewInt(51),
+			tokenizingShares: false,
+			expectedExceeds:  false,
+		},
+		{
+			// Cap: 50% - Tokenized Delegation - Delegation Exceeds Threshold
+			// Total Liquid Stake: 0, Total Stake: 100, New Liquid Stake: 51
+			// => 51 / 100 = 51% > 50% cap
+			name:             "50 percent cap _  tokenized delegation _delegation exceeds cap",
+			globalLiquidCap:  sdk.MustNewDecFromStr("0.5"),
+			totalLiquidStake: sdk.NewInt(0),
+			totalStake:       sdk.NewInt(100),
+			newLiquidStake:   sdk.NewInt(51),
+			tokenizingShares: true,
 			expectedExceeds:  true,
 		},
 		{
@@ -184,6 +239,7 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 			totalLiquidStake: sdk.NewInt(0),
 			totalStake:       sdk.NewInt(1_000_000),
 			newLiquidStake:   sdk.NewInt(1),
+			tokenizingShares: false,
 			expectedExceeds:  true,
 		},
 		{
@@ -193,6 +249,7 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 			totalLiquidStake: sdk.NewInt(1),
 			totalStake:       sdk.NewInt(1),
 			newLiquidStake:   sdk.NewInt(1_000_000),
+			tokenizingShares: false,
 			expectedExceeds:  false,
 		},
 	}
@@ -212,7 +269,7 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 			fundPoolBalance(t, app, ctx, tc.totalStake)
 
 			// Check if the new tokens would exceed the global cap
-			actualExceeds := app.StakingKeeper.CheckExceedsGlobalLiquidStakingCap(ctx, tc.newLiquidStake)
+			actualExceeds := app.StakingKeeper.CheckExceedsGlobalLiquidStakingCap(ctx, tc.newLiquidStake, tc.tokenizingShares)
 			require.Equal(t, tc.expectedExceeds, actualExceeds, tc.name)
 		})
 	}
@@ -238,9 +295,9 @@ func TestSafelyIncreaseTotalLiquidStakedTokens(t *testing.T) {
 	params.GlobalLiquidStakingCap = sdk.MustNewDecFromStr("0.0001")
 	app.StakingKeeper.SetParams(ctx, params)
 
-	// Attempt to increase the total liquid stake again,it should error since
+	// Attempt to increase the total liquid stake again, it should error since
 	// the cap was exceeded
-	err := app.StakingKeeper.SafelyIncreaseTotalLiquidStakedTokens(ctx, increaseAmount)
+	err := app.StakingKeeper.SafelyIncreaseTotalLiquidStakedTokens(ctx, increaseAmount, true)
 	require.ErrorIs(t, err, types.ErrGlobalLiquidStakingCapExceeded)
 	require.Equal(t, intitialTotalLiquidStaked, app.StakingKeeper.GetTotalLiquidStakedTokens(ctx))
 
@@ -249,7 +306,7 @@ func TestSafelyIncreaseTotalLiquidStakedTokens(t *testing.T) {
 	app.StakingKeeper.SetParams(ctx, params)
 
 	// Confirm the total increased
-	err = app.StakingKeeper.SafelyIncreaseTotalLiquidStakedTokens(ctx, increaseAmount)
+	err = app.StakingKeeper.SafelyIncreaseTotalLiquidStakedTokens(ctx, increaseAmount, true)
 	require.NoError(t, err)
 	require.Equal(t, intitialTotalLiquidStaked.Add(increaseAmount), app.StakingKeeper.GetTotalLiquidStakedTokens(ctx))
 }
