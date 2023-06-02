@@ -1,6 +1,6 @@
 # liquidity-staking-module
 
-The purpose of this repository is to develop and release a new set of staking, distrbution and slashing modules for the Cosmos Hub that are compatible with [cosmos-sdk 0.46](https://github.com/cosmos/cosmos-sdk/releases/tag/v0.46.1) and do not need to wait on cosmos-sdk 0.47 to be included in a Gaia release and Cosmos hub Upgrade.
+The purpose of this repository is to develop and release a new set of staking, distrbution and slashing modules for the Cosmos Hub that are compatible with cosmos-sdk v0.45.16-ics and cosmos-sdk v0.47.x.  We'll be making simultaneous releases for both cosmos-sdk flavors, and won't be maintaining the sdk v0.46.x flavor unless there's a clear need to do so. 
 
 ## Liquid Staking design
 
@@ -45,10 +45,4 @@ This flow requires an integration with CosmWasm (or Interchain Security) that is
 
 ### Testnet
 
-Please join our testnet for Release 0.2.
-
-[genesis.json](genesis.json)
-
-```
-persistent_peers = "6aa0b269094af7e54fbfc1faa005845fe97269e4@34.124.241.85:26656,837a38ee4fdac1b0252f31eee9780ac74d685512@34.124.168.210:26656,dd0acaa93c4bae0be874cf52ae4487551756a1e0@35.240.151.206:26656"
-```
+This work should soon be live on the cosmos hub [testnet](https://github.com/cosmos/testnets). 
