@@ -4,13 +4,12 @@ import (
 	"testing"
 	"time"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	simapp_test "github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/keeper"
@@ -28,7 +27,7 @@ func bootstrapSlashTest(t *testing.T, power int64) (*simapp.SimApp, sdk.Context,
 	totalSupply := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), amt.MulRaw(int64(len(addrDels)))))
 
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
-	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), totalSupply))
+	require.NoError(t, simapp_test.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), totalSupply))
 
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
 
@@ -38,13 +37,14 @@ func bootstrapSlashTest(t *testing.T, power int64) (*simapp.SimApp, sdk.Context,
 
 	// set bonded pool balance
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
-	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), bondedCoins))
+	require.NoError(t, simapp_test.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), bondedCoins))
 
 	for i := int64(0); i < numVals; i++ {
 		validator := teststaking.NewValidator(t, addrVals[i], PKs[i])
 		validator, _ = validator.AddTokensFromDel(amt)
 		validator = keeper.TestingUpdateValidator(app.StakingKeeper, ctx, validator, true)
-		app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
+		err := app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
+		require.NoError(t, err)
 	}
 
 	return app, ctx, addrDels, addrVals
@@ -114,7 +114,7 @@ func TestSlashUnbondingDelegation(t *testing.T) {
 	// balance decreased
 	require.Equal(t, sdk.NewInt(5), ubd.Entries[0].Balance)
 	newUnbondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, notBondedPool.GetAddress())
-	diffTokens := oldUnbondedPoolBalances.Sub(newUnbondedPoolBalances...)
+	diffTokens := oldUnbondedPoolBalances.Sub(newUnbondedPoolBalances)
 	require.True(t, diffTokens.AmountOf(app.StakingKeeper.BondDenom(ctx)).Equal(sdk.NewInt(5)))
 }
 
@@ -126,9 +126,9 @@ func TestSlashRedelegation(t *testing.T) {
 	// add bonded tokens to pool for (re)delegations
 	startCoins := sdk.NewCoins(sdk.NewInt64Coin(app.StakingKeeper.BondDenom(ctx), 15))
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
-	balances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
+	_ = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
-	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), startCoins))
+	require.NoError(t, simapp_test.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), startCoins))
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
 	// set a redelegation with an expiration timestamp beyond which the
@@ -156,7 +156,7 @@ func TestSlashRedelegation(t *testing.T) {
 	slashAmount = app.StakingKeeper.SlashRedelegation(ctx, validator, rd, 0, fraction)
 	require.True(t, slashAmount.Equal(sdk.NewInt(0)))
 
-	balances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
+	balances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
 	// test valid slash, before expiration timestamp and to which stake contributed
 	ctx = ctx.WithBlockHeader(tmproto.Header{Time: time.Unix(0, 0)})
@@ -182,7 +182,7 @@ func TestSlashRedelegation(t *testing.T) {
 
 	// pool bonded tokens should decrease
 	burnedCoins := sdk.NewCoins(sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), slashAmount))
-	require.Equal(t, balances.Sub(burnedCoins...), app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress()))
+	require.Equal(t, balances.Sub(burnedCoins), app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress()))
 }
 
 // tests Slash at a future height (must panic)
@@ -191,7 +191,7 @@ func TestSlashAtFutureHeight(t *testing.T) {
 
 	consAddr := sdk.ConsAddress(PKs[0].Address())
 	fraction := sdk.NewDecWithPrec(5, 1)
-	require.Panics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 1, 10, fraction) })
+	require.Panics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 1, 10, fraction, 0) })
 }
 
 // test slash at a negative height
@@ -204,12 +204,12 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	oldBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
-	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	_, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
-	app.StakingKeeper.Slash(ctx, consAddr, -2, 10, fraction)
+	app.StakingKeeper.Slash(ctx, consAddr, -2, 10, fraction, 0)
 
 	// read updated state
-	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 
 	// end block
@@ -222,7 +222,7 @@ func TestSlashAtNegativeHeight(t *testing.T) {
 
 	// pool bonded shares decreased
 	newBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	diffTokens := oldBondedPoolBalances.Sub(newBondedPoolBalances...).AmountOf(app.StakingKeeper.BondDenom(ctx))
+	diffTokens := oldBondedPoolBalances.Sub(newBondedPoolBalances).AmountOf(app.StakingKeeper.BondDenom(ctx))
 	require.Equal(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 5).String(), diffTokens.String())
 }
 
@@ -235,12 +235,12 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	oldBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
-	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	_, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
-	app.StakingKeeper.Slash(ctx, consAddr, ctx.BlockHeight(), 10, fraction)
+	app.StakingKeeper.Slash(ctx, consAddr, ctx.BlockHeight(), 10, fraction, 0)
 
 	// read updated state
-	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 
 	// end block
@@ -253,7 +253,7 @@ func TestSlashValidatorAtCurrentHeight(t *testing.T) {
 
 	// pool bonded shares decreased
 	newBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	diffTokens := oldBondedPoolBalances.Sub(newBondedPoolBalances...).AmountOf(app.StakingKeeper.BondDenom(ctx))
+	diffTokens := oldBondedPoolBalances.Sub(newBondedPoolBalances).AmountOf(app.StakingKeeper.BondDenom(ctx))
 	require.Equal(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 5).String(), diffTokens.String())
 }
 
@@ -275,9 +275,9 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	oldBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
 
-	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	_, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
-	app.StakingKeeper.Slash(ctx, consAddr, 10, 10, fraction)
+	app.StakingKeeper.Slash(ctx, consAddr, 10, 10, fraction, 0)
 
 	// end block
 	applyValidatorSetUpdates(t, ctx, app.StakingKeeper, 1)
@@ -292,11 +292,11 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 
 	// bonded tokens burned
 	newBondedPoolBalances := app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	diffTokens := oldBondedPoolBalances.Sub(newBondedPoolBalances...).AmountOf(app.StakingKeeper.BondDenom(ctx))
+	diffTokens := oldBondedPoolBalances.Sub(newBondedPoolBalances).AmountOf(app.StakingKeeper.BondDenom(ctx))
 	require.Equal(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 3), diffTokens)
 
 	// read updated validator
-	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 
 	// power decreased by 3 - 6 stake originally bonded at the time of infraction
@@ -307,7 +307,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 
 	// slash validator again
 	ctx = ctx.WithBlockHeight(13)
-	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction)
+	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction, 0)
 
 	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
@@ -318,7 +318,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 
 	// bonded tokens burned again
 	newBondedPoolBalances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	diffTokens = oldBondedPoolBalances.Sub(newBondedPoolBalances...).AmountOf(app.StakingKeeper.BondDenom(ctx))
+	diffTokens = oldBondedPoolBalances.Sub(newBondedPoolBalances).AmountOf(app.StakingKeeper.BondDenom(ctx))
 	require.Equal(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 6), diffTokens)
 
 	// read updated validator
@@ -333,7 +333,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// on the unbonding delegation, but it will slash stake bonded since the infraction
 	// this may not be the desirable behaviour, ref https://github.com/cosmos/cosmos-sdk/issues/1440
 	ctx = ctx.WithBlockHeight(13)
-	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction)
+	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction, 0)
 
 	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
@@ -344,7 +344,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 
 	// bonded tokens burned again
 	newBondedPoolBalances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	diffTokens = oldBondedPoolBalances.Sub(newBondedPoolBalances...).AmountOf(app.StakingKeeper.BondDenom(ctx))
+	diffTokens = oldBondedPoolBalances.Sub(newBondedPoolBalances).AmountOf(app.StakingKeeper.BondDenom(ctx))
 	require.Equal(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 9), diffTokens)
 
 	// read updated validator
@@ -359,7 +359,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 	// on the unbonding delegation, but it will slash stake bonded since the infraction
 	// this may not be the desirable behaviour, ref https://github.com/cosmos/cosmos-sdk/issues/1440
 	ctx = ctx.WithBlockHeight(13)
-	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction)
+	app.StakingKeeper.Slash(ctx, consAddr, 9, 10, fraction, 0)
 
 	ubd, found = app.StakingKeeper.GetUnbondingDelegation(ctx, addrDels[0], addrVals[0])
 	require.True(t, found)
@@ -370,7 +370,7 @@ func TestSlashWithUnbondingDelegation(t *testing.T) {
 
 	// just 1 bonded token burned again since that's all the validator now has
 	newBondedPoolBalances = app.BankKeeper.GetAllBalances(ctx, bondedPool.GetAddress())
-	diffTokens = oldBondedPoolBalances.Sub(newBondedPoolBalances...).AmountOf(app.StakingKeeper.BondDenom(ctx))
+	diffTokens = oldBondedPoolBalances.Sub(newBondedPoolBalances).AmountOf(app.StakingKeeper.BondDenom(ctx))
 	require.Equal(t, app.StakingKeeper.TokensFromConsensusPower(ctx, 10), diffTokens)
 
 	// apply TM updates
@@ -405,7 +405,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 	rdCoins := sdk.NewCoins(sdk.NewCoin(bondDenom, rdTokens.MulRaw(2)))
 
-	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), rdCoins))
+	require.NoError(t, simapp_test.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), rdCoins))
 
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 
@@ -414,10 +414,10 @@ func TestSlashWithRedelegation(t *testing.T) {
 
 	// slash validator
 	ctx = ctx.WithBlockHeight(12)
-	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	_, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 
-	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, fraction) })
+	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, fraction, 0) })
 	burnAmount := sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 10)).Mul(fraction).TruncateInt()
 
 	bondedPool = app.StakingKeeper.GetBondedPool(ctx)
@@ -425,10 +425,10 @@ func TestSlashWithRedelegation(t *testing.T) {
 
 	// burn bonded tokens from only from delegations
 	bondedPoolBalance := app.BankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount
-	require.True(math.IntEq(t, oldBonded.Sub(burnAmount), bondedPoolBalance))
+	require.True(sdk.IntEq(t, oldBonded.Sub(burnAmount), bondedPoolBalance))
 
 	notBondedPoolBalance := app.BankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount
-	require.True(math.IntEq(t, oldNotBonded, notBondedPoolBalance))
+	require.True(sdk.IntEq(t, oldNotBonded, notBondedPoolBalance))
 	oldBonded = app.BankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount
 
 	// read updating redelegation
@@ -436,7 +436,7 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.True(t, found)
 	require.Len(t, rd.Entries, 1)
 	// read updated validator
-	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 	// power decreased by 2 - 4 stake originally bonded at the time of infraction
 	// was still bonded at the time of discovery and was slashed by half, 4 stake
@@ -445,10 +445,10 @@ func TestSlashWithRedelegation(t *testing.T) {
 	require.Equal(t, int64(8), validator.GetConsensusPower(app.StakingKeeper.PowerReduction(ctx)))
 
 	// slash the validator again
-	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	_, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 
-	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec()) })
+	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec(), 0) })
 	burnAmount = app.StakingKeeper.TokensFromConsensusPower(ctx, 7)
 
 	// read updated pool
@@ -457,14 +457,14 @@ func TestSlashWithRedelegation(t *testing.T) {
 
 	// seven bonded tokens burned
 	bondedPoolBalance = app.BankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount
-	require.True(math.IntEq(t, oldBonded.Sub(burnAmount), bondedPoolBalance))
-	require.True(math.IntEq(t, oldNotBonded, notBondedPoolBalance))
+	require.True(sdk.IntEq(t, oldBonded.Sub(burnAmount), bondedPoolBalance))
+	require.True(sdk.IntEq(t, oldNotBonded, notBondedPoolBalance))
 
 	bondedPoolBalance = app.BankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount
-	require.True(math.IntEq(t, oldBonded.Sub(burnAmount), bondedPoolBalance))
+	require.True(sdk.IntEq(t, oldBonded.Sub(burnAmount), bondedPoolBalance))
 
 	notBondedPoolBalance = app.BankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount
-	require.True(math.IntEq(t, oldNotBonded, notBondedPoolBalance))
+	require.True(sdk.IntEq(t, oldNotBonded, notBondedPoolBalance))
 	oldBonded = app.BankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount
 
 	// read updating redelegation
@@ -479,10 +479,10 @@ func TestSlashWithRedelegation(t *testing.T) {
 
 	// slash the validator again, by 100%
 	ctx = ctx.WithBlockHeight(12)
-	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
+	_, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.True(t, found)
 
-	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec()) })
+	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec(), 0) })
 
 	burnAmount = sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 10)).Mul(sdk.OneDec()).TruncateInt()
 	burnAmount = burnAmount.Sub(sdk.OneDec().MulInt(rdTokens).TruncateInt())
@@ -492,9 +492,9 @@ func TestSlashWithRedelegation(t *testing.T) {
 	notBondedPool = app.StakingKeeper.GetNotBondedPool(ctx)
 
 	bondedPoolBalance = app.BankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount
-	require.True(math.IntEq(t, oldBonded.Sub(burnAmount), bondedPoolBalance))
+	require.True(sdk.IntEq(t, oldBonded.Sub(burnAmount), bondedPoolBalance))
 	notBondedPoolBalance = app.BankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount
-	require.True(math.IntEq(t, oldNotBonded, notBondedPoolBalance))
+	require.True(sdk.IntEq(t, oldNotBonded, notBondedPoolBalance))
 	oldBonded = app.BankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount
 
 	// read updating redelegation
@@ -515,16 +515,16 @@ func TestSlashWithRedelegation(t *testing.T) {
 	validator, _ = app.StakingKeeper.GetValidatorByConsAddr(ctx, consAddr)
 	require.Equal(t, validator.GetStatus(), sdkstaking.Unbonding)
 
-	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec()) })
+	require.NotPanics(t, func() { app.StakingKeeper.Slash(ctx, consAddr, 10, 10, sdk.OneDec(), 0) })
 
 	// read updated pool
 	bondedPool = app.StakingKeeper.GetBondedPool(ctx)
 	notBondedPool = app.StakingKeeper.GetNotBondedPool(ctx)
 
 	bondedPoolBalance = app.BankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount
-	require.True(math.IntEq(t, oldBonded, bondedPoolBalance))
+	require.True(sdk.IntEq(t, oldBonded, bondedPoolBalance))
 	notBondedPoolBalance = app.BankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount
-	require.True(math.IntEq(t, oldNotBonded, notBondedPoolBalance))
+	require.True(sdk.IntEq(t, oldNotBonded, notBondedPoolBalance))
 
 	// read updating redelegation
 	rd, found = app.StakingKeeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
@@ -568,8 +568,8 @@ func TestSlashBoth(t *testing.T) {
 	bondedPool := app.StakingKeeper.GetBondedPool(ctx)
 	notBondedPool := app.StakingKeeper.GetNotBondedPool(ctx)
 
-	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), bondedCoins))
-	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), notBondedCoins))
+	require.NoError(t, simapp_test.FundModuleAccount(app.BankKeeper, ctx, bondedPool.GetName(), bondedCoins))
+	require.NoError(t, simapp_test.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), notBondedCoins))
 
 	app.AccountKeeper.SetModuleAccount(ctx, bondedPool)
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
@@ -578,10 +578,10 @@ func TestSlashBoth(t *testing.T) {
 	oldNotBonded := app.BankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount
 	// slash validator
 	ctx = ctx.WithBlockHeight(12)
-	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(PKs[0]))
+	_, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(PKs[0]))
 	require.True(t, found)
 	consAddr0 := sdk.ConsAddress(PKs[0].Address())
-	app.StakingKeeper.Slash(ctx, consAddr0, 10, 10, fraction)
+	app.StakingKeeper.Slash(ctx, consAddr0, 10, 10, fraction, 0)
 
 	burnedNotBondedAmount := fraction.MulInt(ubdATokens).TruncateInt()
 	burnedBondAmount := sdk.NewDecFromInt(app.StakingKeeper.TokensFromConsensusPower(ctx, 10)).Mul(fraction).TruncateInt()
@@ -592,31 +592,18 @@ func TestSlashBoth(t *testing.T) {
 	notBondedPool = app.StakingKeeper.GetNotBondedPool(ctx)
 
 	bondedPoolBalance := app.BankKeeper.GetBalance(ctx, bondedPool.GetAddress(), bondDenom).Amount
-	require.True(math.IntEq(t, oldBonded.Sub(burnedBondAmount), bondedPoolBalance))
+	require.True(sdk.IntEq(t, oldBonded.Sub(burnedBondAmount), bondedPoolBalance))
 
 	notBondedPoolBalance := app.BankKeeper.GetBalance(ctx, notBondedPool.GetAddress(), bondDenom).Amount
-	require.True(math.IntEq(t, oldNotBonded.Sub(burnedNotBondedAmount), notBondedPoolBalance))
+	require.True(sdk.IntEq(t, oldNotBonded.Sub(burnedNotBondedAmount), notBondedPoolBalance))
 
 	// read updating redelegation
 	rdA, found = app.StakingKeeper.GetRedelegation(ctx, addrDels[0], addrVals[0], addrVals[1])
 	require.True(t, found)
 	require.Len(t, rdA.Entries, 1)
 	// read updated validator
-	validator, found = app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(PKs[0]))
+	validator, found := app.StakingKeeper.GetValidatorByConsAddr(ctx, sdk.GetConsAddress(PKs[0]))
 	require.True(t, found)
 	// power not decreased, all stake was bonded since
 	require.Equal(t, int64(10), validator.GetConsensusPower(app.StakingKeeper.PowerReduction(ctx)))
-}
-
-func TestSlashAmount(t *testing.T) {
-	app, ctx, _, _ := bootstrapSlashTest(t, 10)
-	consAddr := sdk.ConsAddress(PKs[0].Address())
-	fraction := sdk.NewDecWithPrec(5, 1)
-	burnedCoins := app.StakingKeeper.Slash(ctx, consAddr, ctx.BlockHeight(), 10, fraction)
-	require.True(t, burnedCoins.GT(sdk.ZeroInt()))
-
-	// test the case where the validator was not found, which should return no coins
-	_, addrVals := generateAddresses(app, ctx, 100)
-	noBurned := app.StakingKeeper.Slash(ctx, sdk.ConsAddress(addrVals[0]), ctx.BlockHeight(), 10, fraction)
-	require.True(t, sdk.NewInt(0).Equal(noBurned))
 }

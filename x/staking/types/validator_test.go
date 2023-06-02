@@ -5,7 +5,6 @@ import (
 	"sort"
 	"testing"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	tmtypes "github.com/tendermint/tendermint/types"
@@ -107,7 +106,7 @@ func TestAddTokensValidatorBonded(t *testing.T) {
 	validator, delShares := validator.AddTokensFromDel(sdk.NewInt(10))
 
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), delShares))
-	assert.True(math.IntEq(t, sdk.NewInt(10), validator.BondedTokens()))
+	assert.True(sdk.IntEq(t, sdk.NewInt(10), validator.BondedTokens()))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 }
 
@@ -118,7 +117,7 @@ func TestAddTokensValidatorUnbonding(t *testing.T) {
 
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), delShares))
 	assert.Equal(t, sdkstaking.Unbonding, validator.Status)
-	assert.True(math.IntEq(t, sdk.NewInt(10), validator.Tokens))
+	assert.True(sdk.IntEq(t, sdk.NewInt(10), validator.Tokens))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 }
 
@@ -129,7 +128,7 @@ func TestAddTokensValidatorUnbonded(t *testing.T) {
 
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), delShares))
 	assert.Equal(t, sdkstaking.Unbonded, validator.Status)
-	assert.True(math.IntEq(t, sdk.NewInt(10), validator.Tokens))
+	assert.True(sdk.IntEq(t, sdk.NewInt(10), validator.Tokens))
 	assert.True(sdk.DecEq(t, sdk.NewDec(10), validator.DelegatorShares))
 }
 
@@ -153,7 +152,7 @@ func TestRemoveDelShares(t *testing.T) {
 	validator := mkValidator(5102, sdk.NewDec(115))
 	_, tokens := validator.RemoveDelShares(sdk.NewDec(29))
 
-	require.True(math.IntEq(t, sdk.NewInt(1286), tokens))
+	require.True(sdk.IntEq(t, sdk.NewInt(1286), tokens))
 }
 
 func TestAddTokensFromDel(t *testing.T) {
@@ -162,12 +161,12 @@ func TestAddTokensFromDel(t *testing.T) {
 	validator, shares := validator.AddTokensFromDel(sdk.NewInt(6))
 	require.True(sdk.DecEq(t, sdk.NewDec(6), shares))
 	require.True(sdk.DecEq(t, sdk.NewDec(6), validator.DelegatorShares))
-	require.True(math.IntEq(t, sdk.NewInt(6), validator.Tokens))
+	require.True(sdk.IntEq(t, sdk.NewInt(6), validator.Tokens))
 
 	validator, shares = validator.AddTokensFromDel(sdk.NewInt(3))
 	require.True(sdk.DecEq(t, sdk.NewDec(3), shares))
 	require.True(sdk.DecEq(t, sdk.NewDec(9), validator.DelegatorShares))
-	require.True(math.IntEq(t, sdk.NewInt(9), validator.Tokens))
+	require.True(sdk.IntEq(t, sdk.NewInt(9), validator.Tokens))
 }
 
 func TestUpdateStatus(t *testing.T) {
@@ -262,9 +261,7 @@ func TestValidatorsSortDeterminism(t *testing.T) {
 	// Randomly shuffle validators, sort, and check it is equal to original sort
 	for i := 0; i < 10; i++ {
 		rand.Shuffle(10, func(i, j int) {
-			it := vals[i]
-			vals[i] = vals[j]
-			vals[j] = it
+			vals[i], vals[j] = vals[j], vals[i]
 		})
 
 		types.Validators(vals).Sort()

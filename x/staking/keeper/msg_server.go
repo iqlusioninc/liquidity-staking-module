@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strconv"
 	"time"
@@ -44,7 +45,7 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	}
 
 	if msg.Commission.Rate.LT(k.MinCommissionRate(ctx)) {
-		return nil, errorsmod.Wrapf(sdkstaking.ErrCommissionLTMinRate, "cannot set validator commission to less than minimum rate of %s", k.MinCommissionRate(ctx))
+		return nil, errorsmod.Wrapf(errors.New("commission cannot be less than min rate"), "cannot set validator commission to less than minimum rate of %s", k.MinCommissionRate(ctx))
 	}
 
 	// check to see if the pubkey or sender has been registered before
@@ -111,7 +112,10 @@ func (k msgServer) CreateValidator(goCtx context.Context, msg *types.MsgCreateVa
 	}
 
 	k.SetValidator(ctx, validator)
-	k.SetValidatorByConsAddr(ctx, validator)
+	err = k.SetValidatorByConsAddr(ctx, validator)
+	if err != nil {
+		return nil, err
+	}
 	k.SetNewValidatorByPowerIndex(ctx, validator)
 
 	// call the after-creation hook
@@ -563,11 +567,11 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
-			sdkstaking.EventTypeCancelUnbondingDelegation,
+			"cancel_unbonding_delegation",
 			sdk.NewAttribute(sdk.AttributeKeyAmount, msg.Amount.String()),
 			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
-			sdk.NewAttribute(sdkstaking.AttributeKeyCreationHeight, strconv.FormatInt(msg.CreationHeight, 10)),
+			sdk.NewAttribute("creation_height", strconv.FormatInt(msg.CreationHeight, 10)),
 		),
 	)
 
@@ -672,13 +676,13 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		}
 	}
 
-	recordId := k.GetLastTokenizeShareRecordId(ctx) + 1
-	k.SetLastTokenizeShareRecordId(ctx, recordId)
+	recordID := k.GetLastTokenizeShareRecordID(ctx) + 1
+	k.SetLastTokenizeShareRecordID(ctx, recordID)
 
 	record := types.TokenizeShareRecord{
-		Id:            recordId,
+		Id:            recordID,
 		Owner:         msg.TokenizedShareOwner,
-		ModuleAccount: fmt.Sprintf("%s%d", types.TokenizeShareModuleAccountPrefix, recordId),
+		ModuleAccount: fmt.Sprintf("%s%d", types.TokenizeShareModuleAccountPrefix, recordID),
 		Validator:     msg.ValidatorAddress,
 	}
 
@@ -710,8 +714,10 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	}
 
 	// create reward ownership record
-	k.AddTokenizeShareRecord(ctx, record)
-
+	err = k.AddTokenizeShareRecord(ctx, record)
+	if err != nil {
+		return nil, err
+	}
 	// send coins to module account
 	err = k.bankKeeper.SendCoins(ctx, delegatorAddress, record.GetModuleAddress(), sdk.Coins{msg.Amount})
 	if err != nil {
@@ -736,7 +742,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
 			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 			sdk.NewAttribute(types.AttributeKeyShareOwner, msg.TokenizedShareOwner),
-			sdk.NewAttribute(types.AttributeKeyShareRecordId, fmt.Sprintf("%d", record.Id)),
+			sdk.NewAttribute(types.AttributeKeyShareRecordID, fmt.Sprintf("%d", record.Id)),
 			sdk.NewAttribute(types.AttributeKeyAmount, msg.Amount.String()),
 		),
 	)
@@ -777,6 +783,9 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 	// calculate the ratio between shares and redeem amount
 	// moduleAccountTotalDelegation * redeemAmount / totalIssue
 	delegation, found := k.GetLiquidDelegation(ctx, record.GetModuleAddress(), valAddr)
+	if !found {
+		return nil, sdkstaking.ErrNoUnbondingDelegation
+	}
 	shareDenomSupply := k.bankKeeper.GetSupply(ctx, msg.Amount.Denom)
 	shares := delegation.Shares.Mul(sdk.NewDecFromInt(msg.Amount.Amount)).QuoInt(shareDenomSupply.Amount)
 	tokens := validator.TokensFromShares(shares).TruncateInt()
@@ -802,7 +811,7 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 	_, found = k.GetLiquidDelegation(ctx, record.GetModuleAddress(), valAddr)
 	if !found {
 		if k.hooks != nil {
-			k.hooks.BeforeTokenizeShareRecordRemoved(ctx, record.Id)
+			return nil, k.hooks.BeforeTokenizeShareRecordRemoved(ctx, record.Id)
 		}
 
 		err = k.DeleteTokenizeShareRecord(ctx, record.Id)
@@ -887,7 +896,7 @@ func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeTransferTokenizeShareRecord,
-			sdk.NewAttribute(types.AttributeKeyShareRecordId, fmt.Sprintf("%d", msg.TokenizeShareRecordId)),
+			sdk.NewAttribute(types.AttributeKeyShareRecordID, fmt.Sprintf("%d", msg.TokenizeShareRecordId)),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 			sdk.NewAttribute(types.AttributeKeyShareOwner, msg.NewOwner),
 		),

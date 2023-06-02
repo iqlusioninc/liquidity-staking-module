@@ -8,10 +8,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/testutil"
-	"github.com/cosmos/cosmos-sdk/testutil/rest"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	grpctypes "github.com/cosmos/cosmos-sdk/types/grpc"
 	"github.com/cosmos/cosmos-sdk/types/query"
+	"github.com/cosmos/cosmos-sdk/types/rest"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/client/cli"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
@@ -361,8 +361,7 @@ func (s *IntegrationTestSuite) TestGRPCQueryDelegatorDelegations() {
 	// Create new account in the keyring for address without delegations.
 	k, _, err := val.ClientCtx.Keyring.NewMnemonic("test", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	s.Require().NoError(err)
-	newAddr, err := k.GetAddress()
-	s.Require().NoError(err)
+	newAddr := k.GetAddress()
 
 	testCases := []struct {
 		name         string

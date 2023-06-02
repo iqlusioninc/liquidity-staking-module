@@ -815,8 +815,8 @@ func TestTokenizeShareAuthorizationQueue(t *testing.T) {
 	actualAddresses = app.StakingKeeper.RemoveExpiredTokenizeShareLocks(ctx, unlockBlockTimes["10"])
 	require.Equal(t, expectedUnlockedAddresses["10"], actualAddresses, "addresses unlocked from time 10")
 }
-  
- // Test CalculateTotalLiquidStaked
+
+// Test CalculateTotalLiquidStaked
 func TestCalculateTotalLiquidStaked(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 

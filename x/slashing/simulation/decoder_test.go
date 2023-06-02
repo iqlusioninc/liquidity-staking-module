@@ -16,7 +16,7 @@ import (
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
 )
 
-// nolint:deadcode,unused,varcheck
+//nolint:deadcode,unused,varcheck
 var (
 	delPk1    = ed25519.GenPrivKey().PubKey()
 	delAddr1  = sdk.AccAddress(delPk1.Address())
@@ -25,7 +25,7 @@ var (
 )
 
 func TestDecodeStore(t *testing.T) {
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	cdc := simapp.MakeTestEncodingConfig().Marshaler
 	dec := simulation.NewDecodeStore(cdc)
 
 	info := types.NewValidatorSigningInfo(consAddr1, 0, 1, time.Now().UTC(), false, 0)

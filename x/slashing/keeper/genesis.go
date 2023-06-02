@@ -15,7 +15,10 @@ func (keeper Keeper) InitGenesis(ctx sdk.Context, stakingKeeper types.StakingKee
 			if err != nil {
 				panic(err)
 			}
-			keeper.AddPubkey(ctx, consPk)
+			err = keeper.AddPubkey(ctx, consPk)
+			if err != nil {
+				panic(err)
+			}
 			return false
 		},
 	)

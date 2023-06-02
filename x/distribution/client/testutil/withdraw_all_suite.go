@@ -54,8 +54,7 @@ func (s *WithdrawAllTestSuite) TestNewWithdrawAllRewardsGenerateOnly() {
 	info, _, err := val.ClientCtx.Keyring.NewMnemonic("newAccount", keyring.English, sdk.FullFundraiserPath, keyring.DefaultBIP39Passphrase, hd.Secp256k1)
 	require.NoError(err)
 
-	pubkey, err := info.GetPubKey()
-	require.NoError(err)
+	pubkey := info.GetPubKey()
 
 	newAddr := sdk.AccAddress(pubkey.Address())
 	_, err = banktestutil.MsgSendExec(

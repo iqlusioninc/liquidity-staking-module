@@ -9,7 +9,7 @@ import (
 )
 
 // RegisterLegacyAminoCodec registers concrete types on LegacyAmino codec
-func RegisterLegacyAminoCodec(cdc *codec.LegacyAmino) {
+func RegisterLegacyAminoCodec(_ *codec.LegacyAmino) {
 	// cdc.RegisterConcrete(&MsgUnjail{}, "cosmos-sdk/MsgUnjail", nil)
 }
 

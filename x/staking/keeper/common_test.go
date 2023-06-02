@@ -4,7 +4,6 @@ import (
 	"math/big"
 	"testing"
 
-	"cosmossdk.io/math"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -50,7 +49,7 @@ func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int) ([]sdk
 	return addrDels, addrVals
 }
 
-func delegateCoinsFromAccount(ctx sdk.Context, app *simapp.SimApp, addr sdk.AccAddress, amount math.Int, val types.Validator) error {
+func delegateCoinsFromAccount(ctx sdk.Context, app *simapp.SimApp, addr sdk.AccAddress, amount sdk.Int, val types.Validator) error {
 	// bondDenom := app.StakingKeeper.BondDenom(ctx)
 	// coins := sdk.Coins{sdk.NewCoin(bondDenom, amount)}
 	// app.BankKeeper.DelegateCoinsFromAccountToModule(ctx, addr, types.EpochDelegationPoolName, coins)

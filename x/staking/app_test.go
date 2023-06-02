@@ -3,7 +3,6 @@ package staking_test
 import (
 	"testing"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -83,7 +82,7 @@ func TestStakingMsgs(t *testing.T) {
 	validator := checkValidator(t, app, sdk.ValAddress(addr1), true)
 	require.Equal(t, sdk.ValAddress(addr1).String(), validator.OperatorAddress)
 	require.Equal(t, sdkstaking.Bonded, validator.Status)
-	require.True(math.IntEq(t, bondTokens, validator.BondedTokens()))
+	require.True(sdk.IntEq(t, bondTokens, validator.BondedTokens()))
 
 	header = tmproto.Header{Height: app.LastBlockHeight() + 1}
 	app.BeginBlock(abci.RequestBeginBlock{Header: header})

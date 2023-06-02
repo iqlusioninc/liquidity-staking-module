@@ -7,8 +7,8 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
+	simapp_test "github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
@@ -33,8 +33,8 @@ func TestProposalHandlerPassed(t *testing.T) {
 
 	// add coins to the module account
 	macc := app.DistrKeeper.GetDistributionAccount(ctx)
-	balances := app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
-	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, macc.GetName(), amount))
+	_ = app.BankKeeper.GetAllBalances(ctx, macc.GetAddress())
+	require.NoError(t, simapp_test.FundModuleAccount(app.BankKeeper, ctx, macc.GetName(), amount))
 
 	app.AccountKeeper.SetModuleAccount(ctx, macc)
 
@@ -50,7 +50,7 @@ func TestProposalHandlerPassed(t *testing.T) {
 	hdlr := distribution.NewCommunityPoolSpendProposalHandler(app.DistrKeeper)
 	require.NoError(t, hdlr(ctx, tp))
 
-	balances = app.BankKeeper.GetAllBalances(ctx, recipient)
+	balances := app.BankKeeper.GetAllBalances(ctx, recipient)
 	require.Equal(t, balances, amount)
 }
 

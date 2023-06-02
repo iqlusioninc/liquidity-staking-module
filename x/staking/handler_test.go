@@ -3,17 +3,16 @@ package staking_test
 import (
 	"testing"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 
+	simapp_test "github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/teststaking"
 )
 
-func bootstrapHandlerGenesisTest(t *testing.T, power int64, numAddrs int, accAmount math.Int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
+func bootstrapHandlerGenesisTest(t *testing.T, power int64, numAddrs int, accAmount sdk.Int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
 	_, app, ctx := getBaseSimappWithCustomKeeper(t)
 
 	addrDels, addrVals := generateAddresses(app, ctx, numAddrs, accAmount)
@@ -25,7 +24,7 @@ func bootstrapHandlerGenesisTest(t *testing.T, power int64, numAddrs int, accAmo
 
 	// set non bonded pool balance
 	app.AccountKeeper.SetModuleAccount(ctx, notBondedPool)
-	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), totalSupply))
+	require.NoError(t, simapp_test.FundModuleAccount(app.BankKeeper, ctx, notBondedPool.GetName(), totalSupply))
 	return app, ctx, addrDels, addrVals
 }
 
@@ -36,7 +35,7 @@ func TestTokenizeShares(t *testing.T) {
 		name      string
 		delIndex  int64
 		valIndex  int64
-		amount    math.Int
+		amount    sdk.Int
 		isSuccess bool
 		expStatus sdkstaking.BondStatus
 		expJailed bool
@@ -125,7 +124,7 @@ func TestRedeemTokensforShares(t *testing.T) {
 
 	testCases := []struct {
 		name      string
-		amount    math.Int
+		amount    sdk.Int
 		isSuccess bool
 	}{
 		{
@@ -189,7 +188,7 @@ func TransferTokenizeShareRecord(t *testing.T) {
 
 	testCases := []struct {
 		name      string
-		recordId  uint64
+		recordID  uint64
 		oldOwner  int64
 		newOwner  int64
 		isSuccess bool
@@ -239,7 +238,7 @@ func TransferTokenizeShareRecord(t *testing.T) {
 			tstaking.TokenizeShares(del2, val1, sdk.NewInt64Coin(sdk.DefaultBondDenom, 10000), del2, true)
 
 			// redeem share
-			tstaking.TranserTokenizeShareRecord(tc.recordId, delAddrs[tc.oldOwner], delAddrs[tc.newOwner], tc.isSuccess)
+			tstaking.TranserTokenizeShareRecord(tc.recordID, delAddrs[tc.oldOwner], delAddrs[tc.newOwner], tc.isSuccess)
 		})
 	}
 }

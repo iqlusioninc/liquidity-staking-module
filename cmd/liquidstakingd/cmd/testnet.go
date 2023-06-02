@@ -6,13 +6,13 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net"
 	"os"
 	"path/filepath"
 
 	"github.com/spf13/cobra"
 	tmconfig "github.com/tendermint/tendermint/config"
+
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"
@@ -249,7 +249,7 @@ func initTestnetFiles(
 		memo := fmt.Sprintf("%s@%s:26656", nodeIDs[i], ip)
 		genFiles = append(genFiles, nodeConfig.GenesisFile())
 
-		kb, err := keyring.New(sdk.KeyringServiceName(), args.keyringBackend, nodeDir, inBuf, clientCtx.Codec)
+		kb, err := keyring.New(sdk.KeyringServiceName(), args.keyringBackend, nodeDir, inBuf, clientCtx.KeyringOptions...)
 		if err != nil {
 			return err
 		}
@@ -465,7 +465,7 @@ func calculateIP(ip string, i int) (string, error) {
 }
 
 func writeFile(name string, dir string, contents []byte) error {
-	writePath := filepath.Join(dir)
+	writePath := filepath.Clean(dir)
 	file := filepath.Join(writePath, name)
 
 	err := tmos.EnsureDir(writePath, 0o755)
@@ -473,7 +473,7 @@ func writeFile(name string, dir string, contents []byte) error {
 		return err
 	}
 
-	err = ioutil.WriteFile(file, contents, 0o644) // nolint: gosec
+	err = os.WriteFile(file, contents, 0o644) //nolint: gosec
 	if err != nil {
 		return err
 	}
@@ -512,7 +512,10 @@ func startTestnet(cmd *cobra.Command, args startArgs) error {
 		return err
 	}
 
-	testnet.WaitForHeight(1)
+	_, err = testnet.WaitForHeight(1)
+	if err != nil {
+		return err
+	}
 	cmd.Println("press the Enter Key to terminate")
 	fmt.Scanln() // wait for Enter Key
 	testnet.Cleanup()

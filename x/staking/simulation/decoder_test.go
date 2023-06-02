@@ -7,8 +7,6 @@ import (
 
 	"github.com/stretchr/testify/require"
 
-	"github.com/cosmos/cosmos-sdk/codec"
-	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
@@ -23,16 +21,8 @@ var (
 	valAddr1 = sdk.ValAddress(delPk1.Address())
 )
 
-func makeTestCodec() (cdc *codec.LegacyAmino) {
-	cdc = codec.NewLegacyAmino()
-	sdk.RegisterLegacyAminoCodec(cdc)
-	cryptocodec.RegisterCrypto(cdc)
-	types.RegisterLegacyAminoCodec(cdc)
-	return
-}
-
 func TestDecodeStore(t *testing.T) {
-	cdc := simapp.MakeTestEncodingConfig().Codec
+	cdc := simapp.MakeTestEncodingConfig().Marshaler
 	dec := simulation.NewDecodeStore(cdc)
 	bondTime := time.Now().UTC()
 

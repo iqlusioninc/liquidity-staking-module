@@ -4,7 +4,6 @@ import (
 	"math/big"
 	"testing"
 
-	"cosmossdk.io/math"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -20,7 +19,7 @@ func init() {
 	sdk.DefaultPowerReduction = sdk.NewIntFromBigInt(new(big.Int).Exp(big.NewInt(10), big.NewInt(18), nil))
 }
 
-// nolint:deadcode,unused,varcheck
+//nolint:deadcode,unused,varcheck
 var (
 	priv1 = secp256k1.GenPrivKey()
 	addr1 = sdk.AccAddress(priv1.PubKey().Address())
@@ -56,7 +55,7 @@ func getBaseSimappWithCustomKeeper(t *testing.T) (*codec.LegacyAmino, *simapp.Si
 }
 
 // generateAddresses generates numAddrs of normal AccAddrs and ValAddrs
-func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int, accAmount math.Int) ([]sdk.AccAddress, []sdk.ValAddress) {
+func generateAddresses(app *simapp.SimApp, ctx sdk.Context, numAddrs int, accAmount sdk.Int) ([]sdk.AccAddress, []sdk.ValAddress) {
 	addrDels := simapp.AddTestAddrsIncremental(app, ctx, numAddrs, accAmount)
 	addrVals := simapp.ConvertAddrsToValAddrs(addrDels)
 

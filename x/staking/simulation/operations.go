@@ -22,6 +22,8 @@ const (
 )
 
 // Simulation operation weights constants
+//
+//nolint:gosec // these are not hard-coded credentials
 const (
 	OpWeightMsgCreateValidator             = "op_weight_msg_create_validator"
 	OpWeightMsgEditValidator               = "op_weight_msg_edit_validator"
@@ -83,7 +85,7 @@ func WeightedOperations(
 
 	appParams.GetOrGenerate(cdc, OpWeightMsgCancelUnbondingDelegation, &weightMsgCancelUnbondingDelegation, nil,
 		func(_ *rand.Rand) {
-			weightMsgCancelUnbondingDelegation = simappparams.DefaultWeightMsgCancelUnbondingDelegation
+			weightMsgCancelUnbondingDelegation = simappparams.DefaultWeightMsgDelegate
 		},
 	)
 
@@ -178,7 +180,7 @@ func SimulateMsgCreateValidator(ak types.AccountKeeper, bk types.BankKeeper, k k
 
 		var fees sdk.Coins
 
-		coins, hasNeg := spendable.SafeSub(selfDelegation)
+		coins, hasNeg := spendable.SafeSub(sdk.NewCoins(selfDelegation))
 		if !hasNeg {
 			fees, err = simtypes.RandomFees(r, ctx, coins)
 			if err != nil {
@@ -321,7 +323,7 @@ func SimulateMsgDelegate(ak types.AccountKeeper, bk types.BankKeeper, k keeper.K
 
 		var fees sdk.Coins
 
-		coins, hasNeg := spendable.SafeSub(bondAmt)
+		coins, hasNeg := spendable.SafeSub(sdk.NewCoins(bondAmt))
 		if !hasNeg {
 			fees, err = simtypes.RandomFees(r, ctx, coins)
 			if err != nil {
@@ -440,38 +442,38 @@ func SimulateMsgCancelUnbondingDelegate(ak types.AccountKeeper, bk types.BankKee
 		// get random validator
 		validator, ok := keeper.RandomValidator(r, k, ctx)
 		if !ok {
-			return simtypes.NoOpMsg(types.ModuleName, sdkstaking.TypeMsgCancelUnbondingDelegation, "validator is not ok"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, "cancel_unbond", "validator is not ok"), nil, nil
 		}
 
 		if validator.IsJailed() || validator.InvalidExRate() {
-			return simtypes.NoOpMsg(types.ModuleName, sdkstaking.TypeMsgCancelUnbondingDelegation, "validator is jailed"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, "cancel_unbond", "validator is jailed"), nil, nil
 		}
 
 		valAddr := validator.GetOperator()
 		unbondingDelegation, found := k.GetUnbondingDelegation(ctx, simAccount.Address, valAddr)
 		if !found {
-			return simtypes.NoOpMsg(types.ModuleName, sdkstaking.TypeMsgCancelUnbondingDelegation, "account does have any unbonding delegation"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, "cancel_unbond", "account does have any unbonding delegation"), nil, nil
 		}
 
 		// get random unbonding delegation entry at block height
 		unbondingDelegationEntry := unbondingDelegation.Entries[r.Intn(len(unbondingDelegation.Entries))]
 
 		if unbondingDelegationEntry.CompletionTime.Before(ctx.BlockTime()) {
-			return simtypes.NoOpMsg(types.ModuleName, sdkstaking.TypeMsgCancelUnbondingDelegation, "unbonding delegation is already processed"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, "cancel_unbond", "unbonding delegation is already processed"), nil, nil
 		}
 
 		if !unbondingDelegationEntry.Balance.IsPositive() {
-			return simtypes.NoOpMsg(types.ModuleName, sdkstaking.TypeMsgCancelUnbondingDelegation, "delegator receiving balance is negative"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, "cancel_unbond", "delegator receiving balance is negative"), nil, nil
 		}
 
 		cancelBondAmt := simtypes.RandomAmount(r, unbondingDelegationEntry.Balance)
 
 		if cancelBondAmt.IsZero() {
-			return simtypes.NoOpMsg(types.ModuleName, sdkstaking.TypeMsgCancelUnbondingDelegation, "cancelBondAmt amount is zero"), nil, nil
+			return simtypes.NoOpMsg(types.ModuleName, "cancel_unbond", "cancelBondAmt amount is zero"), nil, nil
 		}
 
-		msg := sdkstaking.NewMsgCancelUnbondingDelegation(
-			simAccount.Address, valAddr, unbondingDelegationEntry.CreationHeight, sdk.NewCoin(k.BondDenom(ctx), cancelBondAmt),
+		msg := sdkstaking.NewMsgUndelegate(
+			simAccount.Address, valAddr, sdk.NewCoin(k.BondDenom(ctx), cancelBondAmt),
 		)
 
 		spendable := bk.SpendableCoins(ctx, simAccount.Address)

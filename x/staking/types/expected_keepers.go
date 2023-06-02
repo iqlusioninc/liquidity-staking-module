@@ -1,7 +1,6 @@
 package types
 
 import (
-	"cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
@@ -61,11 +60,11 @@ type ValidatorSet interface {
 
 	Validator(sdk.Context, sdk.ValAddress) sdkstaking.ValidatorI            // get a particular validator by operator address
 	ValidatorByConsAddr(sdk.Context, sdk.ConsAddress) sdkstaking.ValidatorI // get a particular validator by consensus address
-	TotalBondedTokens(sdk.Context) math.Int                                 // total bonded tokens within the validator set
-	StakingTokenSupply(sdk.Context) math.Int                                // total staking token supply
+	TotalBondedTokens(sdk.Context) sdk.Int                                  // total bonded tokens within the validator set
+	StakingTokenSupply(sdk.Context) sdk.Int                                 // total staking token supply
 
 	// slash the validator and delegators of the validator, specifying offence height, offence power, and slash fraction
-	Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec) math.Int
+	Slash(sdk.Context, sdk.ConsAddress, int64, int64, sdk.Dec, sdkstaking.InfractionType)
 	Jail(sdk.Context, sdk.ConsAddress)   // jail a validator
 	Unjail(sdk.Context, sdk.ConsAddress) // unjail a validator
 
@@ -98,7 +97,7 @@ type StakingHooks interface {
 	AfterValidatorCreated(ctx sdk.Context, valAddr sdk.ValAddress) error                           // Must be called when a validator is created
 	BeforeValidatorModified(ctx sdk.Context, valAddr sdk.ValAddress) error                         // Must be called when a validator's state changes
 	AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error // Must be called when a validator is deleted
-	BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordId uint64) error                       // Must be called when tokenize share record is deleted
+	BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordID uint64) error                       // Must be called when tokenize share record is deleted
 
 	AfterValidatorBonded(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error         // Must be called when a validator is bonded
 	AfterValidatorBeginUnbonding(ctx sdk.Context, consAddr sdk.ConsAddress, valAddr sdk.ValAddress) error // Must be called when a validator begins unbonding

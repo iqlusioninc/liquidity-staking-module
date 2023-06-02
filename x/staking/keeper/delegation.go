@@ -6,7 +6,6 @@ import (
 	"time"
 
 	errorsmod "cosmossdk.io/errors"
-	"cosmossdk.io/math"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
@@ -200,7 +199,7 @@ func (k Keeper) IterateUnbondingDelegations(ctx sdk.Context, fn func(index int64
 }
 
 // GetDelegatorUnbonding returns the total amount a delegator has unbonding.
-func (k Keeper) GetDelegatorUnbonding(ctx sdk.Context, delegator sdk.AccAddress) math.Int {
+func (k Keeper) GetDelegatorUnbonding(ctx sdk.Context, delegator sdk.AccAddress) sdk.Int {
 	unbonding := sdk.ZeroInt()
 	k.IterateDelegatorUnbondingDelegations(ctx, delegator, func(ubd types.UnbondingDelegation) bool {
 		for _, entry := range ubd.Entries {
@@ -227,7 +226,7 @@ func (k Keeper) IterateDelegatorUnbondingDelegations(ctx sdk.Context, delegator 
 }
 
 // GetDelegatorBonded returs the total amount a delegator has bonded.
-func (k Keeper) GetDelegatorBonded(ctx sdk.Context, delegator sdk.AccAddress) math.Int {
+func (k Keeper) GetDelegatorBonded(ctx sdk.Context, delegator sdk.AccAddress) sdk.Int {
 	bonded := sdk.ZeroDec()
 
 	k.IterateDelegatorDelegations(ctx, delegator, func(delegation types.Delegation) bool {
@@ -320,7 +319,7 @@ func (k Keeper) RemoveUnbondingDelegation(ctx sdk.Context, ubd types.UnbondingDe
 // the given addresses. It creates the unbonding delegation if it does not exist.
 func (k Keeper) SetUnbondingDelegationEntry(
 	ctx sdk.Context, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress,
-	creationHeight int64, minTime time.Time, balance math.Int,
+	creationHeight int64, minTime time.Time, balance sdk.Int,
 ) types.UnbondingDelegation {
 	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddr, validatorAddr)
 	if found {
@@ -502,8 +501,8 @@ func (k Keeper) SetRedelegation(ctx sdk.Context, red types.Redelegation) {
 func (k Keeper) SetRedelegationEntry(ctx sdk.Context,
 	delegatorAddr sdk.AccAddress, validatorSrcAddr,
 	validatorDstAddr sdk.ValAddress, creationHeight int64,
-	minTime time.Time, balance math.Int,
-	sharesSrc, sharesDst sdk.Dec,
+	minTime time.Time, balance sdk.Int,
+	_, sharesDst sdk.Dec,
 ) types.Redelegation {
 	red, found := k.GetRedelegation(ctx, delegatorAddr, validatorSrcAddr, validatorDstAddr)
 	if found {
@@ -607,7 +606,7 @@ func (k Keeper) RedelegationQueueIterator(ctx sdk.Context, endTime time.Time) sd
 // DequeueAllMatureRedelegationQueue returns a concatenated list of all the
 // timeslices inclusively previous to currTime, and deletes the timeslices from
 // the queue.
-func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time.Time) (matureRedelegations []types.DVVTriplet) {
+func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, _ time.Time) (matureRedelegations []types.DVVTriplet) {
 	store := ctx.KVStore(k.storeKey)
 
 	// gets an iterator for all timeslices from time 0 until the current Blockheader time
@@ -630,7 +629,7 @@ func (k Keeper) DequeueAllMatureRedelegationQueue(ctx sdk.Context, currTime time
 // Delegate performs a delegation, set/update everything necessary within the store.
 // tokenSrc indicates the bond status of the incoming funds.
 func (k Keeper) Delegate(
-	ctx sdk.Context, delAddr sdk.AccAddress, bondAmt math.Int, tokenSrc sdkstaking.BondStatus,
+	ctx sdk.Context, delAddr sdk.AccAddress, bondAmt sdk.Int, tokenSrc sdkstaking.BondStatus,
 	validator types.Validator, subtractAccount bool,
 ) (newShares sdk.Dec, err error) {
 	// In some situations, the exchange rate becomes invalid, e.g. if
@@ -717,7 +716,7 @@ func (k Keeper) Delegate(
 // Unbond unbonds a particular delegation and perform associated store operations.
 func (k Keeper) Unbond(
 	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, shares sdk.Dec,
-) (amount math.Int, err error) {
+) (amount sdk.Int, err error) {
 	// check if a delegation object exists in the store
 	delegation, found := k.GetLiquidDelegation(ctx, delAddr, valAddr)
 	if !found {
@@ -982,7 +981,7 @@ func (k Keeper) CompleteRedelegation(
 // valied based on upon the converted shares. If the amount is valid, the total
 // amount of respective shares is returned, otherwise an error is returned.
 func (k Keeper) ValidateUnbondAmount(
-	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt math.Int,
+	ctx sdk.Context, delAddr sdk.AccAddress, valAddr sdk.ValAddress, amt sdk.Int,
 ) (shares sdk.Dec, err error) {
 	validator, found := k.GetLiquidValidator(ctx, valAddr)
 	if !found {

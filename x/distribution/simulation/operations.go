@@ -18,6 +18,8 @@ import (
 const DefaultWeightMsgWithdrawAllTokenizeShareRecordReward int = 50
 
 // Simulation operation weights constants
+//
+//nolint:gosec // these are weights for simulation, not hard coded credentials
 const (
 	OpWeightMsgSetWithdrawAddress                = "op_weight_msg_set_withdraw_address"
 	OpWeightMsgWithdrawDelegationReward          = "op_weight_msg_withdraw_delegation_reward"
@@ -126,7 +128,7 @@ func SimulateMsgSetWithdrawAddress(ak types.AccountKeeper, bk types.BankKeeper, 
 }
 
 // SimulateMsgWithdrawDelegatorReward generates a MsgWithdrawDelegatorReward with random values.
-func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simtypes.Operation {
+func SimulateMsgWithdrawDelegatorReward(ak types.AccountKeeper, bk types.BankKeeper, _ keeper.Keeper, sk stakingkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -213,7 +215,7 @@ func SimulateMsgWithdrawValidatorCommission(ak types.AccountKeeper, bk types.Ban
 
 // SimulateMsgFundCommunityPool simulates MsgFundCommunityPool execution where
 // a random account sends a random amount of its funds to the community pool.
-func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simtypes.Operation {
+func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, _ keeper.Keeper, _ stakingkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {
@@ -232,7 +234,7 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 			err  error
 		)
 
-		coins, hasNeg := spendable.SafeSub(fundAmount...)
+		coins, hasNeg := spendable.SafeSub(fundAmount)
 		if !hasNeg {
 			fees, err = simtypes.RandomFees(r, ctx, coins)
 			if err != nil {
@@ -261,7 +263,7 @@ func SimulateMsgFundCommunityPool(ak types.AccountKeeper, bk types.BankKeeper, k
 
 // SimulateMsgWithdrawTokenizeShareRecordReward simulates MsgWithdrawTokenizeShareRecordReward execution where
 // a random account claim tokenize share record rewards.
-func SimulateMsgWithdrawTokenizeShareRecordReward(ak types.AccountKeeper, bk types.BankKeeper, k keeper.Keeper, sk stakingkeeper.Keeper) simtypes.Operation {
+func SimulateMsgWithdrawTokenizeShareRecordReward(ak types.AccountKeeper, bk types.BankKeeper, _ keeper.Keeper, sk stakingkeeper.Keeper) simtypes.Operation {
 	return func(
 		r *rand.Rand, app *baseapp.BaseApp, ctx sdk.Context, accs []simtypes.Account, chainID string,
 	) (simtypes.OperationMsg, []simtypes.FutureOperation, error) {

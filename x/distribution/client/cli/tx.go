@@ -13,7 +13,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/tx"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/version"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
+	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 )
 
@@ -385,12 +385,12 @@ $ %s tx distribution withdraw-tokenize-share-rewards 1 --from mykey
 				return err
 			}
 
-			recordId, err := strconv.Atoi(args[0])
+			recordID, err := strconv.Atoi(args[0])
 			if err != nil {
 				return err
 			}
 
-			msg := types.NewMsgWithdrawTokenizeShareRecordReward(clientCtx.GetFromAddress(), uint64(recordId))
+			msg := types.NewMsgWithdrawTokenizeShareRecordReward(clientCtx.GetFromAddress(), uint64(recordID))
 
 			return tx.GenerateOrBroadcastTxCLI(clientCtx, cmd.Flags(), msg)
 		},

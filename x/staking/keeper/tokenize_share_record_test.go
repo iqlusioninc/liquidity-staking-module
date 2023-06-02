@@ -6,11 +6,11 @@ import (
 
 func (suite *KeeperTestSuite) TestGetLastTokenizeShareRecordId() {
 	app, ctx := suite.app, suite.ctx
-	lastTokenizeShareRecordId := app.StakingKeeper.GetLastTokenizeShareRecordId(ctx)
-	suite.Equal(lastTokenizeShareRecordId, uint64(0))
-	app.StakingKeeper.SetLastTokenizeShareRecordId(ctx, 100)
-	lastTokenizeShareRecordId = app.StakingKeeper.GetLastTokenizeShareRecordId(ctx)
-	suite.Equal(lastTokenizeShareRecordId, uint64(100))
+	lastTokenizeShareRecordID := app.StakingKeeper.GetLastTokenizeShareRecordID(ctx)
+	suite.Equal(lastTokenizeShareRecordID, uint64(0))
+	app.StakingKeeper.SetLastTokenizeShareRecordID(ctx, 100)
+	lastTokenizeShareRecordID = app.StakingKeeper.GetLastTokenizeShareRecordID(ctx)
+	suite.Equal(lastTokenizeShareRecordID, uint64(100))
 }
 
 func (suite *KeeperTestSuite) TestGetTokenizeShareRecord() {
@@ -35,9 +35,12 @@ func (suite *KeeperTestSuite) TestGetTokenizeShareRecord() {
 		ModuleAccount: "test-module-account-3",
 		Validator:     "test-validator",
 	}
-	app.StakingKeeper.AddTokenizeShareRecord(ctx, tokenizeShareRecord1)
-	app.StakingKeeper.AddTokenizeShareRecord(ctx, tokenizeShareRecord2)
-	app.StakingKeeper.AddTokenizeShareRecord(ctx, tokenizeShareRecord3)
+	err := app.StakingKeeper.AddTokenizeShareRecord(ctx, tokenizeShareRecord1)
+	suite.NoError(err)
+	err = app.StakingKeeper.AddTokenizeShareRecord(ctx, tokenizeShareRecord2)
+	suite.NoError(err)
+	err = app.StakingKeeper.AddTokenizeShareRecord(ctx, tokenizeShareRecord3)
+	suite.NoError(err)
 
 	tokenizeShareRecord, err := app.StakingKeeper.GetTokenizeShareRecord(ctx, 2)
 	suite.NoError(err)

@@ -9,9 +9,9 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
+	simapp_test "github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	sdkdistr "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
@@ -629,7 +629,7 @@ func (suite *KeeperTestSuite) TestGRPCCommunityPool() {
 			"valid request",
 			func() {
 				amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-				suite.Require().NoError(testutil.FundAccount(app.BankKeeper, ctx, addrs[0], amount))
+				suite.Require().NoError(simapp_test.FundAccount(app.BankKeeper, ctx, addrs[0], amount))
 
 				err := app.DistrKeeper.FundCommunityPool(ctx, amount, addrs[0])
 				suite.Require().Nil(err)
@@ -700,18 +700,21 @@ func (suite *KeeperTestSuite) TestGRPCTokenizeShareRecordReward() {
 	app.DistrKeeper.IncrementValidatorPeriod(ctx, val)
 
 	coins := sdk.Coins{sdk.NewCoin(sdk.DefaultBondDenom, initial)}
-	app.MintKeeper.MintCoins(ctx, coins)
-	app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)
+	err := app.MintKeeper.MintCoins(ctx, coins)
+	suite.Require().NoError(err)
 
+	err = app.BankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)
+	suite.Require().NoError(err)
 	// tokenize share amount
 	delTokens := sdk.NewInt(1000000)
 	msgServer := stakingkeeper.NewMsgServerImpl(app.StakingKeeper)
-	_, err := msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &stakingtypes.MsgTokenizeShares{
+	_, err = msgServer.TokenizeShares(sdk.WrapSDKContext(ctx), &stakingtypes.MsgTokenizeShares{
 		DelegatorAddress:    sdk.AccAddress(valAddrs[0]).String(),
 		ValidatorAddress:    valAddrs[0].String(),
 		TokenizedShareOwner: sdk.AccAddress(valAddrs[0]).String(),
 		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, delTokens),
 	})
+	suite.Require().NoError(err)
 
 	staking.EndBlocker(ctx, app.StakingKeeper)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 1)

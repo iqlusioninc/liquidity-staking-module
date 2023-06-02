@@ -4,6 +4,7 @@ import (
 	"context"
 
 	errorsmod "cosmossdk.io/errors"
+
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
@@ -18,7 +19,7 @@ import (
 var _ types.QueryServer = Keeper{}
 
 // Params queries params of distribution module
-func (k Keeper) Params(c context.Context, req *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
+func (k Keeper) Params(c context.Context, _ *types.QueryParamsRequest) (*types.QueryParamsResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	var params types.Params
 	k.paramSpace.GetParamSet(ctx, &params)
@@ -241,7 +242,7 @@ func (k Keeper) DelegatorWithdrawAddress(c context.Context, req *types.QueryDele
 }
 
 // CommunityPool queries the community pool coins
-func (k Keeper) CommunityPool(c context.Context, req *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
+func (k Keeper) CommunityPool(c context.Context, _ *types.QueryCommunityPoolRequest) (*types.QueryCommunityPoolResponse, error) {
 	ctx := sdk.UnwrapSDKContext(c)
 	pool := k.GetFeePoolCommunityCoins(ctx)
 

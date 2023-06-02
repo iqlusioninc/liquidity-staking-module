@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"time"
 
-	"cosmossdk.io/math"
 	gogotypes "github.com/gogo/protobuf/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,7 +25,7 @@ func (k Keeper) GetLiquidValidator(ctx sdk.Context, addr sdk.ValAddress) (valida
 }
 
 // get a single validator as sdktypes for other module use
-func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator sdkstaking.Validator, found bool) {
+func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator types.Validator, found bool) {
 	store := ctx.KVStore(k.storeKey)
 
 	value := store.Get(types.GetValidatorKey(addr))
@@ -34,7 +33,7 @@ func (k Keeper) GetValidator(ctx sdk.Context, addr sdk.ValAddress) (validator sd
 		return validator, false
 	}
 
-	validator = sdkstaking.MustUnmarshalValidator(k.cdc, value)
+	validator = types.MustUnmarshalValidator(k.cdc, value)
 	return validator, true
 }
 
@@ -111,7 +110,7 @@ func (k Keeper) SetNewValidatorByPowerIndex(ctx sdk.Context, validator types.Val
 
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
-	tokensToAdd math.Int,
+	tokensToAdd sdk.Int,
 ) (valOut types.Validator, addedShares sdk.Dec) {
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	validator, addedShares = validator.AddTokensFromDel(tokensToAdd)
@@ -124,7 +123,7 @@ func (k Keeper) AddValidatorTokensAndShares(ctx sdk.Context, validator types.Val
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.Validator,
 	sharesToRemove sdk.Dec,
-) (valOut types.Validator, removedTokens math.Int) {
+) (valOut types.Validator, removedTokens sdk.Int) {
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	validator, removedTokens = validator.RemoveDelShares(sharesToRemove)
 	k.SetValidator(ctx, validator)
@@ -135,7 +134,7 @@ func (k Keeper) RemoveValidatorTokensAndShares(ctx sdk.Context, validator types.
 
 // Update the tokens of an existing validator, update the validators power index key
 func (k Keeper) RemoveValidatorTokens(ctx sdk.Context,
-	validator types.Validator, tokensToRemove math.Int,
+	validator types.Validator, tokensToRemove sdk.Int,
 ) types.Validator {
 	k.DeleteValidatorByPowerIndex(ctx, validator)
 	validator = validator.RemoveTokens(tokensToRemove)
@@ -197,7 +196,10 @@ func (k Keeper) RemoveValidator(ctx sdk.Context, address sdk.ValAddress) {
 	store.Delete(types.GetValidatorsByPowerIndexKey(validator, k.PowerReduction(ctx)))
 
 	// call hooks
-	k.AfterValidatorRemoved(ctx, valConsAddr, validator.GetOperator())
+	err = k.AfterValidatorRemoved(ctx, valConsAddr, validator.GetOperator())
+	if err != nil {
+		panic(err)
+	}
 }
 
 // get groups of validators

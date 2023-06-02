@@ -6,7 +6,6 @@ import (
 	"strings"
 	"time"
 
-	"cosmossdk.io/math"
 	"sigs.k8s.io/yaml"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -166,11 +165,9 @@ func (p Params) Validate() error {
 		return err
 	}
 
-	if err := validateValidatorBondFactor(p.ValidatorBondFactor); err != nil {
-		return err
-	}
+	err := validateValidatorBondFactor(p.ValidatorBondFactor)
 
-	return nil
+	return err
 }
 
 func validateUnbondingTime(i interface{}) error {
@@ -231,15 +228,13 @@ func validateBondDenom(i interface{}) error {
 		return errors.New("bond denom cannot be blank")
 	}
 
-	if err := sdk.ValidateDenom(v); err != nil {
-		return err
-	}
+	err := sdk.ValidateDenom(v)
 
-	return nil
+	return err
 }
 
 func ValidatePowerReduction(i interface{}) error {
-	v, ok := i.(math.Int)
+	v, ok := i.(sdk.Int)
 	if !ok {
 		return fmt.Errorf("invalid parameter type: %T", i)
 	}

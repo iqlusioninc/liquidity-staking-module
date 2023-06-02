@@ -6,8 +6,8 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	simapp_test "github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
@@ -138,6 +138,7 @@ func TestWithdrawTokenizeShareRecordReward(t *testing.T) {
 		TokenizedShareOwner: sdk.AccAddress(valAddrs[1]).String(),
 		Amount:              sdk.NewCoin(sdk.DefaultBondDenom, delTokens),
 	})
+	require.NoError(t, err)
 
 	// try withdrawing rewards before no reward is allocated
 	coins, err = app.DistrKeeper.WithdrawAllTokenizeShareRecordReward(ctx, sdk.AccAddress(valAddrs[1]))
@@ -226,7 +227,7 @@ func TestCalculateRewardsAfterSlash(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
 	// slash the validator by 50%
-	app.StakingKeeper.Slash(ctx, valConsAddr1, ctx.BlockHeight(), valPower, sdk.NewDecWithPrec(5, 1))
+	app.StakingKeeper.Slash(ctx, valConsAddr1, ctx.BlockHeight(), valPower, sdk.NewDecWithPrec(5, 1), 0)
 
 	// retrieve validator
 	val = app.StakingKeeper.Validator(ctx, valAddrs[0])
@@ -289,7 +290,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
 	// slash the validator by 50%
-	app.StakingKeeper.Slash(ctx, valConsAddr1, ctx.BlockHeight(), valPower, sdk.NewDecWithPrec(5, 1))
+	app.StakingKeeper.Slash(ctx, valConsAddr1, ctx.BlockHeight(), valPower, sdk.NewDecWithPrec(5, 1), 0)
 
 	// fetch the validator again
 	val = app.StakingKeeper.Validator(ctx, valAddrs[0])
@@ -303,7 +304,7 @@ func TestCalculateRewardsAfterManySlashes(t *testing.T) {
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// slash the validator by 50% again
-	app.StakingKeeper.Slash(ctx, valConsAddr1, ctx.BlockHeight(), valPower/2, sdk.NewDecWithPrec(5, 1))
+	app.StakingKeeper.Slash(ctx, valConsAddr1, ctx.BlockHeight(), valPower/2, sdk.NewDecWithPrec(5, 1), 0)
 
 	// fetch the validator again
 	val = app.StakingKeeper.Validator(ctx, valAddrs[0])
@@ -405,7 +406,7 @@ func TestWithdrawDelegationRewardsBasic(t *testing.T) {
 
 	// set module account coins
 	distrAcc := app.DistrKeeper.GetDistributionAccount(ctx)
-	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, distrAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, balanceTokens))))
+	require.NoError(t, simapp_test.FundModuleAccount(app.BankKeeper, ctx, distrAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, balanceTokens))))
 	app.AccountKeeper.SetModuleAccount(ctx, distrAcc)
 
 	// create validator with 50% commission
@@ -505,10 +506,10 @@ func TestCalculateRewardsAfterManySlashesInSameBlock(t *testing.T) {
 	app.DistrKeeper.AllocateTokensToValidator(ctx, val, tokens)
 
 	// slash the validator by 50%
-	app.StakingKeeper.Slash(ctx, valConsAddr1, ctx.BlockHeight(), valPower, sdk.NewDecWithPrec(5, 1))
+	app.StakingKeeper.Slash(ctx, valConsAddr1, ctx.BlockHeight(), valPower, sdk.NewDecWithPrec(5, 1), 0)
 
 	// slash the validator by 50% again
-	app.StakingKeeper.Slash(ctx, valConsAddr1, ctx.BlockHeight(), valPower/2, sdk.NewDecWithPrec(5, 1))
+	app.StakingKeeper.Slash(ctx, valConsAddr1, ctx.BlockHeight(), valPower/2, sdk.NewDecWithPrec(5, 1), 0)
 
 	// fetch the validator again
 	val = app.StakingKeeper.Validator(ctx, valAddrs[0])
@@ -562,7 +563,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 
 	// slash the validator
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
-	app.StakingKeeper.Slash(ctx, valConsAddr1, ctx.BlockHeight(), valPower, sdk.NewDecWithPrec(5, 1))
+	app.StakingKeeper.Slash(ctx, valConsAddr1, ctx.BlockHeight(), valPower, sdk.NewDecWithPrec(5, 1), 0)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
 	// second delegation
@@ -581,7 +582,7 @@ func TestCalculateRewardsMultiDelegatorMultiSlash(t *testing.T) {
 
 	// slash the validator again
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
-	app.StakingKeeper.Slash(ctx, valConsAddr1, ctx.BlockHeight(), valPower, sdk.NewDecWithPrec(5, 1))
+	app.StakingKeeper.Slash(ctx, valConsAddr1, ctx.BlockHeight(), valPower, sdk.NewDecWithPrec(5, 1), 0)
 	ctx = ctx.WithBlockHeight(ctx.BlockHeight() + 3)
 
 	// fetch updated validator
@@ -619,7 +620,7 @@ func TestCalculateRewardsMultiDelegatorMultWithdraw(t *testing.T) {
 
 	// set module account coins
 	distrAcc := app.DistrKeeper.GetDistributionAccount(ctx)
-	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, distrAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)))))
+	require.NoError(t, simapp_test.FundModuleAccount(app.BankKeeper, ctx, distrAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)))))
 	app.AccountKeeper.SetModuleAccount(ctx, distrAcc)
 
 	tokens := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(initial))}
@@ -764,7 +765,7 @@ func Test100PercentCommissionReward(t *testing.T) {
 
 	// set module account coins
 	distrAcc := app.DistrKeeper.GetDistributionAccount(ctx)
-	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, distrAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)))))
+	require.NoError(t, simapp_test.FundModuleAccount(app.BankKeeper, ctx, distrAcc.GetName(), sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(1000)))))
 	app.AccountKeeper.SetModuleAccount(ctx, distrAcc)
 
 	tokens := sdk.DecCoins{sdk.NewDecCoinFromDec(sdk.DefaultBondDenom, sdk.NewDec(initial))}

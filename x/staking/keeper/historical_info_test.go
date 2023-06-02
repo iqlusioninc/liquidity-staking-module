@@ -3,7 +3,6 @@ package keeper_test
 import (
 	"testing"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
@@ -15,7 +14,7 @@ import (
 )
 
 // IsValSetSorted reports whether valset is sorted.
-func IsValSetSorted(data []types.Validator, powerReduction math.Int) bool {
+func IsValSetSorted(data []types.Validator, powerReduction sdk.Int) bool {
 	n := len(data)
 	for i := n - 1; i > 0; i-- {
 		if types.ValidatorsByVotingPower(data).Less(i, i-1, powerReduction) {
@@ -160,7 +159,8 @@ func TestGetAllHistoricalInfo(t *testing.T) {
 	expHistInfos := []types.HistoricalInfo{hist1, hist2, hist3}
 
 	for i, hi := range expHistInfos {
-		app.StakingKeeper.SetHistoricalInfo(ctx, int64(10+i), &hi)
+		hihi := hi
+		app.StakingKeeper.SetHistoricalInfo(ctx, int64(10+i), &hihi)
 	}
 
 	infos = app.StakingKeeper.GetAllHistoricalInfo(ctx)

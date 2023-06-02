@@ -4,7 +4,6 @@ import (
 	"errors"
 	"testing"
 
-	"cosmossdk.io/math"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
@@ -83,7 +82,7 @@ func TestSlashingMsgs(t *testing.T) {
 	validator := checkValidator(t, app, addr1, true)
 	require.Equal(t, sdk.ValAddress(addr1).String(), validator.OperatorAddress)
 	require.Equal(t, sdkstaking.Bonded, validator.Status)
-	require.True(math.IntEq(t, bondTokens, validator.BondedTokens()))
+	require.True(sdk.IntEq(t, bondTokens, validator.BondedTokens()))
 	unjailMsg := &types.MsgUnjail{ValidatorAddr: sdk.ValAddress(addr1).String()}
 
 	checkValidatorSigningInfo(t, app, sdk.ConsAddress(valAddr), true)

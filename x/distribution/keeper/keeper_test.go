@@ -7,8 +7,8 @@ import (
 	"github.com/stretchr/testify/require"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
+	simapp_test "github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/testutil"
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 )
@@ -50,7 +50,7 @@ func TestWithdrawValidatorCommission(t *testing.T) {
 	// set module account coins
 	distrAcc := app.DistrKeeper.GetDistributionAccount(ctx)
 	coins := sdk.NewCoins(sdk.NewCoin("mytoken", sdk.NewInt(2)), sdk.NewCoin("stake", sdk.NewInt(2)))
-	require.NoError(t, testutil.FundModuleAccount(app.BankKeeper, ctx, distrAcc.GetName(), coins))
+	require.NoError(t, simapp_test.FundModuleAccount(app.BankKeeper, ctx, distrAcc.GetName(), coins))
 
 	app.AccountKeeper.SetModuleAccount(ctx, distrAcc)
 
@@ -118,7 +118,7 @@ func TestFundCommunityPool(t *testing.T) {
 	addr := simapp.AddTestAddrs(app, ctx, 2, sdk.ZeroInt())
 
 	amount := sdk.NewCoins(sdk.NewInt64Coin("stake", 100))
-	require.NoError(t, testutil.FundAccount(app.BankKeeper, ctx, addr[0], amount))
+	require.NoError(t, simapp_test.FundAccount(app.BankKeeper, ctx, addr[0], amount))
 
 	initPool := app.DistrKeeper.GetFeePool(ctx)
 	assert.Empty(t, initPool.CommunityPool)
