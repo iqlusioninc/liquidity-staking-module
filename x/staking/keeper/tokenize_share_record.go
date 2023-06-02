@@ -58,7 +58,7 @@ func (k Keeper) GetTokenizeShareRecordsByOwner(ctx sdk.Context, owner sdk.AccAdd
 
 func (k Keeper) GetTokenizeShareRecordByDenom(ctx sdk.Context, denom string) (types.TokenizeShareRecord, error) {
 	store := ctx.KVStore(k.storeKey)
-	bz := store.Get(types.GetTokenizeShareRecordIdByDenomKey(denom))
+	bz := store.Get(types.GetTokenizeShareRecordIDByDenomKey(denom))
 	if bz == nil {
 		return types.TokenizeShareRecord{}, fmt.Errorf("tokenize share record not found from denom: %s", denom)
 	}
@@ -102,8 +102,8 @@ func (k Keeper) AddTokenizeShareRecord(ctx sdk.Context, tokenizeShareRecord type
 	return nil
 }
 
-func (k Keeper) DeleteTokenizeShareRecord(ctx sdk.Context, recordId uint64) error {
-	record, err := k.GetTokenizeShareRecord(ctx, recordId)
+func (k Keeper) DeleteTokenizeShareRecord(ctx sdk.Context, recordID uint64) error {
+	record, err := k.GetTokenizeShareRecord(ctx, recordID)
 	if err != nil {
 		return err
 	}
@@ -113,9 +113,9 @@ func (k Keeper) DeleteTokenizeShareRecord(ctx sdk.Context, recordId uint64) erro
 	}
 
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetTokenizeShareRecordByIndexKey(recordId))
-	store.Delete(types.GetTokenizeShareRecordIdByOwnerAndIdKey(owner, recordId))
-	store.Delete(types.GetTokenizeShareRecordIdByDenomKey(record.GetShareTokenDenom()))
+	store.Delete(types.GetTokenizeShareRecordByIndexKey(recordID))
+	store.Delete(types.GetTokenizeShareRecordIdByOwnerAndIdKey(owner, recordID))
+	store.Delete(types.GetTokenizeShareRecordIDByDenomKey(record.GetShareTokenDenom()))
 	return nil
 }
 
@@ -147,5 +147,5 @@ func (k Keeper) setTokenizeShareRecordWithDenom(ctx sdk.Context, denom string, i
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: id})
 
-	store.Set(types.GetTokenizeShareRecordIdByDenomKey(denom), bz)
+	store.Set(types.GetTokenizeShareRecordIDByDenomKey(denom), bz)
 }

@@ -374,7 +374,7 @@ func GetTokenizeShareRecordIdByOwnerAndIdKey(owner sdk.AccAddress, id uint64) []
 	return append(append(TokenizeShareRecordIdByOwnerPrefix, address.MustLengthPrefix(owner)...), sdk.Uint64ToBigEndian(id)...)
 }
 
-func GetTokenizeShareRecordIdByDenomKey(denom string) []byte {
+func GetTokenizeShareRecordIDByDenomKey(denom string) []byte {
 	return append(TokenizeShareRecordIdByDenomPrefix, []byte(denom)...)
 }
 

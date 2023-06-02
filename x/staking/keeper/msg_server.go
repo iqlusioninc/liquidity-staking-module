@@ -783,6 +783,9 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 	// calculate the ratio between shares and redeem amount
 	// moduleAccountTotalDelegation * redeemAmount / totalIssue
 	delegation, found := k.GetLiquidDelegation(ctx, record.GetModuleAddress(), valAddr)
+	if !found {
+		return nil, sdkstaking.ErrNoUnbondingDelegation
+	}
 	shareDenomSupply := k.bankKeeper.GetSupply(ctx, msg.Amount.Denom)
 	shares := delegation.Shares.Mul(sdk.NewDecFromInt(msg.Amount.Amount)).QuoInt(shareDenomSupply.Amount)
 	tokens := validator.TokensFromShares(shares).TruncateInt()

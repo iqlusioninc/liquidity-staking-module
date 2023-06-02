@@ -159,7 +159,6 @@ func (k Keeper) Slash(ctx sdk.Context, consAddr sdk.ConsAddress, infractionHeigh
 		"slash_factor", slashFactor.String(),
 		"burned", tokensToBurn,
 	)
-	return
 }
 
 // jail a validator
@@ -237,7 +236,7 @@ func (k Keeper) SlashUnbondingDelegation(ctx sdk.Context, unbondingDelegation ty
 // (the amount actually slashed may be less if there's
 // insufficient stake remaining)
 // NOTE this is only slashing for prior infractions from the source validator
-func (k Keeper) SlashRedelegation(ctx sdk.Context, srcValidator types.Validator, redelegation types.Redelegation,
+func (k Keeper) SlashRedelegation(ctx sdk.Context, _ types.Validator, redelegation types.Redelegation,
 	infractionHeight int64, slashFactor sdk.Dec,
 ) (totalSlashAmount sdk.Int) {
 	now := ctx.BlockHeader().Time
