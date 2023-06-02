@@ -195,6 +195,24 @@ func TestCheckExceedsGlobalLiquidStakingCap(t *testing.T) {
 			newLiquidStake:   sdk.NewInt(1_000_000),
 			expectedExceeds:  false,
 		},
+		{
+			// Cap of 50%, should exceed when delegating all
+			name:             "50 percent cap, but delegating everything",
+			globalLiquidCap:  sdk.MustNewDecFromStr("0.50"),
+			totalLiquidStake: sdk.NewInt(0),
+			totalStake:       sdk.NewInt(100),
+			newLiquidStake:   sdk.NewInt(100),
+			expectedExceeds:  true,
+		},
+		{
+			// Cap of 50%, should not exceed when delegating half
+			name:             "50 percent cap, and delegating only half",
+			globalLiquidCap:  sdk.MustNewDecFromStr("0.50"),
+			totalLiquidStake: sdk.NewInt(0),
+			totalStake:       sdk.NewInt(100),
+			newLiquidStake:   sdk.NewInt(50),
+			expectedExceeds:  false,
+		},
 	}
 
 	for _, tc := range testCases {
@@ -815,8 +833,8 @@ func TestTokenizeShareAuthorizationQueue(t *testing.T) {
 	actualAddresses = app.StakingKeeper.RemoveExpiredTokenizeShareLocks(ctx, unlockBlockTimes["10"])
 	require.Equal(t, expectedUnlockedAddresses["10"], actualAddresses, "addresses unlocked from time 10")
 }
-  
- // Test CalculateTotalLiquidStaked
+
+// Test CalculateTotalLiquidStaked
 func TestCalculateTotalLiquidStaked(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
