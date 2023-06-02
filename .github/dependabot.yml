@@ -4,7 +4,7 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
-    target-branch: "main"
+    target-branch: "master"
     open-pull-requests-limit: 10
     labels:
       - dependencies
@@ -13,7 +13,7 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
-    target-branch: "main"
+    target-branch: "master"
     open-pull-requests-limit: 10
     labels:
       - dependencies
