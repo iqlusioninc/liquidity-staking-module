@@ -404,17 +404,18 @@ func (suite *KeeperTestSuite) TestGRPCQueryValidatorDelegations() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
 			res, err := queryClient.ValidatorDelegations(gocontext.Background(), req)
-			if tc.expPass && !tc.expErr {
+			switch {
+			case tc.expPass && !tc.expErr:
 				suite.NoError(err)
 				suite.Len(res.DelegationResponses, 1)
 				suite.NotNil(res.Pagination.NextKey)
 				suite.Equal(uint64(2), res.Pagination.Total)
 				suite.Equal(addrVal1, res.DelegationResponses[0].Delegation.ValidatorAddress)
 				suite.Equal(sdk.NewCoin(sdk.DefaultBondDenom, delegation.Shares.TruncateInt()), res.DelegationResponses[0].Balance)
-			} else if !tc.expPass && !tc.expErr {
+			case !tc.expPass && !tc.expErr:
 				suite.NoError(err)
 				suite.Nil(res.DelegationResponses)
-			} else {
+			default:
 				suite.Error(err)
 				suite.Nil(res)
 			}
@@ -538,16 +539,17 @@ func (suite *KeeperTestSuite) TestGRPCQueryDelegatorUnbondingDelegations() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
 			res, err := queryClient.DelegatorUnbondingDelegations(gocontext.Background(), req)
-			if tc.expPass && !tc.expErr {
+			switch {
+			case tc.expPass && !tc.expErr:
 				suite.NoError(err)
 				suite.NotNil(res.Pagination.NextKey)
 				suite.Equal(uint64(2), res.Pagination.Total)
 				suite.Len(res.UnbondingResponses, 1)
 				suite.Equal(unbond, res.UnbondingResponses[0])
-			} else if !tc.expPass && !tc.expErr {
+			case !tc.expPass && !tc.expErr:
 				suite.NoError(err)
 				suite.Nil(res.UnbondingResponses)
-			} else {
+			default:
 				suite.Error(err)
 				suite.Nil(res)
 			}
@@ -715,17 +717,18 @@ func (suite *KeeperTestSuite) TestGRPCQueryRedelegations() {
 		suite.Run(fmt.Sprintf("Case %s", tc.msg), func() {
 			tc.malleate()
 			res, err := queryClient.Redelegations(gocontext.Background(), req)
-			if tc.expPass && !tc.expErr {
+			switch {
+			case tc.expPass && !tc.expErr:
 				suite.NoError(err)
 				suite.Len(res.RedelegationResponses, len(redel.Entries))
 				suite.Equal(redel.DelegatorAddress, res.RedelegationResponses[0].Redelegation.DelegatorAddress)
 				suite.Equal(redel.ValidatorSrcAddress, res.RedelegationResponses[0].Redelegation.ValidatorSrcAddress)
 				suite.Equal(redel.ValidatorDstAddress, res.RedelegationResponses[0].Redelegation.ValidatorDstAddress)
 				suite.Len(redel.Entries, len(res.RedelegationResponses[0].Entries))
-			} else if !tc.expPass && !tc.expErr {
+			case !tc.expPass && !tc.expErr:
 				suite.NoError(err)
 				suite.Nil(res.RedelegationResponses)
-			} else {
+			default:
 				suite.Error(err)
 				suite.Nil(res)
 			}

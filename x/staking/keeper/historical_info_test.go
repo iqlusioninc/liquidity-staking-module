@@ -158,8 +158,9 @@ func TestGetAllHistoricalInfo(t *testing.T) {
 
 	expHistInfos := []types.HistoricalInfo{hist1, hist2, hist3}
 
-	for i, HI := range expHistInfos {
-		app.StakingKeeper.SetHistoricalInfo(ctx, int64(10+i), &HI)
+	for i, hi := range expHistInfos {
+		hihi := hi
+		app.StakingKeeper.SetHistoricalInfo(ctx, int64(10+i), &hihi)
 	}
 
 	infos = app.StakingKeeper.GetAllHistoricalInfo(ctx)

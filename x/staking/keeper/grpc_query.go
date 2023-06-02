@@ -612,7 +612,7 @@ func (k Querier) LastTokenizeShareRecordId(c context.Context, req *types.QueryLa
 
 	ctx := sdk.UnwrapSDKContext(c)
 	return &types.QueryLastTokenizeShareRecordIdResponse{
-		Id: k.GetLastTokenizeShareRecordId(ctx),
+		Id: k.GetLastTokenizeShareRecordID(ctx),
 	}, nil
 }
 

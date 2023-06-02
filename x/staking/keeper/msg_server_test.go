@@ -353,7 +353,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			delegationCoin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), tc.delegationAmount)
 			err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(delegationCoin))
 			require.NoError(t, err)
-			app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, icaAccountAddress, sdk.NewCoins(delegationCoin))
+			err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, icaAccountAddress, sdk.NewCoins(delegationCoin))
 			require.NoError(t, err)
 
 			// set the delegator address depending on whether the delegator should be a liquid staking provider
@@ -411,7 +411,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			_, found := app.StakingKeeper.GetLiquidDelegation(ctx, delegatorAccount, addrVal1)
 			require.True(t, found, "delegation not found after delegate")
 
-			lastRecordID := app.StakingKeeper.GetLastTokenizeShareRecordId(ctx)
+			lastRecordID := app.StakingKeeper.GetLastTokenizeShareRecordID(ctx)
 			oldValidator, found := app.StakingKeeper.GetLiquidValidator(ctx, addrVal1)
 			require.True(t, found)
 
@@ -439,7 +439,7 @@ func TestTokenizeSharesAndRedeemTokens(t *testing.T) {
 			require.NoError(t, err)
 
 			// check last record id increase
-			require.Equal(t, lastRecordID+1, app.StakingKeeper.GetLastTokenizeShareRecordId(ctx))
+			require.Equal(t, lastRecordID+1, app.StakingKeeper.GetLastTokenizeShareRecordID(ctx))
 
 			// ensure validator's total tokens is consistent
 			newValidator, found := app.StakingKeeper.GetLiquidValidator(ctx, addrVal1)
@@ -718,7 +718,8 @@ func TestValidatorBond(t *testing.T) {
 				validator.Status = sdkstaking.Bonded
 				app.StakingKeeper.SetValidator(ctx, validator)
 				app.StakingKeeper.SetValidatorByPowerIndex(ctx, validator)
-				app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
+				err = app.StakingKeeper.SetValidatorByConsAddr(ctx, validator)
+				require.NoError(t, err)
 
 				// Optionally create the delegation, depending on the test case
 				if tc.createDelegation {

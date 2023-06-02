@@ -11,18 +11,18 @@ import (
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
-func (k Keeper) GetLastTokenizeShareRecordId(ctx sdk.Context) uint64 {
+func (k Keeper) GetLastTokenizeShareRecordID(ctx sdk.Context) uint64 {
 	store := ctx.KVStore(k.storeKey)
-	bytes := store.Get(types.LastTokenizeShareRecordIdKey)
+	bytes := store.Get(types.LastTokenizeShareRecordIDKey)
 	if bytes == nil {
 		return 0
 	}
 	return sdk.BigEndianToUint64(bytes)
 }
 
-func (k Keeper) SetLastTokenizeShareRecordId(ctx sdk.Context, id uint64) {
+func (k Keeper) SetLastTokenizeShareRecordID(ctx sdk.Context, id uint64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Set(types.LastTokenizeShareRecordIdKey, sdk.Uint64ToBigEndian(id))
+	store.Set(types.LastTokenizeShareRecordIDKey, sdk.Uint64ToBigEndian(id))
 }
 
 func (k Keeper) GetTokenizeShareRecord(ctx sdk.Context, id uint64) (tokenizeShareRecord types.TokenizeShareRecord, err error) {
@@ -114,7 +114,7 @@ func (k Keeper) DeleteTokenizeShareRecord(ctx sdk.Context, recordID uint64) erro
 
 	store := ctx.KVStore(k.storeKey)
 	store.Delete(types.GetTokenizeShareRecordByIndexKey(recordID))
-	store.Delete(types.GetTokenizeShareRecordIdByOwnerAndIdKey(owner, recordID))
+	store.Delete(types.GetTokenizeShareRecordIDByOwnerAndIDKey(owner, recordID))
 	store.Delete(types.GetTokenizeShareRecordIDByDenomKey(record.GetShareTokenDenom()))
 	return nil
 }
@@ -135,12 +135,12 @@ func (k Keeper) setTokenizeShareRecordWithOwner(ctx sdk.Context, owner sdk.AccAd
 	store := ctx.KVStore(k.storeKey)
 	bz := k.cdc.MustMarshal(&gogotypes.UInt64Value{Value: id})
 
-	store.Set(types.GetTokenizeShareRecordIdByOwnerAndIdKey(owner, id), bz)
+	store.Set(types.GetTokenizeShareRecordIDByOwnerAndIDKey(owner, id), bz)
 }
 
 func (k Keeper) deleteTokenizeShareRecordWithOwner(ctx sdk.Context, owner sdk.AccAddress, id uint64) {
 	store := ctx.KVStore(k.storeKey)
-	store.Delete(types.GetTokenizeShareRecordIdByOwnerAndIdKey(owner, id))
+	store.Delete(types.GetTokenizeShareRecordIDByOwnerAndIDKey(owner, id))
 }
 
 func (k Keeper) setTokenizeShareRecordWithDenom(ctx sdk.Context, denom string, id uint64) {

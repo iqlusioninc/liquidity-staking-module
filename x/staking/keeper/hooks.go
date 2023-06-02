@@ -32,9 +32,9 @@ func (k Keeper) AfterValidatorRemoved(ctx sdk.Context, consAddr sdk.ConsAddress,
 	return nil
 }
 
-func (k Keeper) BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordId uint64) error {
+func (k Keeper) BeforeTokenizeShareRecordRemoved(ctx sdk.Context, recordID uint64) error {
 	if k.hooks != nil {
-		return k.hooks.BeforeTokenizeShareRecordRemoved(ctx, recordId)
+		return k.hooks.BeforeTokenizeShareRecordRemoved(ctx, recordID)
 	}
 	return nil
 }

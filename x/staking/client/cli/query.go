@@ -39,11 +39,11 @@ func GetQueryCmd() *cobra.Command {
 		GetCmdQueryHistoricalInfo(),
 		GetCmdQueryParams(),
 		GetCmdQueryPool(),
-		GetCmdQueryTokenizeShareRecordById(),
+		GetCmdQueryTokenizeShareRecordByID(),
 		GetCmdQueryTokenizeShareRecordByDenom(),
 		GetCmdQueryTokenizeShareRecordsOwned(),
 		GetCmdQueryAllTokenizeShareRecords(),
-		GetCmdQueryLastTokenizeShareRecordId(),
+		GetCmdQueryLastTokenizeShareRecordID(),
 		GetCmdQueryTotalTokenizeSharedAssets(),
 		GetCmdQueryTokenizeShareLockInfo(),
 		GetCmdQueryTotalLiquidStaked(),
@@ -754,7 +754,7 @@ $ %s query staking params
 }
 
 // GetCmdQueryTokenizeShareRecordById implements the query for individual tokenize share record information by share by id
-func GetCmdQueryTokenizeShareRecordById() *cobra.Command {
+func GetCmdQueryTokenizeShareRecordByID() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "tokenize-share-record-by-id [id]",
 		Args:  cobra.ExactArgs(1),
@@ -914,7 +914,7 @@ $ %s query staking all-tokenize-share-records
 }
 
 // GetCmdQueryLastTokenizeShareRecordId implements the query for last tokenize share record id
-func GetCmdQueryLastTokenizeShareRecordId() *cobra.Command {
+func GetCmdQueryLastTokenizeShareRecordID() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "last-tokenize-share-record-id",
 		Args:  cobra.NoArgs,

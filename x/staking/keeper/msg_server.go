@@ -676,13 +676,13 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 		}
 	}
 
-	recordId := k.GetLastTokenizeShareRecordId(ctx) + 1
-	k.SetLastTokenizeShareRecordId(ctx, recordId)
+	recordID := k.GetLastTokenizeShareRecordID(ctx) + 1
+	k.SetLastTokenizeShareRecordID(ctx, recordID)
 
 	record := types.TokenizeShareRecord{
-		Id:            recordId,
+		Id:            recordID,
 		Owner:         msg.TokenizedShareOwner,
-		ModuleAccount: fmt.Sprintf("%s%d", types.TokenizeShareModuleAccountPrefix, recordId),
+		ModuleAccount: fmt.Sprintf("%s%d", types.TokenizeShareModuleAccountPrefix, recordID),
 		Validator:     msg.ValidatorAddress,
 	}
 
@@ -742,7 +742,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 			sdk.NewAttribute(types.AttributeKeyDelegator, msg.DelegatorAddress),
 			sdk.NewAttribute(types.AttributeKeyValidator, msg.ValidatorAddress),
 			sdk.NewAttribute(types.AttributeKeyShareOwner, msg.TokenizedShareOwner),
-			sdk.NewAttribute(types.AttributeKeyShareRecordId, fmt.Sprintf("%d", record.Id)),
+			sdk.NewAttribute(types.AttributeKeyShareRecordID, fmt.Sprintf("%d", record.Id)),
 			sdk.NewAttribute(types.AttributeKeyAmount, msg.Amount.String()),
 		),
 	)
@@ -896,7 +896,7 @@ func (k msgServer) TransferTokenizeShareRecord(goCtx context.Context, msg *types
 	ctx.EventManager().EmitEvent(
 		sdk.NewEvent(
 			types.EventTypeTransferTokenizeShareRecord,
-			sdk.NewAttribute(types.AttributeKeyShareRecordId, fmt.Sprintf("%d", msg.TokenizeShareRecordId)),
+			sdk.NewAttribute(types.AttributeKeyShareRecordID, fmt.Sprintf("%d", msg.TokenizeShareRecordId)),
 			sdk.NewAttribute(sdk.AttributeKeySender, msg.Sender),
 			sdk.NewAttribute(types.AttributeKeyShareOwner, msg.NewOwner),
 		),

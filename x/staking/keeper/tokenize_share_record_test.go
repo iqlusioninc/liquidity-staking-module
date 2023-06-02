@@ -6,10 +6,10 @@ import (
 
 func (suite *KeeperTestSuite) TestGetLastTokenizeShareRecordId() {
 	app, ctx := suite.app, suite.ctx
-	lastTokenizeShareRecordID := app.StakingKeeper.GetLastTokenizeShareRecordId(ctx)
+	lastTokenizeShareRecordID := app.StakingKeeper.GetLastTokenizeShareRecordID(ctx)
 	suite.Equal(lastTokenizeShareRecordID, uint64(0))
-	app.StakingKeeper.SetLastTokenizeShareRecordId(ctx, 100)
-	lastTokenizeShareRecordID = app.StakingKeeper.GetLastTokenizeShareRecordId(ctx)
+	app.StakingKeeper.SetLastTokenizeShareRecordID(ctx, 100)
+	lastTokenizeShareRecordID = app.StakingKeeper.GetLastTokenizeShareRecordID(ctx)
 	suite.Equal(lastTokenizeShareRecordID, uint64(100))
 }
 
