@@ -3,7 +3,7 @@ module github.com/iqlusioninc/liquidity-staking-module
 go 1.16
 
 require (
-	github.com/armon/go-metrics v0.3.9
+	github.com/armon/go-metrics v0.3.10
 	github.com/cosmos/cosmos-sdk v0.43.0-beta1.0.20210817145924-7b0e7da7c68a
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/mock v1.6.0
@@ -12,16 +12,16 @@ require (
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/rakyll/statik v0.1.7
 	github.com/regen-network/cosmos-proto v0.3.1
-	github.com/spf13/cast v1.4.1
-	github.com/spf13/cobra v1.2.1
+	github.com/spf13/cast v1.5.0
+	github.com/spf13/cobra v1.5.0
 	github.com/spf13/pflag v1.0.5
-	github.com/spf13/viper v1.8.1
-	github.com/stretchr/testify v1.7.0
-	github.com/tendermint/tendermint v0.34.11
-	github.com/tendermint/tm-db v0.6.4
-	google.golang.org/genproto v0.0.0-20210602131652-f16073e35f0c
-	google.golang.org/grpc v1.40.0
-	google.golang.org/protobuf v1.27.1
+	github.com/spf13/viper v1.12.0
+	github.com/stretchr/testify v1.8.0
+	github.com/tendermint/tendermint v0.35.9
+	github.com/tendermint/tm-db v0.6.6
+	google.golang.org/genproto v0.0.0-20220519153652-3a47de7e79bd
+	google.golang.org/grpc v1.47.0
+	google.golang.org/protobuf v1.28.0
 	gopkg.in/yaml.v2 v2.4.0
 )
 
