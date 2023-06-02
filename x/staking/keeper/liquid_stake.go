@@ -59,21 +59,18 @@ func (k Keeper) CheckExceedsGlobalLiquidStakingCap(ctx sdk.Context, tokens sdk.I
 	liquidStakingCap := k.GlobalLiquidStakingCap(ctx)
 	liquidStakedAmount := k.GetTotalLiquidStakedTokens(ctx)
 
-	// Determine the total stake from the balance of the bonded pools
-	bondedPoolAddress := k.authKeeper.GetModuleAddress(types.BondedPoolName)
-	totalStakedAmount := k.bankKeeper.GetBalance(ctx, bondedPoolAddress, k.BondDenom(ctx)).Amount
-
+	// Determine the total stake from the balance of the bonded pool
 	// If this is not a tokenized delegation, we need to add the tokens to the pool balance since
 	// they would not have been counted yet
 	// If this is for a tokenized delegation, the tokens are already included in the pool balance
-	updatedTotalStaked := totalStakedAmount
+	totalStakedAmount := k.TotalBondedTokens(ctx)
 	if !tokenizingShares {
-		updatedTotalStaked = updatedTotalStaked.Add(tokens)
+		totalStakedAmount = totalStakedAmount.Add(tokens)
 	}
 
 	// Calculate the percentage of stake that is liquid
 	updatedLiquidStaked := liquidStakedAmount.Add(tokens).ToDec()
-	liquidStakePercent := updatedLiquidStaked.Quo(updatedTotalStaked.ToDec())
+	liquidStakePercent := updatedLiquidStaked.Quo(totalStakedAmount.ToDec())
 
 	return liquidStakePercent.GT(liquidStakingCap)
 }
