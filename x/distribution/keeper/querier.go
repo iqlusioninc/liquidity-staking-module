@@ -1,8 +1,9 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"encoding/json"
+
+	errorsmod "cosmossdk.io/errors"
 
 	abci "github.com/tendermint/tendermint/abci/types"
 

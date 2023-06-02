@@ -1,8 +1,9 @@
 package types
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	"sort"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/gogo/protobuf/proto"
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
