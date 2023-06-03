@@ -501,15 +501,13 @@ func TestValidatorBondUndelegate(t *testing.T) {
 
 	// create a validator and a delegator to that validator
 	validator := teststaking.NewValidator(t, addrVals[0], PKs[0])
+	validator.Status = sdkstaking.Bonded
 	app.StakingKeeper.SetValidator(ctx, validator)
 
 	// set validator bond factor
 	params := app.StakingKeeper.GetParams(ctx)
 	params.ValidatorBondFactor = sdk.NewDec(1)
 	app.StakingKeeper.SetParams(ctx, params)
-
-	// set total liquid stake
-	app.StakingKeeper.SetTotalLiquidStakedTokens(ctx, sdk.NewInt(100))
 
 	// convert to validator self-bond
 	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
@@ -581,8 +579,10 @@ func TestValidatorBondRedelegate(t *testing.T) {
 
 	// create a validator and a delegator to that validator
 	validator := teststaking.NewValidator(t, addrVals[0], PKs[0])
+	validator.Status = sdkstaking.Bonded
 	app.StakingKeeper.SetValidator(ctx, validator)
 	validator2 := teststaking.NewValidator(t, addrVals[1], PKs[1])
+	validator.Status = sdkstaking.Bonded
 	app.StakingKeeper.SetValidator(ctx, validator2)
 
 	// set validator bond factor

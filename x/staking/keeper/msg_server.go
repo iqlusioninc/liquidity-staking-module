@@ -233,7 +233,7 @@ func (k msgServer) Delegate(goCtx context.Context, msg *types.MsgDelegate) (*typ
 	// if this delegation is from a liquid staking provider, it cannot exceed
 	// the global or validator bond cap
 	if k.AccountIsLiquidStakingProvider(ctx, delegatorAddress) {
-		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, tokens); err != nil {
+		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, tokens, false); err != nil {
 			return nil, err
 		}
 		if err := k.SafelyIncreaseValidatorTotalLiquidShares(ctx, validator, shares); err != nil {
@@ -668,7 +668,7 @@ func (k msgServer) TokenizeShares(goCtx context.Context, msg *types.MsgTokenizeS
 	// If the tokenization is from a liquid staking provider,
 	//   the shares are already considered liquid and there's no need to increment the totals
 	if !k.AccountIsLiquidStakingProvider(ctx, delegatorAddress) {
-		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, msg.Amount.Amount); err != nil {
+		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, msg.Amount.Amount, true); err != nil {
 			return nil, err
 		}
 		if err := k.SafelyIncreaseValidatorTotalLiquidShares(ctx, validator, shares); err != nil {
