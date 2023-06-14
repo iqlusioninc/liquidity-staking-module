@@ -912,12 +912,17 @@ func (k msgServer) DisableTokenizeShares(goCtx context.Context, msg *types.MsgDi
 	delegator := sdk.MustAccAddressFromBech32(msg.DelegatorAddress)
 
 	// If tokenized shares is already disabled, alert the user
-	lockStatus, _ := k.GetTokenizeSharesLock(ctx, delegator)
+	lockStatus, completionTime := k.GetTokenizeSharesLock(ctx, delegator)
 	if lockStatus == types.TokenizeShareLockStatus_LOCKED {
 		return nil, types.ErrTokenizeSharesAlreadyDisabledForAccount
 	}
 
-	// Otherwise, create a new tokenization lock for the user
+	// If the tokenized shares lock is expiring, remove the pending unlock from the queue
+	if lockStatus == types.TokenizeShareLockStatus_LOCK_EXPIRING {
+		k.CancelTokenizeShareLockExpiration(ctx, delegator, completionTime)
+	}
+
+	// Create a new tokenization lock for the user
 	// Note: if there is a lock expiration in progress, this will override the expiration
 	k.AddTokenizeSharesLock(ctx, delegator)
 

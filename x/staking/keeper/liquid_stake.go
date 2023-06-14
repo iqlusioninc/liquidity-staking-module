@@ -245,6 +245,21 @@ func (k Keeper) QueueTokenizeSharesAuthorization(ctx sdk.Context, address sdk.Ac
 	return completionTime
 }
 
+// Cancels a pending tokenize share authorization by removing the lock from the queue
+func (k Keeper) CancelTokenizeShareLockExpiration(ctx sdk.Context, address sdk.AccAddress, completionTime time.Time) {
+	authorizations := k.GetPendingTokenizeShareAuthorizations(ctx, completionTime)
+
+	updatedAddresses := []string{}
+	for _, expiringAddress := range authorizations.Addresses {
+		if address.String() != expiringAddress {
+			updatedAddresses = append(updatedAddresses, expiringAddress)
+		}
+	}
+
+	authorizations.Addresses = updatedAddresses
+	k.SetPendingTokenizeShareAuthorizations(ctx, completionTime, authorizations)
+}
+
 // Unlocks all queued tokenize share authorizations that have matured
 // (i.e. have waited the full unbonding period)
 func (k Keeper) RemoveExpiredTokenizeShareLocks(ctx sdk.Context, blockTime time.Time) (unlockedAddresses []string) {
