@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	"fmt"
 	"testing"
 	"time"
 
@@ -33,6 +34,16 @@ func createICAAccount(app *simapp.SimApp, ctx sdk.Context, accountName string) s
 	app.AccountKeeper.SetAccount(ctx, account)
 
 	return accountAddress
+}
+
+// Helper function to create a module account address from a tokenized share
+// Used to mock the delegation owner of a tokenized share
+func createTokenizeShareModuleAccount(recordID uint64) sdk.AccAddress {
+	record := types.TokenizeShareRecord{
+		Id:            recordID,
+		ModuleAccount: fmt.Sprintf("%s%d", types.TokenizeShareModuleAccountPrefix, recordID),
+	}
+	return record.GetModuleAddress()
 }
 
 // Tests Set/Get TotalLiquidStakedTokens
@@ -919,8 +930,9 @@ func TestCalculateTotalLiquidStaked(t *testing.T) {
 	}
 
 	delegations := []struct {
-		delegation types.Delegation
-		isLSTP     bool
+		delegation  types.Delegation
+		isLSTP      bool
+		isTokenized bool
 	}{
 		// Delegator A - Not a liquid staking provider
 		// Number of tokens/shares is irrelevant for this test
@@ -977,11 +989,11 @@ func TestCalculateTotalLiquidStaked(t *testing.T) {
 				Shares:           sdk.NewDec(900),
 			},
 		},
-		// Delegator C - Liquid staking provider, tokens included in total
+		// Delegator C - Tokenized shares, tokens included in total
 		// Total liquid staked: 325 + 522 + 75 = 922
 		{
 			// Shares: 325 shares, Exchange Rate: 1.0, Tokens: 325
-			isLSTP: true,
+			isTokenized: true,
 			delegation: types.Delegation{
 				DelegatorAddress: "delC-LSTP",
 				ValidatorAddress: "valA",
@@ -990,7 +1002,7 @@ func TestCalculateTotalLiquidStaked(t *testing.T) {
 		},
 		{
 			// Shares: 580 shares, Exchange Rate: 0.9, Tokens: 522
-			isLSTP: true,
+			isTokenized: true,
 			delegation: types.Delegation{
 				DelegatorAddress: "delC-LSTP",
 				ValidatorAddress: "valB",
@@ -999,7 +1011,7 @@ func TestCalculateTotalLiquidStaked(t *testing.T) {
 		},
 		{
 			// Shares: 100 shares, Exchange Rate: 0.75, Tokens: 75
-			isLSTP: true,
+			isTokenized: true,
 			delegation: types.Delegation{
 				DelegatorAddress: "delC-LSTP",
 				ValidatorAddress: "valC",
@@ -1025,6 +1037,8 @@ func TestCalculateTotalLiquidStaked(t *testing.T) {
 		var delegatorAddress sdk.AccAddress
 		if delegationCase.isLSTP {
 			delegatorAddress = createICAAccount(app, ctx, delegationCase.delegation.DelegatorAddress)
+		} else if delegationCase.isTokenized {
+			delegatorAddress = createTokenizeShareModuleAccount(1)
 		} else {
 			delegatorAddress = createBaseAccount(app, ctx, delegationCase.delegation.DelegatorAddress)
 		}
