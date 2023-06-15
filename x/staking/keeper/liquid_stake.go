@@ -4,7 +4,6 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
@@ -40,11 +39,10 @@ func (k Keeper) GetTotalLiquidStakedTokens(ctx sdk.Context) sdk.Int {
 }
 
 // Check if an account is a owned by a liquid staking provider
-// This is determined by checking if the account is a 32-length module account
+// This is determined by checking if the account has a 32-length address
+// NOTE: This will have to be refactored before adapting it to chains beyond gaia
 func (k Keeper) AccountIsLiquidStakingProvider(ctx sdk.Context, address sdk.AccAddress) bool {
-	account := k.authKeeper.GetAccount(ctx, address)
-	_, isModuleAccount := account.(*authtypes.ModuleAccount)
-	return isModuleAccount && len(address) == 32
+	return len(address) == 32
 }
 
 // CheckExceedsGlobalLiquidStakingCap checks if a liquid delegation would cause the
@@ -287,8 +285,8 @@ func (k Keeper) RemoveExpiredTokenizeShareLocks(ctx sdk.Context, blockTime time.
 
 // Calculates and sets the global liquid staked tokens and total liquid shares by validator
 // The totals are determined by looping each delegation record and summing the stake
-// if the delegator is a module account. Checking for a module account will capture
-// ICA accounts, as well as tokenized delegationswhich are owned by module accounts
+// if the delegator has a 32-length address. Checking for a 32-length address will capture
+// ICA accounts, as well as tokenized delegations which are owned by module accounts
 // under the hood
 // This function must be called in the upgrade handler which onboards LSM, as
 // well as any time the liquid staking cap is re-enabled

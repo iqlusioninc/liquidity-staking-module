@@ -22,7 +22,7 @@ func createBaseAccount(app *simapp.SimApp, ctx sdk.Context, accountName string) 
 	return baseAccountAddress
 }
 
-// Helper function to create a module account from an account name
+// Helper function to create 32-length account
 // Used to mock an liquid staking provider's ICA account
 func createICAAccount(app *simapp.SimApp, ctx sdk.Context, accountName string) sdk.AccAddress {
 	accountAddress := address.Module(accountName, []byte(accountName))
@@ -71,11 +71,11 @@ func TestAccountIsLiquidStakingProvider(t *testing.T) {
 
 	// Create base and ICA accounts
 	baseAccountAddress := createBaseAccount(app, ctx, "base-account")
-	icaAccountAddress := createICAAccount(app, ctx, "ica-module-account")
+	icaAccountAddress := createICAAccount(app, ctx, "ica-account")
 
-	// Only the ICA module account should be considered a liquid staking provider
+	// Only the ICA account should be considered a liquid staking provider
 	require.False(t, app.StakingKeeper.AccountIsLiquidStakingProvider(ctx, baseAccountAddress), "base account")
-	require.True(t, app.StakingKeeper.AccountIsLiquidStakingProvider(ctx, icaAccountAddress), "ICA module account")
+	require.True(t, app.StakingKeeper.AccountIsLiquidStakingProvider(ctx, icaAccountAddress), "ICA account")
 }
 
 // Helper function to clear the Bonded pool balances before a unit test
