@@ -41,7 +41,7 @@ func (k Keeper) GetTotalLiquidStakedTokens(ctx sdk.Context) sdk.Int {
 // Check if an account is a owned by a liquid staking provider
 // This is determined by checking if the account has a 32-length address
 // NOTE: This will have to be refactored before adapting it to chains beyond gaia
-func (k Keeper) AccountIsLiquidStakingProvider(ctx sdk.Context, address sdk.AccAddress) bool {
+func (k Keeper) AccountIsLiquidStakingProvider(address sdk.AccAddress) bool {
 	return len(address) == 32
 }
 
@@ -325,7 +325,7 @@ func (k Keeper) RefreshTotalLiquidStaked(ctx sdk.Context) error {
 
 		// If the account is a liquid staking provider, increment the global number
 		// of liquid staked tokens, and the total liquid shares on the validator
-		if k.AccountIsLiquidStakingProvider(ctx, delegatorAddress) {
+		if k.AccountIsLiquidStakingProvider(delegatorAddress) {
 			liquidShares := delegation.Shares
 			liquidTokens := validator.TokensFromShares(liquidShares).TruncateInt()
 
