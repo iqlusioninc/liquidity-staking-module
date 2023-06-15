@@ -334,7 +334,9 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		if err := k.SafelyIncreaseValidatorTotalLiquidShares(ctx, dstValidator, dstShares); err != nil {
 			return nil, err
 		}
-		k.DecreaseValidatorTotalLiquidShares(ctx, srcValidator, srcShares)
+		if err := k.DecreaseValidatorTotalLiquidShares(ctx, srcValidator, srcShares); err != nil {
+			return nil, err
+		}
 	}
 
 	bondDenom := k.BondDenom(ctx)
@@ -427,8 +429,12 @@ func (k msgServer) Undelegate(goCtx context.Context, msg *types.MsgUndelegate) (
 	// if this undelegation is from a liquid staking provider, the global and validator
 	// liquid counts should be decremented
 	if k.AccountIsLiquidStakingProvider(ctx, delegatorAddress) {
-		k.DecreaseTotalLiquidStakedTokens(ctx, tokens)
-		k.DecreaseValidatorTotalLiquidShares(ctx, validator, shares)
+		if err := k.DecreaseTotalLiquidStakedTokens(ctx, tokens); err != nil {
+			return nil, err
+		}
+		if err := k.DecreaseValidatorTotalLiquidShares(ctx, validator, shares); err != nil {
+			return nil, err
+		}
 	}
 
 	bondDenom := k.BondDenom(ctx)
@@ -796,8 +802,12 @@ func (k msgServer) RedeemTokens(goCtx context.Context, msg *types.MsgRedeemToken
 	// If the redemption was from a liquid staking provider, the shares are still considered
 	// liquid, even in their non-tokenized form (since they are owned by a liquid staking provider)
 	if !k.AccountIsLiquidStakingProvider(ctx, delegatorAddress) {
-		k.DecreaseTotalLiquidStakedTokens(ctx, tokens)
-		k.DecreaseValidatorTotalLiquidShares(ctx, validator, shares)
+		if err := k.DecreaseTotalLiquidStakedTokens(ctx, tokens); err != nil {
+			return nil, err
+		}
+		if err := k.DecreaseValidatorTotalLiquidShares(ctx, validator, shares); err != nil {
+			return nil, err
+		}
 	}
 
 	returnAmount, err := k.Unbond(ctx, record.GetModuleAddress(), valAddr, shares)

@@ -333,8 +333,13 @@ func TestDecreaseTotalLiquidStakedTokens(t *testing.T) {
 	app.StakingKeeper.SetTotalLiquidStakedTokens(ctx, intitialTotalLiquidStaked)
 
 	// Decrease the total liquid stake and confirm the total was updated
-	app.StakingKeeper.DecreaseTotalLiquidStakedTokens(ctx, decreaseAmount)
+	err := app.StakingKeeper.DecreaseTotalLiquidStakedTokens(ctx, decreaseAmount)
+	require.NoError(t, err, "no error expected when decreasing total liquid staked tokens")
 	require.Equal(t, intitialTotalLiquidStaked.Sub(decreaseAmount), app.StakingKeeper.GetTotalLiquidStakedTokens(ctx))
+
+	// Attempt to decrease by an excessive amount, it should error
+	err = app.StakingKeeper.DecreaseTotalLiquidStakedTokens(ctx, intitialTotalLiquidStaked)
+	require.ErrorIs(t, err, types.ErrTotalLiquidStakedUnderflow)
 }
 
 // Tests CheckExceedsValidatorBondCap
@@ -691,7 +696,7 @@ func TestSafelyIncreaseValidatorTotalLiquidShares(t *testing.T) {
 func TestDecreaseValidatorTotalLiquidShares(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 
-	initialLiquidShares := sdk.NewDec(0)
+	initialLiquidShares := sdk.NewDec(100)
 	decreaseAmount := sdk.NewDec(10)
 
 	// Create a validator with designated self-bond shares
@@ -706,10 +711,16 @@ func TestDecreaseValidatorTotalLiquidShares(t *testing.T) {
 	app.StakingKeeper.SetValidator(ctx, initialValidator)
 
 	// Decrease the validator liquid shares, and confirm the new share amount has been updated
-	app.StakingKeeper.DecreaseValidatorTotalLiquidShares(ctx, initialValidator, decreaseAmount)
+	err := app.StakingKeeper.DecreaseValidatorTotalLiquidShares(ctx, initialValidator, decreaseAmount)
+	require.NoError(t, err, "no error expected when decreasing validator total liquid shares")
+
 	actualValidator, found := app.StakingKeeper.GetLiquidValidator(ctx, valAddress)
 	require.True(t, found)
-	require.Equal(t, initialLiquidShares.Sub(decreaseAmount), actualValidator.TotalLiquidShares, "shares with cap disabled")
+	require.Equal(t, initialLiquidShares.Sub(decreaseAmount), actualValidator.TotalLiquidShares, "total liquid shares")
+
+	// Attempt to decrease by a larger amount than it has, it shoudl fail
+	err = app.StakingKeeper.DecreaseValidatorTotalLiquidShares(ctx, actualValidator, initialLiquidShares)
+	require.ErrorIs(t, err, types.ErrValidatorLiquidSharesUnderflow)
 }
 
 // Tests Add/Remove/Get/SetTokenizeSharesLock

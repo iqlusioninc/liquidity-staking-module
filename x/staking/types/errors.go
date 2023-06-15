@@ -66,4 +66,6 @@ var (
 	ErrUnableToDisableTokenizeShares            = errorsmod.Register(ModuleName, 55, "unable to disable tokenize shares for account")
 	ErrTokenizeSharesAlreadyEnabledForAccount   = errorsmod.Register(ModuleName, 57, "tokenize shares is already enabled for this account")
 	ErrTokenizeSharesAlreadyDisabledForAccount  = errorsmod.Register(ModuleName, 58, "tokenize shares is already disabled for this account")
+	ErrValidatorLiquidSharesUnderflow           = errorsmod.Register(ModuleName, 59, "validator liquid shares underflow")
+	ErrTotalLiquidStakedUnderflow               = errorsmod.Register(ModuleName, 60, "total liquid staked underflow")
 )

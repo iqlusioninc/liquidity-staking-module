@@ -112,8 +112,13 @@ func (k Keeper) SafelyIncreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sd
 }
 
 // DecreaseTotalLiquidStakedTokens decrements the total liquid staked tokens
-func (k Keeper) DecreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sdk.Int) {
-	k.SetTotalLiquidStakedTokens(ctx, k.GetTotalLiquidStakedTokens(ctx).Sub(amount))
+func (k Keeper) DecreaseTotalLiquidStakedTokens(ctx sdk.Context, amount sdk.Int) error {
+	totalLiquidStake := k.GetTotalLiquidStakedTokens(ctx)
+	if amount.GT(totalLiquidStake) {
+		return types.ErrTotalLiquidStakedUnderflow
+	}
+	k.SetTotalLiquidStakedTokens(ctx, totalLiquidStake.Sub(amount))
+	return nil
 }
 
 // SafelyIncreaseValidatorTotalLiquidShares increments the total liquid shares on a validator, if:
@@ -135,9 +140,13 @@ func (k Keeper) SafelyIncreaseValidatorTotalLiquidShares(ctx sdk.Context, valida
 }
 
 // DecreaseValidatorTotalLiquidShares decrements the total liquid shares on a validator
-func (k Keeper) DecreaseValidatorTotalLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) {
+func (k Keeper) DecreaseValidatorTotalLiquidShares(ctx sdk.Context, validator types.Validator, shares sdk.Dec) error {
+	if shares.GT(validator.TotalLiquidShares) {
+		return types.ErrValidatorLiquidSharesUnderflow
+	}
 	validator.TotalLiquidShares = validator.TotalLiquidShares.Sub(shares)
 	k.SetValidator(ctx, validator)
+	return nil
 }
 
 // SafelyDecreaseValidatorBond decrements the total validator's self bond
