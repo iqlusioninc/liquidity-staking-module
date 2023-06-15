@@ -311,16 +311,18 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 		)
 	}
 
-	shares, err := k.ValidateUnbondAmount(
-		ctx, delegatorAddress, valSrcAddr, msg.Amount.Amount,
-	)
+	srcShares, err := k.ValidateUnbondAmount(ctx, delegatorAddress, valSrcAddr, msg.Amount.Amount)
+	if err != nil {
+		return nil, err
+	}
+	dstShares, err := dstValidator.SharesFromTokensTruncated(msg.Amount.Amount)
 	if err != nil {
 		return nil, err
 	}
 
 	// if this is a validator self-bond, the new liquid delegation cannot fall below the self-bond * bond factor
 	if delegation.ValidatorBond {
-		if err := k.SafelyDecreaseValidatorBond(ctx, srcValidator, shares); err != nil {
+		if err := k.SafelyDecreaseValidatorBond(ctx, srcValidator, srcShares); err != nil {
 			return nil, err
 		}
 	}
@@ -329,10 +331,10 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 	// cannot exceed that validator's self-bond cap
 	// The liquid shares from the source validator should get moved to the destination validator
 	if k.AccountIsLiquidStakingProvider(ctx, delegatorAddress) {
-		if err := k.SafelyIncreaseValidatorTotalLiquidShares(ctx, dstValidator, shares); err != nil {
+		if err := k.SafelyIncreaseValidatorTotalLiquidShares(ctx, dstValidator, dstShares); err != nil {
 			return nil, err
 		}
-		k.DecreaseValidatorTotalLiquidShares(ctx, srcValidator, shares)
+		k.DecreaseValidatorTotalLiquidShares(ctx, srcValidator, srcShares)
 	}
 
 	bondDenom := k.BondDenom(ctx)
@@ -343,7 +345,7 @@ func (k msgServer) BeginRedelegate(goCtx context.Context, msg *types.MsgBeginRed
 	}
 
 	completionTime, err := k.BeginRedelegation(
-		ctx, delegatorAddress, valSrcAddr, valDstAddr, shares,
+		ctx, delegatorAddress, valSrcAddr, valDstAddr, srcShares,
 	)
 	if err != nil {
 		return nil, err
