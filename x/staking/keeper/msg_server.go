@@ -517,6 +517,22 @@ func (k msgServer) CancelUnbondingDelegation(goCtx context.Context, msg *types.M
 		return nil, sdkstaking.ErrValidatorJailed
 	}
 
+	// if this undelegation was from a liquid staking provider, the global and validator
+	// liquid counts should be incremented
+	tokens := msg.Amount.Amount
+	shares, err := validator.SharesFromTokens(tokens)
+	if err != nil {
+		return nil, err
+	}
+	if k.AccountIsLiquidStakingProvider(delegatorAddress) {
+		if err := k.SafelyIncreaseTotalLiquidStakedTokens(ctx, tokens, false); err != nil {
+			return nil, err
+		}
+		if err := k.SafelyIncreaseValidatorTotalLiquidShares(ctx, validator, shares); err != nil {
+			return nil, err
+		}
+	}
+
 	ubd, found := k.GetUnbondingDelegation(ctx, delegatorAddress, valAddr)
 	if !found {
 		return nil, status.Errorf(

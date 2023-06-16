@@ -439,11 +439,11 @@ message QueryTotalTokenizeSharedAssetsResponse {
   cosmos.base.v1beta1.Coin value = 1 [ (gogoproto.nullable) = false ];
 }
 
-// QueryQueryTotalLiquidStakedRequest is request type for the 
+// QueryTotalLiquidStakedRequest is request type for the 
 // Query/QueryQueryTotalLiquidStaked RPC method.
 message QueryTotalLiquidStaked {}
 
-// QueryQueryTotalLiquidStakedResponse is response type for the 
+// QueryTotalLiquidStakedResponse is response type for the 
 // Query/QueryQueryTotalLiquidStaked RPC method.
 message QueryTotalLiquidStakedResponse {
   string tokens = 1;
