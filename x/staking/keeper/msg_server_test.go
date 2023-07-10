@@ -930,14 +930,12 @@ func TestICADelegateUndelegate(t *testing.T) {
 	_, app, ctx := createTestInput(t)
 	msgServer := keeper.NewMsgServerImpl(app.StakingKeeper)
 
-	// Create a delegator and validator
+	// Create a delegator and validator (the delegator will be an ICA account)
 	delegateAmount := sdk.NewInt(1000)
 	delegateCoin := sdk.NewCoin(app.StakingKeeper.BondDenom(ctx), delegateAmount)
-
-	// Create ICA module account
 	icaAccountAddress := createICAAccount(app, ctx, "ica-module-account")
 
-	// Fund module account
+	// Fund ICA account
 	err := app.BankKeeper.MintCoins(ctx, minttypes.ModuleName, sdk.NewCoins(delegateCoin))
 	require.NoError(t, err)
 	err = app.BankKeeper.SendCoinsFromModuleToAccount(ctx, minttypes.ModuleName, icaAccountAddress, sdk.NewCoins(delegateCoin))
@@ -969,7 +967,32 @@ func TestICADelegateUndelegate(t *testing.T) {
 	_, err = msgServer.Delegate(sdk.WrapSDKContext(ctx), &delegateMsg)
 	require.NoError(t, err, "no error expected when delegating")
 
+	// Confirm delegation record
+	_, found := app.StakingKeeper.GetDelegation(ctx, icaAccountAddress, validatorAddress)
+	require.True(t, found, "delegation should have been found")
+
+	// Confirm liquid staking totals were incremented
+	expectedTotalLiquidStaked := delegateAmount.Int64()
+	actualTotalLiquidStaked := app.StakingKeeper.GetTotalLiquidStakedTokens(ctx).Int64()
+	require.Equal(t, expectedTotalLiquidStaked, actualTotalLiquidStaked, "total liquid staked tokens after delegation")
+
+	validator, found = app.StakingKeeper.GetValidator(ctx, validatorAddress)
+	require.True(t, found, "validator should have been found")
+	require.Equal(t, delegateAmount.ToDec(), validator.TotalLiquidShares, "validator total liquid shares after delegation")
+
 	// Try to undelegate
 	_, err = msgServer.Undelegate(sdk.WrapSDKContext(ctx), &undelegateMsg)
 	require.NoError(t, err, "no error expected when sequentially undelegating")
+
+	// Confirm delegation record was removed
+	_, found = app.StakingKeeper.GetDelegation(ctx, icaAccountAddress, validatorAddress)
+	require.False(t, found, "delegation not have been found")
+
+	// Confirm liquid staking totals were decremented
+	actualTotalLiquidStaked = app.StakingKeeper.GetTotalLiquidStakedTokens(ctx).Int64()
+	require.Zero(t, actualTotalLiquidStaked, "total liquid staked tokens after undelegation")
+
+	validator, found = app.StakingKeeper.GetValidator(ctx, validatorAddress)
+	require.True(t, found, "validator should have been found")
+	require.Equal(t, sdk.ZeroDec(), validator.TotalLiquidShares, "validator total liquid shares after undelegation")
 }
