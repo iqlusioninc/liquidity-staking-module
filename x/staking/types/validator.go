@@ -7,11 +7,11 @@ import (
 	"strings"
 	"time"
 
-	errorsmod "cosmossdk.io/errors"
-
 	abci "github.com/tendermint/tendermint/abci/types"
 	tmprotocrypto "github.com/tendermint/tendermint/proto/tendermint/crypto"
 	"sigs.k8s.io/yaml"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
@@ -514,7 +514,7 @@ func (v Validator) GetConsensusPower(r sdk.Int) int64 {
 func (v Validator) GetCommission() sdk.Dec      { return v.Commission.Rate }
 func (v Validator) GetDelegatorShares() sdk.Dec { return v.DelegatorShares }
 
-func (v Validator) GetMinSelfDelegation() sdk.Int { return sdk.ZeroInt() }
+func (Validator) GetMinSelfDelegation() sdk.Int { return sdk.ZeroInt() }
 
 // UnpackInterfaces implements UnpackInterfacesMessage.UnpackInterfaces
 func (v Validator) UnpackInterfaces(unpacker codectypes.AnyUnpacker) error {

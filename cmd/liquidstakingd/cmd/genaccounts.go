@@ -16,6 +16,7 @@ import (
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authvesting "github.com/cosmos/cosmos-sdk/x/auth/vesting/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	"github.com/iqlusioninc/liquidity-staking-module/x/genutil"
 	genutiltypes "github.com/iqlusioninc/liquidity-staking-module/x/genutil/types"
 )

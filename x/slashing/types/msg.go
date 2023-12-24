@@ -23,8 +23,8 @@ func NewMsgUnjail(validatorAddr sdk.ValAddress) *MsgUnjail {
 	}
 }
 
-func (msg MsgUnjail) Route() string { return RouterKey }
-func (msg MsgUnjail) Type() string  { return TypeMsgUnjail }
+func (MsgUnjail) Route() string { return RouterKey }
+func (MsgUnjail) Type() string  { return TypeMsgUnjail }
 func (msg MsgUnjail) GetSigners() []sdk.AccAddress {
 	valAddr, _ := sdk.ValAddressFromBech32(msg.ValidatorAddr)
 	return []sdk.AccAddress{sdk.AccAddress(valAddr)}

@@ -30,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
 	"github.com/cosmos/cosmos-sdk/x/crisis"
+
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	genutilcli "github.com/iqlusioninc/liquidity-staking-module/x/genutil/client/cli"
 )

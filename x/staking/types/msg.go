@@ -2,8 +2,8 @@ package types
 
 import (
 	errorsmod "cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -72,10 +72,10 @@ func NewMsgCreateValidator(
 }
 
 // Route implements the sdk.Msg interface.
-func (msg MsgCreateValidator) Route() string { return RouterKey }
+func (MsgCreateValidator) Route() string { return RouterKey }
 
 // Type implements the sdk.Msg interface.
-func (msg MsgCreateValidator) Type() string { return TypeMsgCreateValidator }
+func (MsgCreateValidator) Type() string { return TypeMsgCreateValidator }
 
 // GetSigners implements the sdk.Msg interface. It returns the address(es) that
 // must sign over msg.GetSignBytes().
@@ -155,10 +155,10 @@ func NewMsgEditValidator(valAddr sdk.ValAddress, description Description, newRat
 }
 
 // Route implements the sdk.Msg interface.
-func (msg MsgEditValidator) Route() string { return RouterKey }
+func (MsgEditValidator) Route() string { return RouterKey }
 
 // Type implements the sdk.Msg interface.
-func (msg MsgEditValidator) Type() string { return TypeMsgEditValidator }
+func (MsgEditValidator) Type() string { return TypeMsgEditValidator }
 
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgEditValidator) GetSigners() []sdk.AccAddress {
@@ -203,10 +203,10 @@ func NewMsgDelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk.C
 }
 
 // Route implements the sdk.Msg interface.
-func (msg MsgDelegate) Route() string { return RouterKey }
+func (MsgDelegate) Route() string { return RouterKey }
 
 // Type implements the sdk.Msg interface.
-func (msg MsgDelegate) Type() string { return TypeMsgDelegate }
+func (MsgDelegate) Type() string { return TypeMsgDelegate }
 
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgDelegate) GetSigners() []sdk.AccAddress {
@@ -257,10 +257,10 @@ func NewMsgBeginRedelegate(
 }
 
 // Route implements the sdk.Msg interface.
-func (msg MsgBeginRedelegate) Route() string { return RouterKey }
+func (MsgBeginRedelegate) Route() string { return RouterKey }
 
 // Type implements the sdk.Msg interface
-func (msg MsgBeginRedelegate) Type() string { return TypeMsgBeginRedelegate }
+func (MsgBeginRedelegate) Type() string { return TypeMsgBeginRedelegate }
 
 // GetSigners implements the sdk.Msg interface
 func (msg MsgBeginRedelegate) GetSigners() []sdk.AccAddress {
@@ -311,10 +311,10 @@ func NewMsgUndelegate(delAddr sdk.AccAddress, valAddr sdk.ValAddress, amount sdk
 }
 
 // Route implements the sdk.Msg interface.
-func (msg MsgUndelegate) Route() string { return RouterKey }
+func (MsgUndelegate) Route() string { return RouterKey }
 
 // Type implements the sdk.Msg interface.
-func (msg MsgUndelegate) Type() string { return TypeMsgUndelegate }
+func (MsgUndelegate) Type() string { return TypeMsgUndelegate }
 
 // GetSigners implements the sdk.Msg interface.
 func (msg MsgUndelegate) GetSigners() []sdk.AccAddress {

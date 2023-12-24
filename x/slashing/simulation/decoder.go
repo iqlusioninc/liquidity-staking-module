@@ -9,6 +9,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
 	"github.com/cosmos/cosmos-sdk/types/kv"
+
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
 )
 

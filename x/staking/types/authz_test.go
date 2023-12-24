@@ -7,6 +7,7 @@ import (
 	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	stakingtypes "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )

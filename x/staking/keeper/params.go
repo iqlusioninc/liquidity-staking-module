@@ -4,6 +4,7 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
@@ -36,14 +37,14 @@ func (k Keeper) HistoricalEntries(ctx sdk.Context) (res uint32) {
 // BondDenom - Bondable coin denomination
 func (k Keeper) BondDenom(ctx sdk.Context) (res string) {
 	k.paramstore.Get(ctx, types.KeyBondDenom, &res)
-	return
+	return res
 }
 
 // PowerReduction - is the amount of staking tokens required for 1 unit of consensus-engine power.
 // Currently, this returns a global variable that the app developer can tweak.
 // TODO: we might turn this into an on-chain param:
 // https://github.com/cosmos/cosmos-sdk/issues/8365
-func (k Keeper) PowerReduction(_ sdk.Context) sdk.Int {
+func (Keeper) PowerReduction(_ sdk.Context) sdk.Int {
 	return sdk.DefaultPowerReduction
 }
 

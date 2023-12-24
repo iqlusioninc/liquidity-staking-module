@@ -55,6 +55,7 @@ linters-settings:
       - prefix(github.com/cosmos/cosmos-sdk)
       - prefix(github.com/cometbft/cometbft)
       - prefix(github.com/cosmos/ibc-go)
+      - prefix(github.com/iqlusioninc/liquidity-staking-module)
     custom-order: true
   revive:
     enable-all-rules: true

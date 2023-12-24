@@ -6,6 +6,7 @@ import (
 	"fmt"
 
 	"github.com/cosmos/cosmos-sdk/client"
+
 	distrcli "github.com/iqlusioninc/liquidity-staking-module/x/distribution/client/cli"
 )
 

@@ -20,6 +20,7 @@ import (
 	srvtypes "github.com/cosmos/cosmos-sdk/server/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	"github.com/iqlusioninc/liquidity-staking-module/x/genutil"
 	genutiltypes "github.com/iqlusioninc/liquidity-staking-module/x/genutil/types"
 )

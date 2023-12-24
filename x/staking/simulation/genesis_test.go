@@ -12,6 +12,7 @@ import (
 	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
+
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/simulation"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )

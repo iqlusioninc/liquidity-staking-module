@@ -1,14 +1,16 @@
 package keeper
 
 import (
-	errorsmod "cosmossdk.io/errors"
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	sdkslashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
+
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
 )
 
