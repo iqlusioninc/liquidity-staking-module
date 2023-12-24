@@ -4,6 +4,7 @@ import (
 	"errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 

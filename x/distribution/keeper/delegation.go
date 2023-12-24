@@ -4,9 +4,9 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-
 	sdkdistr "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 )
 
@@ -51,7 +51,7 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val sdkstakin
 	}
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 	rewards = difference.MulDecTruncate(stake)
-	return
+	return rewards
 }
 
 // calculate the total rewards accrued by a delegation

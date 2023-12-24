@@ -3,10 +3,11 @@ package keeper
 import (
 	"fmt"
 
+	gogotypes "github.com/gogo/protobuf/types"
+
 	errorsmod "cosmossdk.io/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	gogotypes "github.com/gogo/protobuf/types"
 
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
@@ -53,7 +54,7 @@ func (k Keeper) GetTokenizeShareRecordsByOwner(ctx sdk.Context, owner sdk.AccAdd
 		}
 		tokenizeShareRecords = append(tokenizeShareRecords, tokenizeShareRecord)
 	}
-	return
+	return tokenizeShareRecords
 }
 
 func (k Keeper) GetTokenizeShareRecordByDenom(ctx sdk.Context, denom string) (types.TokenizeShareRecord, error) {
@@ -81,7 +82,7 @@ func (k Keeper) GetAllTokenizeShareRecords(ctx sdk.Context) (tokenizeShareRecord
 
 		tokenizeShareRecords = append(tokenizeShareRecords, tokenizeShareRecord)
 	}
-	return
+	return tokenizeShareRecords
 }
 
 func (k Keeper) AddTokenizeShareRecord(ctx sdk.Context, tokenizeShareRecord types.TokenizeShareRecord) error {

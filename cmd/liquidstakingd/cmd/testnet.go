@@ -12,7 +12,6 @@ import (
 
 	"github.com/spf13/cobra"
 	tmconfig "github.com/tendermint/tendermint/config"
-
 	tmos "github.com/tendermint/tendermint/libs/os"
 	tmrand "github.com/tendermint/tendermint/libs/rand"
 	"github.com/tendermint/tendermint/types"
@@ -31,6 +30,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/module"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	"github.com/iqlusioninc/liquidity-staking-module/testutil/network"
 	"github.com/iqlusioninc/liquidity-staking-module/x/genutil"
 	genutiltypes "github.com/iqlusioninc/liquidity-staking-module/x/genutil/types"

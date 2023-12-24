@@ -3,15 +3,16 @@ package keeper
 import (
 	"encoding/json"
 
-	errorsmod "cosmossdk.io/errors"
-
 	abci "github.com/tendermint/tendermint/abci/types"
+
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	sdkdistr "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 )
 

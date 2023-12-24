@@ -6,9 +6,6 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
-	"github.com/iqlusioninc/liquidity-staking-module/x/distribution"
-	"github.com/iqlusioninc/liquidity-staking-module/x/slashing"
-	"github.com/iqlusioninc/liquidity-staking-module/x/staking"
 	"github.com/stretchr/testify/require"
 	abci "github.com/tendermint/tendermint/abci/types"
 	"github.com/tendermint/tendermint/libs/log"
@@ -32,7 +29,11 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/mint"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	"github.com/cosmos/cosmos-sdk/x/upgrade"
+
+	"github.com/iqlusioninc/liquidity-staking-module/x/distribution"
 	"github.com/iqlusioninc/liquidity-staking-module/x/genutil"
+	"github.com/iqlusioninc/liquidity-staking-module/x/slashing"
+	"github.com/iqlusioninc/liquidity-staking-module/x/staking"
 )
 
 func TestSimAppExportAndBlockedAddrs(t *testing.T) {

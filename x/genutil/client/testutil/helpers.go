@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/testutil"
 	"github.com/cosmos/cosmos-sdk/types/module"
+
 	genutilcli "github.com/iqlusioninc/liquidity-staking-module/x/genutil/client/cli"
 )
 

@@ -4,16 +4,18 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/stretchr/testify/suite"
+
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	clitestutil "github.com/cosmos/cosmos-sdk/testutil/cli"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktestutil "github.com/cosmos/cosmos-sdk/x/bank/client/testutil"
+
 	"github.com/iqlusioninc/liquidity-staking-module/testutil/network"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/client/cli"
 	stakingcli "github.com/iqlusioninc/liquidity-staking-module/x/staking/client/cli"
-	"github.com/stretchr/testify/suite"
 )
 
 type WithdrawAllTestSuite struct {

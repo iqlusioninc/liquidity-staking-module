@@ -6,6 +6,7 @@ import (
 	gogotypes "github.com/gogo/protobuf/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
 )
 
@@ -16,11 +17,11 @@ func (k Keeper) GetValidatorSigningInfo(ctx sdk.Context, address sdk.ConsAddress
 	bz := store.Get(types.ValidatorSigningInfoKey(address))
 	if bz == nil {
 		found = false
-		return
+		return info, found
 	}
 	k.cdc.MustUnmarshal(bz, &info)
 	found = true
-	return
+	return info, found
 }
 
 // HasValidatorSigningInfo returns if a given validator has signing information

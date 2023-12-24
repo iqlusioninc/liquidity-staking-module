@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/gogo/protobuf/proto"
-
 	tmtypes "github.com/tendermint/tendermint/types"
 
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -15,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/server"
 	"github.com/cosmos/cosmos-sdk/types"
 	bankexported "github.com/cosmos/cosmos-sdk/x/bank/exported"
+
 	"github.com/iqlusioninc/liquidity-staking-module/x/genutil"
 	gtypes "github.com/iqlusioninc/liquidity-staking-module/x/genutil/types"
 )
@@ -31,7 +31,7 @@ type doNothingIterator struct {
 	gtypes.GenesisBalancesIterator
 }
 
-func (dni *doNothingIterator) IterateGenesisBalances(_ codec.JSONCodec, _ map[string]json.RawMessage, _ func(bankexported.GenesisBalance) bool) {
+func (*doNothingIterator) IterateGenesisBalances(_ codec.JSONCodec, _ map[string]json.RawMessage, _ func(bankexported.GenesisBalance) bool) {
 }
 
 // Ensures that CollectTx correctly traverses directories and won't error out on encountering

@@ -4,6 +4,7 @@ import (
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/codec"
+
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 )
 

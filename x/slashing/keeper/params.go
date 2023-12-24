@@ -4,13 +4,14 @@ import (
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
 )
 
 // SignedBlocksWindow - sliding window for downtime slashing
 func (k Keeper) SignedBlocksWindow(ctx sdk.Context) (res int64) {
 	k.paramspace.Get(ctx, types.KeySignedBlocksWindow, &res)
-	return
+	return res
 }
 
 // MinSignedPerWindow - minimum blocks signed per window
@@ -27,19 +28,19 @@ func (k Keeper) MinSignedPerWindow(ctx sdk.Context) int64 {
 // DowntimeJailDuration - Downtime unbond duration
 func (k Keeper) DowntimeJailDuration(ctx sdk.Context) (res time.Duration) {
 	k.paramspace.Get(ctx, types.KeyDowntimeJailDuration, &res)
-	return
+	return res
 }
 
 // SlashFractionDoubleSign - fraction of power slashed in case of double sign
 func (k Keeper) SlashFractionDoubleSign(ctx sdk.Context) (res sdk.Dec) {
 	k.paramspace.Get(ctx, types.KeySlashFractionDoubleSign, &res)
-	return
+	return res
 }
 
 // SlashFractionDowntime - fraction of power slashed for downtime
 func (k Keeper) SlashFractionDowntime(ctx sdk.Context) (res sdk.Dec) {
 	k.paramspace.Get(ctx, types.KeySlashFractionDowntime, &res)
-	return
+	return res
 }
 
 // GetParams returns the total set of slashing parameters.

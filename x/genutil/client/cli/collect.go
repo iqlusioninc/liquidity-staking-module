@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
+
 	"github.com/iqlusioninc/liquidity-staking-module/x/genutil"
 	"github.com/iqlusioninc/liquidity-staking-module/x/genutil/types"
 )

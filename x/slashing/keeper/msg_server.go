@@ -4,6 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/iqlusioninc/liquidity-staking-module/x/slashing/types"
 )
 

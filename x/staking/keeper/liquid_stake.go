@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
@@ -41,7 +42,7 @@ func (k Keeper) GetTotalLiquidStakedTokens(ctx sdk.Context) sdk.Int {
 // Check if an account is a owned by a liquid staking provider
 // This is determined by checking if the account has a 32-length address
 // NOTE: This will have to be refactored before adapting it to chains beyond gaia
-func (k Keeper) AccountIsLiquidStakingProvider(address sdk.AccAddress) bool {
+func (Keeper) AccountIsLiquidStakingProvider(address sdk.AccAddress) bool {
 	return len(address) == 32
 }
 

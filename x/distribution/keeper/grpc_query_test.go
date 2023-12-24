@@ -14,6 +14,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/types/query"
 	sdkdistr "github.com/cosmos/cosmos-sdk/x/distribution/types"
 	minttypes "github.com/cosmos/cosmos-sdk/x/mint/types"
+
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking"

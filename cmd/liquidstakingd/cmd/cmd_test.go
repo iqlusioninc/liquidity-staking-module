@@ -7,6 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 
 	svrcmd "github.com/cosmos/cosmos-sdk/server/cmd"
+
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/cmd/liquidstakingd/cmd"
 	"github.com/iqlusioninc/liquidity-staking-module/x/genutil/client/cli"

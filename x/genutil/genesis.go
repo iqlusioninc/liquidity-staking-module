@@ -5,6 +5,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	"github.com/iqlusioninc/liquidity-staking-module/x/genutil/types"
 )
 
@@ -17,5 +18,5 @@ func InitGenesis(
 	if len(genesisState.GenTxs) > 0 {
 		validators, err = DeliverGenTxs(ctx, genesisState.GenTxs, stakingKeeper, deliverTx, txEncodingConfig)
 	}
-	return
+	return validators, err
 }

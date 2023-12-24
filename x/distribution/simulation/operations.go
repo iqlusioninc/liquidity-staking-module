@@ -10,6 +10,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/keeper"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
 	stakingkeeper "github.com/iqlusioninc/liquidity-staking-module/x/staking/keeper"

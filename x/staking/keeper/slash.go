@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	types "github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 

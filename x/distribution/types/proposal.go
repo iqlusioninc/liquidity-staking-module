@@ -37,10 +37,10 @@ func (csp *CommunityPoolSpendProposal) GetTitle() string { return csp.Title }
 func (csp *CommunityPoolSpendProposal) GetDescription() string { return csp.Description }
 
 // GetDescription returns the routing key of a community pool spend proposal.
-func (csp *CommunityPoolSpendProposal) ProposalRoute() string { return RouterKey }
+func (*CommunityPoolSpendProposal) ProposalRoute() string { return RouterKey }
 
 // ProposalType returns the type of a community pool spend proposal.
-func (csp *CommunityPoolSpendProposal) ProposalType() string { return ProposalTypeCommunityPoolSpend }
+func (*CommunityPoolSpendProposal) ProposalType() string { return ProposalTypeCommunityPoolSpend }
 
 // ValidateBasic runs basic stateless validity checks
 func (csp *CommunityPoolSpendProposal) ValidateBasic() error {

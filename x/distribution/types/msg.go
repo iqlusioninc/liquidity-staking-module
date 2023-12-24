@@ -2,8 +2,8 @@ package types
 
 import (
 	errorsmod "cosmossdk.io/errors"
-	"github.com/cosmos/cosmos-sdk/codec/legacy"
 
+	"github.com/cosmos/cosmos-sdk/codec/legacy"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
@@ -32,8 +32,8 @@ func NewMsgSetWithdrawAddress(delAddr, withdrawAddr sdk.AccAddress) *MsgSetWithd
 	}
 }
 
-func (msg MsgSetWithdrawAddress) Route() string { return ModuleName }
-func (msg MsgSetWithdrawAddress) Type() string  { return TypeMsgSetWithdrawAddress }
+func (MsgSetWithdrawAddress) Route() string { return ModuleName }
+func (MsgSetWithdrawAddress) Type() string  { return TypeMsgSetWithdrawAddress }
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgSetWithdrawAddress) GetSigners() []sdk.AccAddress {
@@ -69,8 +69,8 @@ func NewMsgWithdrawDelegatorReward(delAddr sdk.AccAddress, valAddr sdk.ValAddres
 	}
 }
 
-func (msg MsgWithdrawDelegatorReward) Route() string { return ModuleName }
-func (msg MsgWithdrawDelegatorReward) Type() string  { return TypeMsgWithdrawDelegatorReward }
+func (MsgWithdrawDelegatorReward) Route() string { return ModuleName }
+func (MsgWithdrawDelegatorReward) Type() string  { return TypeMsgWithdrawDelegatorReward }
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgWithdrawDelegatorReward) GetSigners() []sdk.AccAddress {
@@ -104,8 +104,8 @@ func NewMsgWithdrawValidatorCommission(valAddr sdk.ValAddress) *MsgWithdrawValid
 	}
 }
 
-func (msg MsgWithdrawValidatorCommission) Route() string { return ModuleName }
-func (msg MsgWithdrawValidatorCommission) Type() string  { return TypeMsgWithdrawValidatorCommission }
+func (MsgWithdrawValidatorCommission) Route() string { return ModuleName }
+func (MsgWithdrawValidatorCommission) Type() string  { return TypeMsgWithdrawValidatorCommission }
 
 // Return address that must sign over msg.GetSignBytes()
 func (msg MsgWithdrawValidatorCommission) GetSigners() []sdk.AccAddress {
@@ -137,10 +137,10 @@ func NewMsgFundCommunityPool(amount sdk.Coins, depositor sdk.AccAddress) *MsgFun
 }
 
 // Route returns the MsgFundCommunityPool message route.
-func (msg MsgFundCommunityPool) Route() string { return ModuleName }
+func (MsgFundCommunityPool) Route() string { return ModuleName }
 
 // Type returns the MsgFundCommunityPool message type.
-func (msg MsgFundCommunityPool) Type() string { return TypeMsgFundCommunityPool }
+func (MsgFundCommunityPool) Type() string { return TypeMsgFundCommunityPool }
 
 // GetSigners returns the signer addresses that are expected to sign the result
 // of GetSignBytes.
@@ -177,8 +177,8 @@ func NewMsgWithdrawTokenizeShareRecordReward(ownerAddr sdk.AccAddress, recordID 
 	}
 }
 
-func (msg MsgWithdrawTokenizeShareRecordReward) Route() string { return ModuleName }
-func (msg MsgWithdrawTokenizeShareRecordReward) Type() string {
+func (MsgWithdrawTokenizeShareRecordReward) Route() string { return ModuleName }
+func (MsgWithdrawTokenizeShareRecordReward) Type() string {
 	return TypeMsgWithdrawTokenizeShareRecordReward
 }
 
@@ -211,8 +211,8 @@ func NewMsgWithdrawAllTokenizeShareRecordReward(ownerAddr sdk.AccAddress) *MsgWi
 	}
 }
 
-func (msg MsgWithdrawAllTokenizeShareRecordReward) Route() string { return ModuleName }
-func (msg MsgWithdrawAllTokenizeShareRecordReward) Type() string {
+func (MsgWithdrawAllTokenizeShareRecordReward) Route() string { return ModuleName }
+func (MsgWithdrawAllTokenizeShareRecordReward) Type() string {
 	return TypeMsgWithdrawAllTokenizeShareRecordReward
 }
 

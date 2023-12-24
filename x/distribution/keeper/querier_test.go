@@ -11,6 +11,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
+
 	simapp "github.com/iqlusioninc/liquidity-staking-module/app"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/keeper"
 	"github.com/iqlusioninc/liquidity-staking-module/x/distribution/types"
@@ -69,7 +70,7 @@ func getQueriedValidatorSlashes(t *testing.T, ctx sdk.Context, cdc *codec.Legacy
 	require.Nil(t, err)
 	require.Nil(t, cdc.UnmarshalJSON(bz, &slashes))
 
-	return
+	return slashes
 }
 
 func getQueriedDelegationRewards(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier, delegatorAddr sdk.AccAddress, validatorAddr sdk.ValAddress) (rewards sdk.DecCoins) {
@@ -82,7 +83,7 @@ func getQueriedDelegationRewards(t *testing.T, ctx sdk.Context, cdc *codec.Legac
 	require.Nil(t, err)
 	require.Nil(t, cdc.UnmarshalJSON(bz, &rewards))
 
-	return
+	return rewards
 }
 
 func getQueriedDelegatorTotalRewards(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier, delegatorAddr sdk.AccAddress) (response types.QueryDelegatorTotalRewardsResponse) {
@@ -95,7 +96,7 @@ func getQueriedDelegatorTotalRewards(t *testing.T, ctx sdk.Context, cdc *codec.L
 	require.Nil(t, err)
 	require.Nil(t, cdc.UnmarshalJSON(bz, &response))
 
-	return
+	return response
 }
 
 func getQueriedCommunityPool(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmino, querier sdk.Querier) (ptr []byte) {
@@ -108,7 +109,7 @@ func getQueriedCommunityPool(t *testing.T, ctx sdk.Context, cdc *codec.LegacyAmi
 	require.Nil(t, err)
 	require.Nil(t, cdc.UnmarshalJSON(cp, &ptr))
 
-	return
+	return ptr
 }
 
 func TestQueries(t *testing.T) {

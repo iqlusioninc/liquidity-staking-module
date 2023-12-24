@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkstaking "github.com/cosmos/cosmos-sdk/x/staking/types"
+
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
@@ -147,5 +148,5 @@ func (k Keeper) GetAllSDKDelegations(ctx sdk.Context) (delegations []types.Deleg
 		delegations = append(delegations, delegation)
 	}
 
-	return
+	return delegations
 }
