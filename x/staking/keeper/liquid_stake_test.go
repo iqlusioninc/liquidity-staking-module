@@ -93,6 +93,7 @@ func TestAccountIsLiquidStakingProvider(t *testing.T) {
 
 // Helper function to clear the Bonded pool balances before a unit test
 func clearPoolBalance(t *testing.T, app *simapp.SimApp, ctx sdk.Context) {
+	t.Helper()
 	bondDenom := app.StakingKeeper.BondDenom(ctx)
 	initialBondedBalance := app.BankKeeper.GetBalance(ctx, app.AccountKeeper.GetModuleAddress(types.BondedPoolName), bondDenom)
 
@@ -102,6 +103,7 @@ func clearPoolBalance(t *testing.T, app *simapp.SimApp, ctx sdk.Context) {
 
 // Helper function to fund the Bonded pool balances before a unit test
 func fundPoolBalance(t *testing.T, app *simapp.SimApp, ctx sdk.Context, amount sdk.Int) {
+	t.Helper()
 	bondDenom := app.StakingKeeper.BondDenom(ctx)
 	bondedPoolCoin := sdk.NewCoin(bondDenom, amount)
 

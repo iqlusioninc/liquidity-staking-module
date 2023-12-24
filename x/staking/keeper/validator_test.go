@@ -22,13 +22,15 @@ import (
 	"github.com/iqlusioninc/liquidity-staking-module/x/staking/types"
 )
 
-func newMonikerValidator(t testing.TB, operator sdk.ValAddress, pubKey cryptotypes.PubKey, moniker string) types.Validator {
+func newMonikerValidator(tb testing.TB, operator sdk.ValAddress, pubKey cryptotypes.PubKey, moniker string) types.Validator {
+	tb.Helper()
 	v, err := types.NewValidator(operator, pubKey, types.Description{Moniker: moniker})
-	require.NoError(t, err)
+	require.NoError(tb, err)
 	return v
 }
 
-func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
+func bootstrapValidatorTest(tb testing.TB, power int64, numAddrs int) (*simapp.SimApp, sdk.Context, []sdk.AccAddress, []sdk.ValAddress) {
+	tb.Helper()
 	_, app, ctx := createTestInput(&testing.T{})
 
 	addrDels, addrVals := generateAddresses(app, ctx, numAddrs)
@@ -44,11 +46,11 @@ func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*simapp.Si
 
 	// unbond genesis validator delegations
 	delegations := app.StakingKeeper.GetAllDelegations(ctx)
-	require.Len(t, delegations, 1)
+	require.Len(tb, delegations, 1)
 	delegation := delegations[0]
 
 	_, err := app.StakingKeeper.Undelegate(ctx, delegation.GetDelegatorAddr(), delegation.GetValidatorAddr(), delegation.Shares)
-	require.NoError(t, err)
+	require.NoError(tb, err)
 
 	// end block to unbond genesis validator
 	staking.EndBlocker(ctx, app.StakingKeeper)
@@ -56,13 +58,14 @@ func bootstrapValidatorTest(t testing.TB, power int64, numAddrs int) (*simapp.Si
 	return app, ctx, addrDels, addrVals
 }
 
-func initValidators(t testing.TB, power int64, numAddrs int, powers []int64) (*simapp.SimApp, sdk.Context, []sdk.ValAddress, []types.Validator) {
-	app, ctx, addrs, valAddrs := bootstrapValidatorTest(t, power, numAddrs)
+func initValidators(tb testing.TB, power int64, numAddrs int, powers []int64) (*simapp.SimApp, sdk.Context, []sdk.ValAddress, []types.Validator) {
+	tb.Helper()
+	app, ctx, addrs, valAddrs := bootstrapValidatorTest(tb, power, numAddrs)
 	pks := simapp.CreateTestPubKeys(numAddrs)
 
 	vs := make([]types.Validator, len(powers))
 	for i, power := range powers {
-		vs[i] = teststaking.NewValidator(t, sdk.ValAddress(addrs[i]), pks[i])
+		vs[i] = teststaking.NewValidator(tb, sdk.ValAddress(addrs[i]), pks[i])
 		tokens := app.StakingKeeper.TokensFromConsensusPower(ctx, power)
 		vs[i], _ = vs[i].AddTokensFromDel(tokens)
 	}

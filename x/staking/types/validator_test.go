@@ -344,8 +344,8 @@ func mkValidator(tokens int64, shares sdk.Dec) types.Validator {
 }
 
 // Creates a new validators and asserts the error check.
-func newValidator(t *testing.T, operator sdk.ValAddress, pubKey cryptotypes.PubKey) types.Validator {
+func newValidator(tb *testing.T, operator sdk.ValAddress, pubKey cryptotypes.PubKey) types.Validator {
 	v, err := types.NewValidator(operator, pubKey, types.Description{})
-	require.NoError(t, err)
+	require.NoError(tb, err)
 	return v
 }
