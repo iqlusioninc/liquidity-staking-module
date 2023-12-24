@@ -51,7 +51,7 @@ func (k Keeper) calculateDelegationRewardsBetween(ctx sdk.Context, val sdkstakin
 	}
 	// note: necessary to truncate so we don't allow withdrawing more rewards than owed
 	rewards = difference.MulDecTruncate(stake)
-	return
+	return rewards
 }
 
 // calculate the total rewards accrued by a delegation

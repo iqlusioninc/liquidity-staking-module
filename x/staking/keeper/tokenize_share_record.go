@@ -54,7 +54,7 @@ func (k Keeper) GetTokenizeShareRecordsByOwner(ctx sdk.Context, owner sdk.AccAdd
 		}
 		tokenizeShareRecords = append(tokenizeShareRecords, tokenizeShareRecord)
 	}
-	return
+	return tokenizeShareRecords
 }
 
 func (k Keeper) GetTokenizeShareRecordByDenom(ctx sdk.Context, denom string) (types.TokenizeShareRecord, error) {
@@ -82,7 +82,7 @@ func (k Keeper) GetAllTokenizeShareRecords(ctx sdk.Context) (tokenizeShareRecord
 
 		tokenizeShareRecords = append(tokenizeShareRecords, tokenizeShareRecord)
 	}
-	return
+	return tokenizeShareRecords
 }
 
 func (k Keeper) AddTokenizeShareRecord(ctx sdk.Context, tokenizeShareRecord types.TokenizeShareRecord) error {

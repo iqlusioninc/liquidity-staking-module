@@ -11,27 +11,27 @@ import (
 // UnbondingTime
 func (k Keeper) UnbondingTime(ctx sdk.Context) (res time.Duration) {
 	k.paramstore.Get(ctx, types.KeyUnbondingTime, &res)
-	return
+	return res
 }
 
 // MaxValidators - Maximum number of validators
 func (k Keeper) MaxValidators(ctx sdk.Context) (res uint32) {
 	k.paramstore.Get(ctx, types.KeyMaxValidators, &res)
-	return
+	return res
 }
 
 // MaxEntries - Maximum number of simultaneous unbonding
 // delegations or redelegations (per pair/trio)
 func (k Keeper) MaxEntries(ctx sdk.Context) (res uint32) {
 	k.paramstore.Get(ctx, types.KeyMaxEntries, &res)
-	return
+	return res
 }
 
 // HistoricalEntries = number of historical info entries
 // to persist in store
 func (k Keeper) HistoricalEntries(ctx sdk.Context) (res uint32) {
 	k.paramstore.Get(ctx, types.KeyHistoricalEntries, &res)
-	return
+	return res
 }
 
 // BondDenom - Bondable coin denomination
@@ -51,25 +51,25 @@ func (Keeper) PowerReduction(_ sdk.Context) sdk.Int {
 // MinCommissionRate - Minimum validator commission rate
 func (k Keeper) MinCommissionRate(ctx sdk.Context) (res sdk.Dec) {
 	k.paramstore.Get(ctx, types.KeyMinCommissionRate, &res)
-	return
+	return res
 }
 
 // Validator bond factor for all validators
 func (k Keeper) ValidatorBondFactor(ctx sdk.Context) (res sdk.Dec) {
 	k.paramstore.Get(ctx, types.KeyValidatorBondFactor, &res)
-	return
+	return res
 }
 
 // Global liquid staking cap across all liquid staking providers
 func (k Keeper) GlobalLiquidStakingCap(ctx sdk.Context) (res sdk.Dec) {
 	k.paramstore.Get(ctx, types.KeyGlobalLiquidStakingCap, &res)
-	return
+	return res
 }
 
 // Liquid staking cap for each validator
 func (k Keeper) ValidatorLiquidStakingCap(ctx sdk.Context) (res sdk.Dec) {
 	k.paramstore.Get(ctx, types.KeyValidatorLiquidStakingCap, &res)
-	return
+	return res
 }
 
 // Get all parameters as types.Params
