@@ -450,19 +450,26 @@ message QueryTotalLiquidStakedResponse {
 }
 
 // QueryTokenizeShareLockInfo queries the tokenize share lock information
-// associated with given account
+// associated with given account.
 message QueryTokenizeShareLockInfo {
   string address = 1;
 }
 // QueryTokenizeShareLockInfoResponse is the response from the 
-// QueryTokenizeShareLockInfo query
+// QueryTokenizeShareLockInfo query.
 message QueryTokenizeShareLockInfoResponse{
   string status = 1;
   string expiration_time = 2;
 }
 
+// TokenizeShareLockStatus represents status of an account's tokenize share lock.
 enum TokenizeShareLockStatus {
-  LOCKED = 0;
-  UNLOCKED = 1;
-  LOCK_EXPIRING = 2;
+  option (gogoproto.goproto_enum_prefix) = false;
+  // An empty value is not allowed.
+  TOKENIZE_SHARE_LOCK_STATUS_UNSPECIFIED = 0 [(gogoproto.enumvalue_customname) = "ShareLockStatusNil"];
+  // Status means cannot tokenize shares.
+  TOKENIZE_SHARE_LOCK_STATUS_LOCKED = 1 [(gogoproto.enumvalue_customname) = "ShareLockStatusLocked"];
+  // Status means cannot tokenize shares.
+  TOKENIZE_SHARE_LOCK_STATUS_UNLOCKED = 2 [(gogoproto.enumvalue_customname) = "ShareLockStatusUnlocked"];
+  // Status when lock is queued for unlocking.
+  TOKENIZE_SHARE_LOCK_STATUS_LOCK_EXPIRING = 3 [(gogoproto.enumvalue_customname) = "ShareLockStatusLockExpiring"];
 }
